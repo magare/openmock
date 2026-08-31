@@ -8,10 +8,10 @@ import { USDLoader } from "three/examples/jsm/loaders/USDLoader.js";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
-const asset = (path) => `${import.meta.env.BASE_URL}assets/${path}`;
-const modelUrl = asset("source/iphone-17-p-sim.glb");
-const hdrUrl = asset("source/brown_photostudio_04_2k.hdr");
-const starterUrl = asset("source/starter-screen.jpg");
+const localAssetUrl = (path) => `${import.meta.env.BASE_URL}assets/${path}`;
+const modelUrl = localAssetUrl("source/iphone-17-p-sim.glb");
+const hdrUrl = localAssetUrl("source/brown_photostudio_04_2k.hdr");
+const starterUrl = localAssetUrl("source/starter-screen.jpg");
 
 // Manufacturer-supplied product geometry. Apple models come from the AR assets
 // on each product page; Samsung and Google publish the GLBs used by their own
@@ -27,7 +27,7 @@ const exactDeviceAssets = {
   },
   "iPhone 17 Pro": {
     type: "usd",
-    url: asset("devices/iphone-17-pro.usdz"),
+    url: localAssetUrl("devices/iphone-17-pro.usdz"),
     variant: "pro",
     slab: true,
     forceOverlay: true,
@@ -37,7 +37,7 @@ const exactDeviceAssets = {
   },
   "iPhone 17 Pro Max": {
     type: "usd",
-    url: asset("devices/iphone-17-pro.usdz"),
+    url: localAssetUrl("devices/iphone-17-pro.usdz"),
     variant: "pro-max",
     slab: true,
     forceOverlay: true,
@@ -47,7 +47,7 @@ const exactDeviceAssets = {
   },
   "Galaxy S26 Ultra": {
     type: "gltf",
-    url: asset("devices/galaxy-s26-ultra.glb"),
+    url: localAssetUrl("devices/galaxy-s26-ultra.glb"),
     slab: true,
     forceOverlay: true,
     screenOverlay: {
@@ -61,7 +61,7 @@ const exactDeviceAssets = {
   },
   "Pixel 10 Pro": {
     type: "gltf",
-    url: asset("devices/pixel-10-pro.glb"),
+    url: localAssetUrl("devices/pixel-10-pro.glb"),
     slab: true,
     forceOverlay: true,
     screenOverlay: {
@@ -77,14 +77,14 @@ const exactDeviceAssets = {
   },
   "Apple Watch Ultra 3": {
     type: "usd",
-    url: asset("devices/watch-ultra-3.usdz"),
+    url: localAssetUrl("devices/watch-ultra-3.usdz"),
     screenNames: ["LBTKGOnjodxPkhe"],
     nativeScreenUv: true,
     screenAspect: 410 / 502,
   },
   "iPad Pro": {
     type: "usd",
-    url: asset("devices/ipad-pro.usdz"),
+    url: localAssetUrl("devices/ipad-pro.usdz"),
     screenNames: ["lsDiIbtoSGSmWWZ"],
     nativeScreenUv: true,
     screenAspect: 2420 / 1668,
@@ -95,7 +95,7 @@ const exactDeviceAssets = {
   },
   "iPad mini": {
     type: "usd",
-    url: asset("devices/ipad-mini.usdz"),
+    url: localAssetUrl("devices/ipad-mini.usdz"),
     slab: true,
     screenAspect: 1488 / 2266,
     forceOverlay: true,
@@ -104,28 +104,28 @@ const exactDeviceAssets = {
   },
   "MacBook Neo": {
     type: "usd",
-    url: asset("devices/macbook-neo.usdz"),
+    url: localAssetUrl("devices/macbook-neo.usdz"),
     screenNames: ["rvnQqsVlUxgRHpf"],
     screenFlipV: true,
     screenAspect: 16 / 10,
   },
   "MacBook Air 13\"": {
     type: "usd",
-    url: asset("devices/macbook-air-13.usdz"),
+    url: localAssetUrl("devices/macbook-air-13.usdz"),
     screenNames: ["lidqkpaVJriYQHN"],
     screenFlipV: true,
     screenAspect: 16 / 10,
   },
   "MacBook Pro 14\"": {
     type: "usd",
-    url: asset("devices/macbook-pro-14.usdz"),
+    url: localAssetUrl("devices/macbook-pro-14.usdz"),
     screenNames: ["tfTbkkzhxqpKRgC"],
     screenFlipV: true,
     screenAspect: 16 / 10,
   },
   "MacBook Pro 16\"": {
     type: "usd",
-    url: asset("devices/macbook-pro-14.usdz"),
+    url: localAssetUrl("devices/macbook-pro-14.usdz"),
     screenNames: ["tfTbkkzhxqpKRgC"],
     screenFlipV: true,
     screenAspect: 16 / 10,
@@ -133,25 +133,25 @@ const exactDeviceAssets = {
   },
   "iMac 24\"": {
     type: "usd",
-    url: asset("devices/imac-24.usdz"),
+    url: localAssetUrl("devices/imac-24.usdz"),
     screenNames: ["XUnKxWElBQtWRPy"],
     screenAspect: 16 / 9,
     removeSubtrees: ["RdqCKcOrcloXBys", "YBByYyjzwdnRTqR"],
   },
   "Studio Display": {
     type: "usd",
-    url: asset("devices/studio-display.usdz"),
+    url: localAssetUrl("devices/studio-display.usdz"),
     screenNames: ["IZJsAfohLAwOHok"],
     screenAspect: 16 / 9,
     standFinish: true,
   },
   "Apple Vision Pro": {
     type: "usd",
-    url: asset("devices/vision-pro.usdz"),
+    url: localAssetUrl("devices/vision-pro.usdz"),
   },
   "XDR Display": {
     type: "usd",
-    url: asset("devices/xdr-display.usdz"),
+    url: localAssetUrl("devices/xdr-display.usdz"),
     screenNames: ["IyklIWCEUuwKzOr"],
     screenAspect: 16 / 9,
     standFinish: true,
@@ -1163,8 +1163,8 @@ async function loadExactModel(asset, renderer, runtime) {
     return loader.loadAsync(asset.url);
   }
 
-  const ktx2Loader = new KTX2Loader().setTranscoderPath(asset("basis/"));
-  const dracoLoader = new DRACOLoader().setDecoderPath(asset("draco/"));
+  const ktx2Loader = new KTX2Loader().setTranscoderPath(localAssetUrl("basis/"));
+  const dracoLoader = new DRACOLoader().setDecoderPath(localAssetUrl("draco/"));
   ktx2Loader.detectSupport(renderer);
   runtime.ktx2Loader = ktx2Loader;
   runtime.dracoLoader = dracoLoader;
