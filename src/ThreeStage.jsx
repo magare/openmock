@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
@@ -8,9 +8,10 @@ import { USDLoader } from "three/examples/jsm/loaders/USDLoader.js";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
-const modelUrl = "/assets/source/iphone-17-p-sim.glb";
-const hdrUrl = "/assets/source/brown_photostudio_04_2k.hdr";
-const starterUrl = "/assets/source/starter-screen.jpg";
+const asset = (path) => `${import.meta.env.BASE_URL}assets/${path}`;
+const modelUrl = asset("source/iphone-17-p-sim.glb");
+const hdrUrl = asset("source/brown_photostudio_04_2k.hdr");
+const starterUrl = asset("source/starter-screen.jpg");
 
 // Manufacturer-supplied product geometry. Apple models come from the AR assets
 // on each product page; Samsung and Google publish the GLBs used by their own
@@ -26,7 +27,7 @@ const exactDeviceAssets = {
   },
   "iPhone 17 Pro": {
     type: "usd",
-    url: "/assets/devices/iphone-17-pro.usdz",
+    url: asset("devices/iphone-17-pro.usdz"),
     variant: "pro",
     slab: true,
     forceOverlay: true,
@@ -36,7 +37,7 @@ const exactDeviceAssets = {
   },
   "iPhone 17 Pro Max": {
     type: "usd",
-    url: "/assets/devices/iphone-17-pro.usdz",
+    url: asset("devices/iphone-17-pro.usdz"),
     variant: "pro-max",
     slab: true,
     forceOverlay: true,
@@ -46,7 +47,7 @@ const exactDeviceAssets = {
   },
   "Galaxy S26 Ultra": {
     type: "gltf",
-    url: "/assets/devices/galaxy-s26-ultra.glb",
+    url: asset("devices/galaxy-s26-ultra.glb"),
     slab: true,
     forceOverlay: true,
     screenOverlay: {
@@ -60,7 +61,7 @@ const exactDeviceAssets = {
   },
   "Pixel 10 Pro": {
     type: "gltf",
-    url: "/assets/devices/pixel-10-pro.glb",
+    url: asset("devices/pixel-10-pro.glb"),
     slab: true,
     forceOverlay: true,
     screenOverlay: {
@@ -76,14 +77,14 @@ const exactDeviceAssets = {
   },
   "Apple Watch Ultra 3": {
     type: "usd",
-    url: "/assets/devices/watch-ultra-3.usdz",
+    url: asset("devices/watch-ultra-3.usdz"),
     screenNames: ["LBTKGOnjodxPkhe"],
     nativeScreenUv: true,
     screenAspect: 410 / 502,
   },
   "iPad Pro": {
     type: "usd",
-    url: "/assets/devices/ipad-pro.usdz",
+    url: asset("devices/ipad-pro.usdz"),
     screenNames: ["lsDiIbtoSGSmWWZ"],
     nativeScreenUv: true,
     screenAspect: 2420 / 1668,
@@ -94,7 +95,7 @@ const exactDeviceAssets = {
   },
   "iPad mini": {
     type: "usd",
-    url: "/assets/devices/ipad-mini.usdz",
+    url: asset("devices/ipad-mini.usdz"),
     slab: true,
     screenAspect: 1488 / 2266,
     forceOverlay: true,
@@ -103,28 +104,28 @@ const exactDeviceAssets = {
   },
   "MacBook Neo": {
     type: "usd",
-    url: "/assets/devices/macbook-neo.usdz",
+    url: asset("devices/macbook-neo.usdz"),
     screenNames: ["rvnQqsVlUxgRHpf"],
     screenFlipV: true,
     screenAspect: 16 / 10,
   },
   "MacBook Air 13\"": {
     type: "usd",
-    url: "/assets/devices/macbook-air-13.usdz",
+    url: asset("devices/macbook-air-13.usdz"),
     screenNames: ["lidqkpaVJriYQHN"],
     screenFlipV: true,
     screenAspect: 16 / 10,
   },
   "MacBook Pro 14\"": {
     type: "usd",
-    url: "/assets/devices/macbook-pro-14.usdz",
+    url: asset("devices/macbook-pro-14.usdz"),
     screenNames: ["tfTbkkzhxqpKRgC"],
     screenFlipV: true,
     screenAspect: 16 / 10,
   },
   "MacBook Pro 16\"": {
     type: "usd",
-    url: "/assets/devices/macbook-pro-14.usdz",
+    url: asset("devices/macbook-pro-14.usdz"),
     screenNames: ["tfTbkkzhxqpKRgC"],
     screenFlipV: true,
     screenAspect: 16 / 10,
@@ -132,25 +133,25 @@ const exactDeviceAssets = {
   },
   "iMac 24\"": {
     type: "usd",
-    url: "/assets/devices/imac-24.usdz",
+    url: asset("devices/imac-24.usdz"),
     screenNames: ["XUnKxWElBQtWRPy"],
     screenAspect: 16 / 9,
     removeSubtrees: ["RdqCKcOrcloXBys", "YBByYyjzwdnRTqR"],
   },
   "Studio Display": {
     type: "usd",
-    url: "/assets/devices/studio-display.usdz",
+    url: asset("devices/studio-display.usdz"),
     screenNames: ["IZJsAfohLAwOHok"],
     screenAspect: 16 / 9,
     standFinish: true,
   },
   "Apple Vision Pro": {
     type: "usd",
-    url: "/assets/devices/vision-pro.usdz",
+    url: asset("devices/vision-pro.usdz"),
   },
   "XDR Display": {
     type: "usd",
-    url: "/assets/devices/xdr-display.usdz",
+    url: asset("devices/xdr-display.usdz"),
     screenNames: ["IyklIWCEUuwKzOr"],
     screenAspect: 16 / 9,
     standFinish: true,
@@ -1162,8 +1163,8 @@ async function loadExactModel(asset, renderer, runtime) {
     return loader.loadAsync(asset.url);
   }
 
-  const ktx2Loader = new KTX2Loader().setTranscoderPath("/assets/basis/");
-  const dracoLoader = new DRACOLoader().setDecoderPath("/assets/draco/");
+  const ktx2Loader = new KTX2Loader().setTranscoderPath(asset("basis/"));
+  const dracoLoader = new DRACOLoader().setDecoderPath(asset("draco/"));
   ktx2Loader.detectSupport(renderer);
   runtime.ktx2Loader = ktx2Loader;
   runtime.dracoLoader = dracoLoader;
@@ -1277,14 +1278,28 @@ function updateProceduralMaterials(runtime, finish, reflection) {
   }
 }
 
-export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "Angled", lighting, lightRotation, contactShadow = false, finish, reflection, enabled = true, isDark = false, effects = [], media = null, onReady = () => {} }) {
+export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "Angled", lighting, lightRotation, contactShadow = false, finish, reflection, enabled = true, isDark = false, effects = [], media = null, onStatusChange = () => {} }) {
   const canvasRef = useRef(null);
   const runtimeRef = useRef(null);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
 
+  useLayoutEffect(() => {
+    const runtime = runtimeRef.current;
+    if (runtime) {
+      runtime.switching = true;
+      runtime.root.visible = false;
+      runtime.ground.visible = false;
+      runtime.renderer.clear(true, true, true);
+    }
+    setReady(false);
+    setFailed(false);
+    onStatusChange("loading");
+  }, [enabled, mockup, media?.src, media?.type, onStatusChange]);
+
   useEffect(() => {
     if (!enabled || !canvasRef.current) return undefined;
+    onStatusChange("loading");
     let disposed = false;
     const canvas = canvasRef.current;
     let renderer;
@@ -1293,7 +1308,7 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
     } catch {
       setFailed(true);
       setReady(false);
-      onReady(false);
+      onStatusChange("failed");
       return undefined;
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -1333,7 +1348,7 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
 
     const disposables = [];
     const screenTexture = loadScreenTexture(media, disposables);
-    const runtime = { renderer, scene, camera, root, key, rim, fill, ground, model: null, materials: null, screenTexture, disposables };
+    const runtime = { renderer, scene, camera, root, key, rim, fill, ground, model: null, materials: null, screenTexture, disposables, switching: false };
     runtimeRef.current = runtime;
 
     const resize = () => {
@@ -1355,6 +1370,9 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
       runtime.model = model;
       runtime.materials = asset ? null : result.materials || null;
       runtime.exact = Boolean(asset);
+      runtime.switching = false;
+      root.visible = true;
+      ground.visible = true;
       root.add(runtime.model);
       enableModelShadows(runtime.model);
       if (asset) applyLoadedModelMaterials(runtime.model, finish, reflection);
@@ -1362,7 +1380,7 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
       placeGround(ground, runtime.model);
       setFailed(false);
       setReady(true);
-      onReady(true);
+      onStatusChange("ready");
     };
 
     const exactAsset = exactDeviceAssets[mockup];
@@ -1391,8 +1409,12 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
       if (disposed) return;
       frame = window.requestAnimationFrame(render);
       resize();
-      fitScreenTextures(runtime.model);
-      renderer.render(scene, camera);
+      if (runtime.switching) {
+        renderer.clear(true, true, true);
+      } else {
+        fitScreenTextures(runtime.model);
+        renderer.render(scene, camera);
+      }
     };
     render();
     return () => {
@@ -1415,14 +1437,14 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
         }
       });
       setReady(false);
-      onReady(false);
+      onStatusChange("loading");
     };
-  }, [enabled, mockup, media?.src, media?.type, onReady]);
+  }, [enabled, mockup, media?.src, media?.type, onStatusChange]);
 
   useEffect(() => {
     const runtime = runtimeRef.current;
     if (!runtime) return;
-    const { camera, model, root, key, rim, fill, ground, renderer } = runtime;
+    const { camera, model, root, key, rim, fill, ground, renderer, scene } = runtime;
     const cameraData = cameraState || {};
     camera.fov = Number(cameraData.fov) || 24;
     camera.zoom = Math.max(0.5, Math.min(2.2, (Number(cameraData.zoom) || 1.9) / 1.9));
@@ -1482,6 +1504,7 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
     }
     if (rim) rim.intensity = lighting === "Two Tone" ? 1.15 : lighting === "Dark Rim" ? 1.42 : 0.62;
     if (fill) fill.intensity = lighting === "Dark Rim" ? 0.14 : lighting === "Studio Soft" ? 0.48 : 0.32;
+    scene.environmentIntensity = lighting === "Dark Rim" ? 0.22 : lighting === "Two Tone" ? 0.9 : lighting === "Warm Glow" ? 0.82 : lighting === "Studio Soft" ? 1.14 : 1;
     if (ground?.material) ground.material.opacity = contactShadow ? 0.28 : 0.08;
     renderer.toneMappingExposure = effects.includes("Bloom") ? 1.16 : isDark ? 0.8 : lighting === "Warm Glow" ? 1.08 : 1.02;
   }, [cameraState, cameraPreset, lighting, lightRotation, contactShadow, finish, reflection, isDark, effects, mockup, ready]);

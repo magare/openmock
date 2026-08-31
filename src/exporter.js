@@ -1,6 +1,6 @@
 import { backgroundAssetMap, presetBackgrounds } from "./editorState.js";
 
-const localAsset = (path) => `/assets/${path}`;
+const localAsset = (path) => `${import.meta.env.BASE_URL}assets/${path}`;
 
 function loadImage(src) {
   return new Promise((resolve, reject) => {
@@ -54,16 +54,27 @@ function drawGradientBackground(ctx, project, width, height) {
 
 async function drawBackground(ctx, project, width, height) {
   const tab = project.background?.tab || "Image";
+  const blurPx = (Number(project.bgBlur) || 0) * 16 * (width / 1280);
+  const pad = Math.ceil(blurPx * 2);
+  ctx.save();
+  if (blurPx > 0.5) {
+    ctx.filter = `blur(${blurPx.toFixed(2)}px)`;
+    ctx.translate(-pad, -pad);
+    width += pad * 2;
+    height += pad * 2;
+  }
   if (tab === "Image") {
     try {
       const image = await loadImage(localAsset(backgroundAssetMap[project.background?.image] || backgroundAssetMap.Whisp));
       drawCover(ctx, image, 0, 0, width, height);
+      ctx.restore();
       return;
     } catch {
       // Keep the generated export useful even if an optional local background is unavailable.
     }
   }
   drawGradientBackground(ctx, project, width, height);
+  ctx.restore();
 }
 
 async function drawMedia(ctx, project, x, y, width, height) {

@@ -32,6 +32,17 @@ export const sceneOptions = [
   ["Concrete Dark", "", false, "concrete"],
   ["Studio", "", false, "studio"],
 ];
+// Scene presets bundle the lighting + background environment they stand for; "custom" keeps the user's own controls.
+export const scenePresetPatch = {
+  "dark-room": { lighting: "Dark Rim", contactShadow: true, bgBlur: 0.85, background: { tab: "Color", color: "#0b0c0d", preset: "None", image: "Onyx" } },
+  concrete: { lighting: "Default", contactShadow: true, bgBlur: 0.6, background: { tab: "Preset", color: "#F2F2F2", preset: "Metal", image: "Whisp" } },
+  studio: { lighting: "Studio Soft", contactShadow: false, bgBlur: 0.3, background: { tab: "Image", color: "#F2F2F2", preset: "None", image: "Whisp" } },
+};
+
+export function scenePatch(scene) {
+  return scenePresetPatch[scene] || {};
+}
+
 export const mockupOptions = [
   ["Flat", "FREE", false],
   ["iPhone 17", "FREE", false],
