@@ -11,6 +11,8 @@ import {
   templatePatch,
   templateItems,
   mockupOptions,
+  sceneOptions,
+  effectOptions,
 } from "../src/editorState.js";
 
 test("creates a source-shaped default project", () => {
@@ -36,6 +38,18 @@ test("exposes the additional free device mockups", () => {
   }
 });
 
+test("keeps every catalog and export capability available for free", () => {
+  assert.equal(templateItems.every(([, , locked]) => locked === false), true);
+  assert.equal(sceneOptions.every(([, , locked]) => locked === false), true);
+  assert.equal(mockupOptions.every(([, tag, locked]) => tag === "FREE" && locked === false), true);
+  assert.equal(effectOptions.includes("Depth"), true);
+  assert.equal(effectOptions.includes("Ghost"), true);
+
+  const project = createDefaultProject();
+  assert.equal(project.export.watermark, false);
+  assert.equal(project.export.videoOrientation, "Landscape");
+});
+
 test("keeps editor utility values predictable", () => {
   assert.equal(formatTime(0), "00:00.0");
   assert.equal(formatTime(1.87), "00:01.8");
@@ -49,8 +63,8 @@ test("keeps editor utility values predictable", () => {
 test("template patches carry functional camera, scene, and effect changes", () => {
   assert.deepEqual(templatePatch("Flat look").camera, cameraPresets.Flat);
   assert.equal(templatePatch("Flat look").mockup, "Flat");
-  assert.equal(templatePatch("Dark Room Macbook PRO").lighting, "Dark Rim");
-  assert.equal(templatePatch("Concrete Macbook PRO").mockup, "MacBook Neo");
+  assert.equal(templatePatch("Dark Room Macbook").lighting, "Dark Rim");
+  assert.equal(templatePatch("Concrete Macbook").mockup, "MacBook Neo");
   assert.deepEqual(templatePatch("Violet Glass").effects, ["Glass Border"]);
   assert.deepEqual(templatePatch("Unknown template"), {});
 });

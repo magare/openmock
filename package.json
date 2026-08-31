@@ -17,5 +17,8 @@
     "react-dom": "19.2.0",
     "three": "^0.185.1",
     "vite": "6.4.2"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.62.1"
   }
 }

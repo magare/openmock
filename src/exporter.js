@@ -153,14 +153,8 @@ export async function renderProjectCanvas(project, { width = 1920, height = 1080
 }
 
 function imageSize(value) {
-  if (value.includes("1290")) return [1290, 2796];
-  if (value.includes("2064")) return [2064, 2752];
-  if (value.includes("2880")) return [2880, 1800];
-  if (value.includes("1080 × 1920")) return [1080, 1920];
-  if (value.includes("1920 × 1080")) return [1920, 1080];
-  if (value.includes("1280×720")) return [1280, 720];
-  if (value.includes("Square")) return [1080, 1080];
-  if (value.includes("Portrait")) return [1080, 1350];
+  const match = String(value || "").match(/(\d+)\s*[×x]\s*(\d+)/);
+  if (match) return [Number(match[1]), Number(match[2])];
   return [1920, 1080];
 }
 
@@ -189,7 +183,8 @@ export async function exportImage(project) {
 export async function exportVideo(project, onProgress = () => {}) {
   if (typeof MediaRecorder === "undefined") throw new Error("Video export is not supported in this browser.");
   const [width, height] = imageSize(project.export?.videoSize || "16:9 — 1280×720 (720P)");
-  const canvas = await renderProjectCanvas(project, { width: Math.min(width, 1280), height: Math.min(height, 720), watermark: false });
+  const scale = Math.min(1, 1280 / Math.max(width, height));
+  const canvas = await renderProjectCanvas(project, { width: Math.round(width * scale), height: Math.round(height * scale), watermark: false });
   const stream = canvas.captureStream(Number(project.export?.fps) || 30);
   const mime = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find((type) => MediaRecorder.isTypeSupported(type)) || "video/webm";
   const recorder = new MediaRecorder(stream, { mimeType: mime });

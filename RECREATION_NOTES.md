@@ -51,9 +51,9 @@ The reference toolbar contains these visible concepts, in order:
 3. `INFO`.
 4. `TEMPLATES` with a down chevron.
 5. `HELP`.
-6. A capture allowance indicator showing `3` and, at larger widths, capture copy.
-7. At wider breakpoints, a locked `Save project` control.
-8. `UPGRADE` pill.
+6. A `FREE CAPTURES` indicator.
+7. At wider breakpoints, a local `Save project` control.
+8. `FREE` pill.
 9. `FILL` viewport ratio control.
 10. Dark `EXPORT` control.
 
@@ -79,7 +79,7 @@ The stage is now a real Three.js renderer whenever WebGL is available. `src/Thre
 
 ### Exact source model path
 
-- The default `iPhone 17` uses `public/assets/source/iphone-17-p-sim.glb`, the exact compressed model discovered from the reference page.
+- The `iPhone 17`, `iPhone 17 Pro`, and `iPhone 17 Pro Max` options use `public/assets/source/iphone-17-p-sim.glb`, the exact compressed model discovered from the reference page, so the full iPhone family shares the same high-detail physical source.
 - `KTX2Loader` points at `public/assets/basis/` and calls `detectSupport(renderer)` before `GLTFLoader` loads the model, matching the model's `KHR_texture_basisu` requirement.
 - The model's `ultramonkRole: "proDisplayScreen"` mesh is identified from the GLB extras and receives the current local image/video screen texture. This keeps uploaded media mapped to the actual 3D display surface rather than only to a fallback DOM image.
 - The source `brown_photostudio_04_2k.hdr` is loaded through `HDRLoader`, converted with `PMREMGenerator`, and assigned as the local scene environment.
@@ -87,7 +87,7 @@ The stage is now a real Three.js renderer whenever WebGL is available. `src/Thre
 
 ### Procedural 3D device rigs
 
-The other mockups use local geometry so every picker option still produces a genuine 3D object even though only the source iPhone GLB was available locally:
+The other mockups use local geometry so every picker option still produces a genuine 3D object even though only the iPhone family source GLB was available locally:
 
 - Phone/tablet variants use rounded metal bodies, raised bezels, separate display/glass layers, side buttons, a top island, camera sensors, and tablet proportions.
 - `iPad mini` is an additional free tablet option with a narrower, shorter tablet body and the same screen-media, finish, reflection, camera, and shadow bindings as `iPad Pro`.
@@ -136,7 +136,7 @@ The Info panel is a centered modal with a dark Ultramonk banner, light content, 
 - `Join Discord`.
 - `Follow on X`.
 - `©2026 Ultramonk`.
-- `Restore purchase`, `Privacy`, and `Terms` footer links.
+- `Account`, `Privacy`, and `Terms` footer links.
 
 The clone includes the modal and realistic local form behavior without submitting any external form.
 
@@ -144,18 +144,18 @@ The clone includes the modal and realistic local form behavior without submittin
 
 `TEMPLATES` opens a card grid under the toolbar. The observed selector begins with a `Starter` heading and loads thumbnail cards. The reference template names, in DOM order, are:
 
-- Concrete Macbook — PRO.
-- Macbook 2 — PRO.
-- Dark Room Macbook — PRO.
-- Macbook 1 — PRO.
-- Watch ultra 1 — PRO.
-- iPhone 1 — PRO.
-- iPhone 2 — PRO.
+- Concrete Macbook — FREE.
+- Macbook 2 — FREE.
+- Dark Room Macbook — FREE.
+- Macbook 1 — FREE.
+- Watch ultra 1 — FREE.
+- iPhone 1 — FREE.
+- iPhone 2 — FREE.
 - App Store iPhone Images.
-- XDR 1 — PRO.
+- XDR 1 — FREE.
 - Tablet corner.
 - Linear.
-- Brutal phone — PRO.
+- Brutal phone — FREE.
 - Spectrum Warfare.
 - Hero detail.
 - Flat look.
@@ -226,7 +226,7 @@ The clone keeps these labels, selection state, and local ratio feedback. Ratio c
 
 - Image format selector: `JPG — SMALLEST FILE` initially.
 - Alternatives: `PNG — LOSSLESS, TRANSPARENCY` and `WEBP — MODERN, SMALL`.
-- `Ultramonk watermark (Pro to disable)` switch, checked initially.
+- `Ultramonk watermark` switch, unchecked initially so exports are clean by default.
 - `Transparent Background` switch, off initially.
 - Orientation segmented control: Landscape selected, Square, Portrait.
 - Size selector: `16:9 — 1920×1080 (1080P)`.
@@ -235,12 +235,12 @@ The clone keeps these labels, selection state, and local ratio feedback. Ratio c
 
 ### Video tab
 
-- Orientation: Landscape selected; Square and Portrait show locked states.
+- Orientation: Landscape selected; Square and Portrait are available.
 - Size: `16:9 — 1280×720 (720P)`.
-- Quality: Low, Med selected, High locked, Ultra locked.
+- Quality: Low, Med selected, High, and Ultra are available.
 - Frame rate: 30 fps selected, 60 fps.
-- Motion Blur: Off selected; Low, Med, High locked.
-- Transparent Background PRO switch.
+- Motion Blur: Off selected; Low, Med, and High are available.
+- Transparent Background switch.
 - Summary: `1280 × 720`, `30 fps · ~7 Mbps`, `Balanced quality and size.`.
 - `Export Video` action.
 - Exports all 2 scenes back to back.
@@ -333,11 +333,11 @@ The right inspector is scrollable and contains these visible sections:
 `Change scene` opens a card/radio selector:
 
 - Custom scene — `Custom lighting + background`, FREE.
-- Dark Room MacBook — PRO.
-- Concrete Dark — PRO.
-- Studio — PRO.
+- Dark Room MacBook — FREE.
+- Concrete Dark — FREE.
+- Studio — FREE.
 
-The clone preserves the selected custom state and provides a local Pro upgrade message for locked scenes.
+The clone preserves the selected custom state and makes every scene preset directly selectable.
 
 ### Lighting
 
@@ -370,7 +370,7 @@ Image state:
 
 - `Bg Image`.
 - Glaze, Crystal, Liquid Metal, Clouds, Spectrum, Sunrise, Whisp, Bubble, Onyx, Feather, Citrus, Cobalt, Blush, Indigo, Heather, Palm Shadow, Prism, Sky, Sundrape.
-- Later image choices are marked PRO in the source.
+- All image choices are available in the local editor.
 
 Changing preset/image shows the source notification `Background & scene settings apply to all shots.` The clone reproduces this toast.
 
@@ -380,19 +380,23 @@ Observed choices:
 
 - Flat — Any size.
 - iPhone 17 — FREE, selected initially.
-- iPhone 17 Pro — PRO.
-- iPhone 17 Pro Max — PRO.
-- Galaxy S26 Ultra — PRO.
-- Pixel 10 Pro — PRO.
-- Apple Watch Ultra 3 — PRO.
-- iPad Pro — PRO.
+- iPhone 17 Pro — FREE.
+- iPhone 17 Pro Max — FREE.
+- Galaxy S26 Ultra — FREE.
+- Pixel 10 Pro — FREE.
+- Apple Watch Ultra 3 — FREE.
+- iPad Pro — FREE.
+- iPad mini — FREE.
 - MacBook Neo — FREE.
-- MacBook Air 13\".
-- MacBook Pro 14\".
-- MacBook Pro 16\".
-- XDR Display.
+- MacBook Air 13\" — FREE.
+- MacBook Pro 14\" — FREE.
+- MacBook Pro 16\" — FREE.
+- iMac 24\" — FREE.
+- Studio Display — FREE.
+- Apple Vision Pro — FREE.
+- XDR Display — FREE.
 
-The clone uses the downloaded iPhone asset for the picker, supports Flat/iPhone 17 selection, and shows local upgrade feedback for locked models.
+The clone uses the downloaded iPhone asset for the picker and all device entries are directly selectable.
 
 ### Finish
 
@@ -482,7 +486,7 @@ The compact mobile toolbar shows:
 - Menu.
 - Ultramonk mark.
 - Fill ratio.
-- Upgrade.
+- Free access indicator.
 - Theme control.
 - Orange capture button.
 
@@ -574,7 +578,7 @@ This is a frontend recreation. It does not:
 - Publish or save to a remote Ultramonk account.
 - Export to a remote account or cloud render service.
 - Send feedback or email.
-- Purchase Pro.
+- Charge for editor access; every local editor capability is available without a purchase.
 - Rebuild the remote account, billing, or cloud render services.
 
 ## Functional local implementation
@@ -582,9 +586,10 @@ This is a frontend recreation. It does not:
 - Project state is persisted to browser storage and supports undo/redo, reset, keyboard shortcuts, and mobile history controls.
 - Local image/video files can be selected through the source card, dragged onto the stage, or pasted from the clipboard. Object URLs are cleaned up when replaced or unmounted.
 - Camera tilt, pan, zoom/FOV, wheel zoom, Space-drag camera movement, manual camera controls, presets, center guides, and the mobile camera modes update the shared project state.
-- Image export writes local JPG, PNG, or WEBP files at the selected orientation/size and respects the watermark and transparent-background switches. Video export writes a local WEBM recording through `MediaRecorder` with progress feedback.
+- Image export writes local JPG, PNG, or WEBP files at the selected orientation/size and respects the free watermark and transparent-background switches. Video export writes a local WEBM recording through `MediaRecorder` with free landscape, square, and portrait sizes, quality, frame-rate, motion-blur, and transparency controls.
+- Captures are unlimited; the toolbar exposes `FREE CAPTURES` and no capture counter or upgrade prompt is used.
 - Timeline controls include Simple/Advanced modes, shots and tracks, scrub/play/loop, duration, zoom, presets, auto-keyframe recording, keyframe selection/deletion/easing, minimized mode, and the Auto-motion focus-area workspace.
 - Inspector and mobile dock controls are wired to the same project model: scene, lighting, background color/preset/image, mockup, finish, reflection, camera, effects, blur, handedness, and onboarding states.
-- The 3D renderer uses the bundled GLB/HDR/KTX2 pipeline for the default iPhone 17 and physically-based procedural rigs for the remaining phone, tablet, laptop, display, watch, and Flat options. It reports `ready`, `loading`, or `fallback`; the fallback is intentionally local and does not hotlink source assets.
+- The 3D renderer uses the bundled GLB/HDR/KTX2 pipeline for the iPhone family and physically-based procedural rigs for the remaining phone, tablet, laptop, display, watch, and Flat options. It reports `ready`, `loading`, or `fallback`; the fallback is intentionally local and does not hotlink source assets.
 
 The primary editor journey is local and functional: open menus, inspect Info/Templates/Help, change theme/ratio, switch export tabs, switch timeline modes, add shots/tracks, play/loop/scrub, open recording and Auto-motion flows, open inspector controls, change scene/lighting/background/mockup/finish/camera/effects, import media, export stills/video, and use the mobile control dock.

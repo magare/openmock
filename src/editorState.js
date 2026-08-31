@@ -1,16 +1,16 @@
 export const templateItems = [
-  ["Concrete Macbook PRO", "concrete-macbook.jpg", true],
-  ["Macbook 2 PRO", "macbook-2.jpg", true],
-  ["Dark Room Macbook PRO", "dark-room-macbook.jpg", true],
-  ["Macbook 1 PRO", "macbook-1.jpg", true],
-  ["Watch ultra 1 PRO", "watch-ultra-1.jpg", true],
-  ["iPhone 1 PRO", "iphone-1.jpg", true],
-  ["iPhone 2 PRO", "iphone-2.jpg", true],
+  ["Concrete Macbook", "concrete-macbook.jpg", false],
+  ["Macbook 2", "macbook-2.jpg", false],
+  ["Dark Room Macbook", "dark-room-macbook.jpg", false],
+  ["Macbook 1", "macbook-1.jpg", false],
+  ["Watch ultra 1", "watch-ultra-1.jpg", false],
+  ["iPhone 1", "iphone-1.jpg", false],
+  ["iPhone 2", "iphone-2.jpg", false],
   ["App Store iPhone Images", "app-store-iphone.jpg", false],
-  ["XDR 1 PRO", "xdr-1.jpg", true],
+  ["XDR 1", "xdr-1.jpg", false],
   ["Tablet corner", "tablet-corner.jpg", false],
   ["Linear", "linear.jpg", false],
-  ["Brutal phone PRO", "brutal-phone.jpg", true],
+  ["Brutal phone", "brutal-phone.jpg", false],
   ["Spectrum Warfare", "spectrum-warfare.jpg", false],
   ["Hero detail", "hero-detail.jpg", false],
   ["Flat look", "flat-look.jpg", false],
@@ -28,28 +28,28 @@ export const appStoreOptions = [
 ];
 export const sceneOptions = [
   ["Custom scene", "Custom lighting + background", false, "custom"],
-  ["Dark Room MacBook", "", true, "dark-room"],
-  ["Concrete Dark", "", true, "concrete"],
-  ["Studio", "", true, "studio"],
+  ["Dark Room MacBook", "", false, "dark-room"],
+  ["Concrete Dark", "", false, "concrete"],
+  ["Studio", "", false, "studio"],
 ];
 export const mockupOptions = [
-  ["Flat", "Any size", false],
+  ["Flat", "FREE", false],
   ["iPhone 17", "FREE", false],
-  ["iPhone 17 Pro", "PRO", true],
-  ["iPhone 17 Pro Max", "PRO", true],
-  ["Galaxy S26 Ultra", "PRO", true],
-  ["Pixel 10 Pro", "PRO", true],
-  ["Apple Watch Ultra 3", "PRO", true],
-  ["iPad Pro", "PRO", true],
+  ["iPhone 17 Pro", "FREE", false],
+  ["iPhone 17 Pro Max", "FREE", false],
+  ["Galaxy S26 Ultra", "FREE", false],
+  ["Pixel 10 Pro", "FREE", false],
+  ["Apple Watch Ultra 3", "FREE", false],
+  ["iPad Pro", "FREE", false],
   ["iPad mini", "FREE", false],
   ["MacBook Neo", "FREE", false],
-  ["MacBook Air 13\"", "", true],
-  ["MacBook Pro 14\"", "", true],
-  ["MacBook Pro 16\"", "", true],
+  ["MacBook Air 13\"", "FREE", false],
+  ["MacBook Pro 14\"", "FREE", false],
+  ["MacBook Pro 16\"", "FREE", false],
   ["iMac 24\"", "FREE", false],
   ["Studio Display", "FREE", false],
   ["Apple Vision Pro", "FREE", false],
-  ["XDR Display", "", true],
+  ["XDR Display", "FREE", false],
 ];
 export const finishOptions = ["White", "Black", "Mist Blue", "Sage", "Lavender"];
 export const lightingOptions = ["Default", "Studio Soft", "Dark Rim", "Two Tone", "Warm Glow"];
@@ -136,7 +136,7 @@ export function createDefaultProject() {
     activeTrackId: "shot-1",
     selectedKeyframeId: "kf-1",
     timeline: { mode: "advanced", minimized: true, guides: false, loop: false, playing: false, recording: false, playhead: 0, duration: 6, projectLength: "0:12", zoom: 1, presetOpen: false, trackMenuOpen: false, expandedTrack: false },
-    export: { format: "jpg", watermark: true, transparent: false, orientation: "Landscape", imageSize: "16:9 — 1920×1080 (1080P)", videoSize: "16:9 — 1280×720 (720P)", quality: "Med", fps: 30, motionBlur: "Off" },
+    export: { format: "jpg", watermark: false, transparent: false, orientation: "Landscape", imageSize: "16:9 — 1920×1080 (1080P)", videoOrientation: "Landscape", videoSize: "16:9 — 1280×720 (720P)", quality: "Med", fps: 30, motionBlur: "Off" },
   };
 }
 
@@ -160,8 +160,8 @@ export function templatePatch(name) {
     "Flat look": { mockup: "Flat", cameraPreset: "Flat", camera: { ...cameraPresets.Flat } },
     "Hero detail": { cameraPreset: "Hero", camera: { ...cameraPresets.Hero } },
     "Violet Glass": { background: { tab: "Image", color: "#F2F2F2", preset: "None", image: "Blush" }, effects: ["Glass Border"] },
-    "Dark Room Macbook PRO": { scene: "custom", lighting: "Dark Rim", background: { tab: "Preset", color: "#F2F2F2", preset: "Mono", image: "Whisp" } },
-    "Concrete Macbook PRO": { mockup: "MacBook Neo", cameraPreset: "Angled", camera: { ...cameraPresets.Angled }, background: { tab: "Preset", color: "#F2F2F2", preset: "Metal", image: "Whisp" } },
+    "Dark Room Macbook": { scene: "custom", lighting: "Dark Rim", background: { tab: "Preset", color: "#F2F2F2", preset: "Mono", image: "Whisp" } },
+    "Concrete Macbook": { mockup: "MacBook Neo", cameraPreset: "Angled", camera: { ...cameraPresets.Angled }, background: { tab: "Preset", color: "#F2F2F2", preset: "Metal", image: "Whisp" } },
     "Clean demo": { scene: "custom", lighting: "Studio Soft", background: { tab: "Image", color: "#F2F2F2", preset: "None", image: "Whisp" }, cameraPreset: "Hero", camera: { ...cameraPresets.Hero } },
   };
   return patches[name] || {};
