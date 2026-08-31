@@ -1,4 +1,4 @@
-import { backgroundAssetMap, cameraAtTime, presetBackgrounds } from "./editorState.js";
+import { backgroundAssetMap, blurAtTime, cameraAtTime, presetBackgrounds } from "./editorState.js";
 
 const localAsset = (path) => `${import.meta.env.BASE_URL}assets/${path}`;
 
@@ -123,6 +123,57 @@ function finishDeviceFrame(ctx) {
   ctx.restore();
 }
 
+function applyDepthOfField(ctx, canvas, blur = {}) {
+  const strength = Math.max(0, Math.min(100, Number(blur.strength) || 0));
+  if (!strength) return;
+  const size = Math.max(0, Math.min(1, Number(blur.size) || 0));
+  const falloff = Math.max(0, Math.min(1, Number(blur.falloff) || 0));
+  const x = Math.max(0, Math.min(1, Number.isFinite(Number(blur.x)) ? Number(blur.x) : 0.5));
+  const y = Math.max(0, Math.min(1, Number.isFinite(Number(blur.y)) ? Number(blur.y) : 0.52));
+  const source = document.createElement("canvas");
+  source.width = canvas.width;
+  source.height = canvas.height;
+  source.getContext("2d").drawImage(canvas, 0, 0);
+  const layer = document.createElement("canvas");
+  layer.width = canvas.width;
+  layer.height = canvas.height;
+  const layerCtx = layer.getContext("2d");
+  layerCtx.filter = `blur(${Math.max(0.5, (strength / 100) * 14 * (canvas.width / 1280))}px)`;
+  layerCtx.drawImage(source, 0, 0);
+  layerCtx.filter = "none";
+  layerCtx.globalCompositeOperation = "destination-out";
+  if (blur.mode === "directional" || blur.mode === "tilt") {
+    const vertical = blur.mode === "tilt";
+    const length = vertical ? canvas.height : canvas.width;
+    const center = (vertical ? y : x) * length;
+    const half = (0.05 + size * 0.24) * length;
+    const feather = (0.05 + falloff * 0.2) * length;
+    const gradient = layerCtx.createLinearGradient(0, 0, vertical ? 0 : canvas.width, vertical ? canvas.height : 0);
+    const startOuter = Math.max(0, (center - half - feather) / length);
+    const startInner = Math.max(startOuter, (center - half) / length);
+    const endInner = Math.max(startInner, Math.min(1, (center + half) / length));
+    const endOuter = Math.max(endInner, Math.min(1, (center + half + feather) / length));
+    gradient.addColorStop(0, "rgba(0,0,0,0)");
+    gradient.addColorStop(startOuter, "rgba(0,0,0,0)");
+    gradient.addColorStop(startInner, "rgba(0,0,0,1)");
+    gradient.addColorStop(endInner, "rgba(0,0,0,1)");
+    gradient.addColorStop(endOuter, "rgba(0,0,0,0)");
+    gradient.addColorStop(1, "rgba(0,0,0,0)");
+    layerCtx.fillStyle = gradient;
+  } else {
+    const shortest = Math.min(canvas.width, canvas.height);
+    const inner = shortest * (0.08 + size * 0.24);
+    const outer = inner + shortest * (0.05 + falloff * 0.2);
+    const gradient = layerCtx.createRadialGradient(x * canvas.width, y * canvas.height, inner, x * canvas.width, y * canvas.height, outer);
+    gradient.addColorStop(0, "rgba(0,0,0,1)");
+    gradient.addColorStop(1, "rgba(0,0,0,0)");
+    layerCtx.fillStyle = gradient;
+  }
+  layerCtx.fillRect(0, 0, canvas.width, canvas.height);
+  layerCtx.globalCompositeOperation = "source-over";
+  ctx.drawImage(layer, 0, 0);
+}
+
 export async function renderProjectCanvas(project, { width = 1920, height = 1080, watermark = true } = {}) {
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(width));
@@ -184,6 +235,7 @@ export async function renderProjectCanvas(project, { width = 1920, height = 1080
     ctx.restore();
   }
   finishDeviceFrame(ctx);
+  applyDepthOfField(ctx, canvas, project.blur);
 
   if (watermark && project.export?.watermark && !project.export?.transparent) {
     ctx.save();
@@ -238,7 +290,7 @@ export async function exportVideo(project, onProgress = () => {}) {
   const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: bitrates[project.export?.quality] || 6000000 });
   const chunks = [];
   recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
-  const duration = 1800;
+  const duration = Math.max(0.25, Number(project.timeline?.duration) || 6) * 1000;
   // Motion blur blends each rendered frame over the previous one; Off replaces
   // the frame outright. Higher blur keeps more of the previous frame visible.
   const blurKeep = { Off: 0, Low: 0.45, Med: 0.6, High: 0.75 }[project.export?.motionBlur] ?? 0;
@@ -248,7 +300,8 @@ export async function exportVideo(project, onProgress = () => {}) {
   let frameIndex = 0;
   let rendering = false;
   const drawFrame = async (progress) => {
-    const animated = { ...project, camera: cameraAtTime(project, progress * (project.timeline?.duration || 6)) };
+    const timelineTime = progress * (project.timeline?.duration || 6);
+    const animated = { ...project, camera: cameraAtTime(project, timelineTime), blur: blurAtTime(project, timelineTime) };
     const next = await renderProjectCanvas(animated, { width: canvas.width, height: canvas.height, watermark: false });
     if (blurKeep > 0 && frameIndex > 0) {
       ctx.globalAlpha = 1 - blurKeep;

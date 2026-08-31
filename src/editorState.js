@@ -113,11 +113,13 @@ export const cameraPresets = {
   Back: { xAxis: 0, yAxis: 0, zAxis: 0, fov: 28, zoom: 1.85, panX: 0, panY: -0.08 },
 };
 
+export const defaultBlur = { strength: 10, size: 0.53, falloff: 0, bokeh: true, mode: "radial", x: 0.5, y: 0.52 };
+
 const defaultKeyframes = [
-  { id: "kf-1", time: 0, camera: { ...cameraPresets.Angled }, easing: "Ease in out" },
-  { id: "kf-2", time: 1.8, camera: { xAxis: -15, yAxis: 5, zAxis: 0, fov: 26, zoom: 2.05, panX: 0.02, panY: -0.11 }, easing: "Ease in out" },
-  { id: "kf-3", time: 3.6, camera: { xAxis: -7, yAxis: 2, zAxis: 0, fov: 28, zoom: 2.2, panX: -0.02, panY: -0.04 }, easing: "Ease out" },
-  { id: "kf-4", time: 6, camera: { ...cameraPresets.Angled }, easing: "Linear" },
+  { id: "kf-1", time: 0, camera: { ...cameraPresets.Angled }, blur: { ...defaultBlur }, easing: "Ease in out" },
+  { id: "kf-2", time: 1.8, camera: { xAxis: -15, yAxis: 5, zAxis: 0, fov: 26, zoom: 2.05, panX: 0.02, panY: -0.11 }, blur: { ...defaultBlur }, easing: "Ease in out" },
+  { id: "kf-3", time: 3.6, camera: { xAxis: -7, yAxis: 2, zAxis: 0, fov: 28, zoom: 2.2, panX: -0.02, panY: -0.04 }, blur: { ...defaultBlur }, easing: "Ease out" },
+  { id: "kf-4", time: 6, camera: { ...cameraPresets.Angled }, blur: { ...defaultBlur }, easing: "Linear" },
 ];
 
 export function createDefaultProject() {
@@ -138,11 +140,11 @@ export function createDefaultProject() {
     reflection: { amount: 0.99, roughness: 0.28 },
     effects: [],
     effectSettings: { "Glass Border": 30, Sharpen: 30, Vignette: 20, Grain: 14, Bloom: 22, "Screen Fade": 0, "Liquid Glass": 35 },
-    blur: { strength: 10, size: 0.53, falloff: 0, bokeh: true, mode: "radial" },
+    blur: { ...defaultBlur },
     media: null,
     tracks: [
-      { id: "shot-1", name: "Shot 1", kind: "scene", duration: 3, selected: true, keyframes: defaultKeyframes.map((frame) => ({ ...frame, camera: { ...frame.camera } })) },
-      { id: "shot-2", name: "Shot 2", kind: "scene", duration: 3, selected: false, keyframes: defaultKeyframes.slice(0, 2).map((frame, index) => ({ ...frame, id: `shot2-kf-${index + 1}`, time: index * 3, camera: { ...frame.camera } })) },
+      { id: "shot-1", name: "Shot 1", kind: "scene", duration: 3, selected: true, keyframes: defaultKeyframes.map((frame) => ({ ...frame, camera: { ...frame.camera }, blur: { ...frame.blur } })) },
+      { id: "shot-2", name: "Shot 2", kind: "scene", duration: 3, selected: false, keyframes: defaultKeyframes.slice(0, 2).map((frame, index) => ({ ...frame, id: `shot2-kf-${index + 1}`, time: index * 3, camera: { ...frame.camera }, blur: { ...frame.blur } })) },
     ],
     activeTrackId: "shot-1",
     selectedKeyframeId: "kf-1",
@@ -207,6 +209,63 @@ export function cameraAtTime(project, time) {
     panX: lerp("panX"),
     panY: lerp("panY"),
   };
+}
+
+// Depth-of-field settings travel with camera keyframes so recorded focus pulls
+// preview at the same position and intensity as the camera move.
+export function blurAtTime(project, time) {
+  const track = project.tracks.find((item) => item.id === project.activeTrackId) || project.tracks[0];
+  const keyframes = track?.keyframes ? [...track.keyframes].sort((a, b) => a.time - b.time) : [];
+  if (keyframes.length < 2 || keyframes.every((frame) => !frame.blur)) return project.blur;
+  const safeTime = Number(time) || 0;
+  const frameBlur = (frame) => ({ ...project.blur, ...(frame?.blur || {}) });
+  if (safeTime <= keyframes[0].time) return frameBlur(keyframes[0]);
+  const last = keyframes[keyframes.length - 1];
+  if (safeTime >= last.time) return frameBlur(last);
+  let index = 0;
+  while (index < keyframes.length - 2 && keyframes[index + 1].time <= safeTime) index += 1;
+  const from = keyframes[index];
+  const to = keyframes[index + 1];
+  const raw = (safeTime - from.time) / Math.max(1e-6, to.time - from.time);
+  const t = easeValue(raw, from.easing);
+  const fromBlur = frameBlur(from);
+  const toBlur = frameBlur(to);
+  const lerp = (key) => Number(fromBlur[key]) + (Number(toBlur[key]) - Number(fromBlur[key])) * t;
+  return {
+    ...project.blur,
+    strength: lerp("strength"),
+    size: lerp("size"),
+    falloff: lerp("falloff"),
+    x: lerp("x"),
+    y: lerp("y"),
+    bokeh: t < 0.5 ? fromBlur.bokeh : toBlur.bokeh,
+    mode: t < 0.5 ? fromBlur.mode : toBlur.mode,
+  };
+}
+
+export function composeAutoMotionKeyframes({ areas, camera, blur, duration = 6, motionType = "3d" }) {
+  if (!Array.isArray(areas) || areas.length < 2) return [];
+  const safeDuration = Math.max(1, Number(duration) || 6);
+  return areas.map((area, index) => {
+    const centerX = clamp((Number(area.x) + Number(area.width) / 2) / 100, 0, 1);
+    const centerY = clamp((Number(area.y) + Number(area.height) / 2) / 100, 0, 1);
+    const cameraFrame = {
+      ...camera,
+      panX: clamp((centerX - 0.5) * 0.9, -1, 1),
+      panY: clamp((centerY - 0.5) * 0.9, -1, 1),
+    };
+    if (motionType === "3d") {
+      cameraFrame.xAxis = clamp(Number(camera.xAxis) + (0.5 - centerX) * 26, -225, 225);
+      cameraFrame.yAxis = clamp(Number(camera.yAxis) + (centerY - 0.5) * 18, -225, 225);
+    }
+    return {
+      id: `auto-${index + 1}`,
+      time: Number(((index / (areas.length - 1)) * safeDuration).toFixed(2)),
+      camera: cameraFrame,
+      blur: { ...defaultBlur, ...(blur || {}), x: centerX, y: centerY },
+      easing: "Ease in out",
+    };
+  });
 }
 
 export function templatePatch(name) {

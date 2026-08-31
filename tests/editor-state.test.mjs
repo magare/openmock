@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import {
   cameraPresets,
   createDefaultProject,
+  blurAtTime,
   cameraAtTime,
+  composeAutoMotionKeyframes,
   easeValue,
   formatTime,
   getSerializableProject,
@@ -170,4 +172,42 @@ test("cameraAtTime falls back to the live camera without keyframes", () => {
   project.tracks = [{ id: "shot-1", name: "Shot 1", kind: "scene", duration: 4, selected: true, keyframes: [] }];
   project.activeTrackId = "shot-1";
   assert.equal(cameraAtTime(project, 2), project.camera);
+});
+
+test("blurAtTime interpolates recorded focus pulls", () => {
+  const project = createDefaultProject();
+  project.tracks = [{
+    id: "shot-1",
+    keyframes: [
+      { id: "a", time: 0, camera: { ...project.camera }, blur: { ...project.blur, strength: 0, size: 0.2, x: 0.2, y: 0.3, mode: "radial" }, easing: "Linear" },
+      { id: "b", time: 4, camera: { ...project.camera }, blur: { ...project.blur, strength: 80, size: 0.8, x: 0.8, y: 0.7, mode: "tilt" }, easing: "Linear" },
+    ],
+  }];
+  project.activeTrackId = "shot-1";
+
+  const halfway = blurAtTime(project, 2);
+  assert.equal(halfway.strength, 40);
+  assert.equal(halfway.size, 0.5);
+  assert.equal(halfway.x, 0.5);
+  assert.equal(halfway.y, 0.5);
+  assert.equal(halfway.mode, "tilt");
+});
+
+test("Auto-motion requires a path and respects 2D versus 3D motion", () => {
+  const project = createDefaultProject();
+  const oneArea = [{ x: 10, y: 20, width: 20, height: 20 }];
+  assert.deepEqual(composeAutoMotionKeyframes({ areas: oneArea, camera: project.camera, blur: project.blur }), []);
+
+  const areas = [...oneArea, { x: 70, y: 60, width: 20, height: 20 }];
+  const twoDimensional = composeAutoMotionKeyframes({ areas, camera: project.camera, blur: project.blur, duration: 8, motionType: "2d" });
+  assert.equal(twoDimensional.length, 2);
+  assert.equal(twoDimensional[0].time, 0);
+  assert.equal(twoDimensional[1].time, 8);
+  assert.equal(twoDimensional[0].camera.xAxis, project.camera.xAxis);
+  assert.notEqual(twoDimensional[0].camera.panX, twoDimensional[1].camera.panX);
+  assert.notEqual(twoDimensional[0].blur.x, twoDimensional[1].blur.x);
+
+  const threeDimensional = composeAutoMotionKeyframes({ areas, camera: project.camera, blur: project.blur, duration: 4, motionType: "3d" });
+  assert.notEqual(threeDimensional[0].camera.xAxis, project.camera.xAxis);
+  assert.equal(threeDimensional[1].time, 4);
 });

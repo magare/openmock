@@ -178,6 +178,7 @@
 /* Depth-of-field layer driven by the mobile Blur dock. */
 .stage-dof-layer{position:absolute;inset:0;z-index:2;pointer-events:none;backdrop-filter:blur(var(--dof-blur,4px));-webkit-backdrop-filter:blur(var(--dof-blur,4px))}
 .stage-dof-layer.dof-bokeh{background-image:radial-gradient(circle at 22% 30%,rgba(255,255,255,.05) 0 12px,transparent 13px),radial-gradient(circle at 74% 62%,rgba(255,255,255,.045) 0 16px,transparent 17px),radial-gradient(circle at 58% 24%,rgba(255,255,255,.04) 0 9px,transparent 10px)}
+.app-shell.reduce-motion *, .app-shell.reduce-motion *::before, .app-shell.reduce-motion *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}
 /* Selected keyframe feedback in the expanded track layer. */
 .keyframe-chip.selected{background:#f8dcc0;color:#8a4a12;box-shadow:0 0 0 1px #f07d28}
 .keyframe-chip.selected b{color:#8a4a12}
