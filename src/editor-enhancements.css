@@ -165,3 +165,21 @@
   .watch-crown,.watch-action{right:-5%}
 }
 .stage-background-layer{position:absolute;inset:-48px;z-index:-1;background-size:cover;background-position:center;background-repeat:no-repeat;pointer-events:none}
+/* Per-effect overlays for the 3D stage. Each effect renders as its own child
+   span so several effects can stack without pseudo-element collisions. */
+.three-effects-overlay>.fx{position:absolute;inset:0;pointer-events:none}
+.fx-glass-border{inset:16px;border:3px solid rgba(255,255,255,.62);border-radius:26px;box-shadow:0 0 22px rgba(255,255,255,.38),inset 0 0 26px rgba(255,255,255,.14)}
+.fx-depth{backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);mask-image:radial-gradient(ellipse 60% 56% at 50% 50%,transparent 34%,#000 84%);-webkit-mask-image:radial-gradient(ellipse 60% 56% at 50% 50%,transparent 34%,#000 84%)}
+.fx-sharpen{backdrop-filter:contrast(1.07) saturate(1.08);-webkit-backdrop-filter:contrast(1.07) saturate(1.08)}
+.fx-fisheye{backdrop-filter:contrast(1.02);-webkit-backdrop-filter:contrast(1.02);box-shadow:inset 0 0 90px rgba(0,0,0,.30),inset 0 0 22px rgba(0,0,0,.16);border-radius:38% 38% 40% 40%/30% 30% 34% 34%;border:14px solid transparent;outline:12px solid rgba(0,0,0,.14);outline-offset:-30px}
+.fx-screen-fade{background:linear-gradient(rgba(255,255,255,.13),rgba(255,255,255,.05));backdrop-filter:contrast(.88) brightness(1.05);-webkit-backdrop-filter:contrast(.88) brightness(1.05)}
+.fx-ghost{backdrop-filter:blur(1.5px) opacity(.92);-webkit-backdrop-filter:blur(1.5px) opacity(.92);box-shadow:inset 12px 0 34px rgba(255,120,120,.06),inset -12px 0 34px rgba(120,160,255,.07)}
+.fx-liquid-glass{background:linear-gradient(115deg,rgba(255,255,255,.20) 0%,rgba(255,255,255,.06) 30%,rgba(255,255,255,0) 47%,rgba(255,255,255,.05) 72%,rgba(255,255,255,.16) 100%);backdrop-filter:saturate(1.3) brightness(1.05);-webkit-backdrop-filter:saturate(1.3) brightness(1.05)}
+/* Depth-of-field layer driven by the mobile Blur dock. */
+.stage-dof-layer{position:absolute;inset:0;z-index:2;pointer-events:none;backdrop-filter:blur(var(--dof-blur,4px));-webkit-backdrop-filter:blur(var(--dof-blur,4px))}
+.stage-dof-layer.dof-bokeh{background-image:radial-gradient(circle at 22% 30%,rgba(255,255,255,.05) 0 12px,transparent 13px),radial-gradient(circle at 74% 62%,rgba(255,255,255,.045) 0 16px,transparent 17px),radial-gradient(circle at 58% 24%,rgba(255,255,255,.04) 0 9px,transparent 10px)}
+/* Selected keyframe feedback in the expanded track layer. */
+.keyframe-chip.selected{background:#f8dcc0;color:#8a4a12;box-shadow:0 0 0 1px #f07d28}
+.keyframe-chip.selected b{color:#8a4a12}
+.track-row:not(.active) .shot-segment i{opacity:.45}
+.shot-segment i.selected{opacity:1;box-shadow:0 0 0 2px rgba(240,125,40,.45)}

@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import {
   cameraPresets,
   createDefaultProject,
+  cameraAtTime,
+  easeValue,
   formatTime,
   getSerializableProject,
   hydrateProject,
@@ -10,8 +12,9 @@ import {
   slugify,
   templatePatch,
   templateItems,
-  mockupOptions,
+  scenePatch,
   sceneOptions,
+  mockupOptions,
   effectOptions,
 } from "../src/editorState.js";
 
@@ -95,4 +98,76 @@ test("serializes local project state without persisting object URLs", () => {
 
   project.media = { name: "screen.png", type: "image/png", src: "data:image/png;base64,abc" };
   assert.deepEqual(getSerializableProject(project).media, project.media);
+});
+
+test("scene presets apply their lighting and background environment", () => {
+  const values = new Set(sceneOptions.map(([, , , value]) => value));
+  for (const value of ["custom", "dark-room", "concrete", "studio"]) {
+    assert.equal(values.has(value), true);
+  }
+
+  assert.deepEqual(scenePatch("custom"), {});
+
+  const darkRoom = scenePatch("dark-room");
+  assert.equal(darkRoom.lighting, "Dark Rim");
+  assert.equal(darkRoom.contactShadow, true);
+  assert.equal(darkRoom.background.tab, "Color");
+  assert.equal(darkRoom.background.color, "#0b0c0d");
+
+  const concrete = scenePatch("concrete");
+  assert.equal(concrete.lighting, "Default");
+  assert.equal(concrete.background.tab, "Preset");
+  assert.equal(concrete.background.preset, "Metal");
+
+  const studio = scenePatch("studio");
+  assert.equal(studio.lighting, "Studio Soft");
+  assert.equal(studio.background.tab, "Image");
+  assert.equal(studio.background.image, "Whisp");
+  assert.equal(studio.contactShadow, false);
+
+  assert.deepEqual(scenePatch("unknown-scene"), {});
+});
+
+test("easing curves stay within the unit range", () => {
+  assert.equal(easeValue(0, "Linear"), 0);
+  assert.equal(easeValue(1, "Ease in out"), 1);
+  assert.equal(easeValue(0.5, "Linear"), 0.5);
+  assert.equal(easeValue(0.5, "Ease in"), 0.25);
+  assert.equal(easeValue(0.5, "Ease out"), 0.75);
+  assert.equal(easeValue(0.5, "Ease in out"), 0.5);
+  assert.equal(easeValue(2, "Linear"), 1);
+  assert.equal(easeValue(-1, "Ease in"), 0);
+});
+
+test("cameraAtTime interpolates the active track between keyframes", () => {
+  const project = createDefaultProject();
+  const start = { ...cameraPresets.Angled };
+  project.tracks = [{
+    id: "shot-1",
+    name: "Shot 1",
+    kind: "scene",
+    duration: 4,
+    selected: true,
+    keyframes: [
+      { id: "a", time: 0, camera: { ...start, xAxis: 0, zoom: 1 }, easing: "Linear" },
+      { id: "b", time: 4, camera: { ...start, xAxis: 100, zoom: 3 }, easing: "Ease in out" },
+    ],
+  }];
+  project.activeTrackId = "shot-1";
+
+  assert.equal(cameraAtTime(project, 0).xAxis, 0);
+  assert.equal(cameraAtTime(project, 4).xAxis, 100);
+  assert.equal(cameraAtTime(project, 2).xAxis, 50);
+  assert.equal(cameraAtTime(project, 2).zoom, 2);
+  // Beyond the last keyframe the end pose holds.
+  assert.equal(cameraAtTime(project, 9).xAxis, 100);
+  // The playback camera keeps unrelated live camera properties.
+  assert.equal(cameraAtTime(project, 2).fov, start.fov);
+});
+
+test("cameraAtTime falls back to the live camera without keyframes", () => {
+  const project = createDefaultProject();
+  project.tracks = [{ id: "shot-1", name: "Shot 1", kind: "scene", duration: 4, selected: true, keyframes: [] }];
+  project.activeTrackId = "shot-1";
+  assert.equal(cameraAtTime(project, 2), project.camera);
 });

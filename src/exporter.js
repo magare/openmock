@@ -1,4 +1,4 @@
-import { backgroundAssetMap, presetBackgrounds } from "./editorState.js";
+import { backgroundAssetMap, cameraAtTime, presetBackgrounds } from "./editorState.js";
 
 const localAsset = (path) => `${import.meta.env.BASE_URL}assets/${path}`;
 
@@ -149,6 +149,40 @@ export async function renderProjectCanvas(project, { width = 1920, height = 1080
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
+  if (project.effects?.includes("Screen Fade")) {
+    ctx.fillStyle = "rgba(255,255,255,.10)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  if (project.effects?.includes("Grain")) {
+    try {
+      const grain = await loadImage(localAsset("source/placeholder.jpg"));
+      ctx.save();
+      ctx.globalAlpha = ((Number(project.effectSettings?.Grain) || 14) / 100) * 0.5;
+      ctx.globalCompositeOperation = "soft-light";
+      for (let y = 0; y < canvas.height; y += grain.height) {
+        for (let x = 0; x < canvas.width; x += grain.width) ctx.drawImage(grain, x, y);
+      }
+      ctx.restore();
+    } catch { /* grain texture is optional */ }
+  }
+  if (project.effects?.includes("Pixel Grid")) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,.09)";
+    ctx.lineWidth = 1;
+    const step = 5;
+    for (let x = 0; x < canvas.width; x += step) { ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, canvas.height); ctx.stroke(); }
+    for (let y = 0; y < canvas.height; y += step) { ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(canvas.width, y + 0.5); ctx.stroke(); }
+    ctx.restore();
+  }
+  if (project.effects?.includes("Chromatic Abb.")) {
+    ctx.save();
+    ctx.lineWidth = Math.max(2, frame.w * 0.004);
+    ctx.strokeStyle = "rgba(255,0,110,.22)";
+    ctx.strokeRect(frame.x + 2, frame.y + 2, frame.w - 4, frame.h - 4);
+    ctx.strokeStyle = "rgba(0,230,255,.22)";
+    ctx.strokeRect(frame.x - 2, frame.y - 2, frame.w + 4, frame.h + 4);
+    ctx.restore();
+  }
   finishDeviceFrame(ctx);
 
   if (watermark && project.export?.watermark && !project.export?.transparent) {
@@ -194,20 +228,48 @@ export async function exportImage(project) {
 export async function exportVideo(project, onProgress = () => {}) {
   if (typeof MediaRecorder === "undefined") throw new Error("Video export is not supported in this browser.");
   const [width, height] = imageSize(project.export?.videoSize || "16:9 — 1280×720 (720P)");
-  const scale = Math.min(1, 1280 / Math.max(width, height));
+  // Allow the selected size through; only clamp absurdly large requests.
+  const scale = Math.min(1, 1920 / Math.max(width, height));
   const canvas = await renderProjectCanvas(project, { width: Math.round(width * scale), height: Math.round(height * scale), watermark: false });
+  const ctx = canvas.getContext("2d");
   const stream = canvas.captureStream(Number(project.export?.fps) || 30);
   const mime = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find((type) => MediaRecorder.isTypeSupported(type)) || "video/webm";
-  const recorder = new MediaRecorder(stream, { mimeType: mime });
+  const bitrates = { Low: 2500000, Med: 6000000, High: 10000000, Ultra: 16000000 };
+  const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: bitrates[project.export?.quality] || 6000000 });
   const chunks = [];
   recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
   const duration = 1800;
+  // Motion blur blends each rendered frame over the previous one; Off replaces
+  // the frame outright. Higher blur keeps more of the previous frame visible.
+  const blurKeep = { Off: 0, Low: 0.45, Med: 0.6, High: 0.75 }[project.export?.motionBlur] ?? 0;
+  // The recording follows the active track's keyframed camera path, matching
+  // what viewport playback shows.
   const start = performance.now();
+  let frameIndex = 0;
+  let rendering = false;
+  const drawFrame = async (progress) => {
+    const animated = { ...project, camera: cameraAtTime(project, progress * (project.timeline?.duration || 6)) };
+    const next = await renderProjectCanvas(animated, { width: canvas.width, height: canvas.height, watermark: false });
+    if (blurKeep > 0 && frameIndex > 0) {
+      ctx.globalAlpha = 1 - blurKeep;
+      ctx.drawImage(next, 0, 0);
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(next, 0, 0);
+    }
+    frameIndex += 1;
+  };
   const animate = (now) => {
     const progress = Math.min(1, (now - start) / duration);
-    ctxFrame(canvas, project, progress);
     onProgress(progress);
-    if (progress < 1) window.requestAnimationFrame(animate);
+    if (progress < 1) {
+      if (!rendering) {
+        rendering = true;
+        drawFrame(progress).catch(() => {}).finally(() => { rendering = false; });
+      }
+      window.requestAnimationFrame(animate);
+    }
   };
   const done = new Promise((resolve) => { recorder.onstop = () => resolve(new Blob(chunks, { type: mime })); });
   recorder.start();
@@ -218,13 +280,4 @@ export async function exportVideo(project, onProgress = () => {}) {
   downloadBlob(blob, "ultramonk-export.webm");
   onProgress(1);
   return { width: canvas.width, height: canvas.height, format: "webm" };
-}
-
-function ctxFrame(canvas, project, progress) {
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-  const previous = project.camera;
-  const drift = Math.sin(progress * Math.PI * 2) * 5;
-  const animated = { ...project, camera: { ...previous, xAxis: (Number(previous?.xAxis) || -24.52) + drift, panX: (Number(previous?.panX) || 0) + Math.sin(progress * Math.PI * 2) * 0.02 } };
-  renderProjectCanvas(animated, { width: canvas.width, height: canvas.height, watermark: false }).then((next) => ctx.drawImage(next, 0, 0));
 }

@@ -166,6 +166,49 @@ export function clamp(value, min, max) {
   return Math.min(max, Math.max(min, Number(value) || 0));
 }
 
+export function easeValue(t, easing) {
+  const x = clamp(t, 0, 1);
+  if (easing === "Linear") return x;
+  if (easing === "Ease in") return x * x;
+  if (easing === "Ease out") return 1 - (1 - x) * (1 - x);
+  return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+}
+
+// Camera pose for the active track at `time`, interpolated between keyframes
+// with each segment's easing. Falls back to the live camera pose for any
+// property the surrounding keyframes do not both carry.
+export function cameraAtTime(project, time) {
+  const track = project.tracks.find((item) => item.id === project.activeTrackId) || project.tracks[0];
+  const keyframes = track?.keyframes ? [...track.keyframes].sort((a, b) => a.time - b.time) : [];
+  if (keyframes.length < 2) return project.camera;
+  const safeTime = Number(time) || 0;
+  if (safeTime <= keyframes[0].time) return { ...project.camera, ...keyframes[0].camera };
+  const last = keyframes[keyframes.length - 1];
+  if (safeTime >= last.time) return { ...project.camera, ...last.camera };
+  let index = 0;
+  while (index < keyframes.length - 2 && keyframes[index + 1].time <= safeTime) index += 1;
+  const from = keyframes[index];
+  const to = keyframes[index + 1];
+  const raw = (safeTime - from.time) / Math.max(1e-6, to.time - from.time);
+  const t = easeValue(raw, from.easing);
+  const lerp = (key) => {
+    const a = Number(from.camera?.[key]);
+    const b = Number(to.camera?.[key]);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return project.camera[key];
+    return a + (b - a) * t;
+  };
+  return {
+    ...project.camera,
+    xAxis: lerp("xAxis"),
+    yAxis: lerp("yAxis"),
+    zAxis: lerp("zAxis"),
+    fov: lerp("fov"),
+    zoom: lerp("zoom"),
+    panX: lerp("panX"),
+    panY: lerp("panY"),
+  };
+}
+
 export function templatePatch(name) {
   const patches = {
     "Flat look": { mockup: "Flat", cameraPreset: "Flat", camera: { ...cameraPresets.Flat } },
