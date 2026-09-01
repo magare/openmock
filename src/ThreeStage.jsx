@@ -1096,13 +1096,34 @@ function prepareExactDevice(model, mockup, asset, screenTexture) {
   return prepared;
 }
 
+// Bounds over meshes that are actually rendered: manufacturer assets can
+// carry hidden variant slabs or helper geometry that Box3.setFromObject would
+// otherwise count, which would silently de-center the visible device.
+function visibleMeshBounds(object, target = new THREE.Box3()) {
+  target.makeEmpty();
+  object.updateWorldMatrix(true, true);
+  const isOpaqueMesh = (node) => {
+    if (!node.isMesh || !node.material) return false;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    return materials.some((material) => material.visible !== false && material.opacity !== 0 && !material.isShadowMaterial);
+  };
+  const walk = (node) => {
+    if (!node.visible) return;
+    if (isOpaqueMesh(node)) target.expandByObject(node);
+    for (const child of node.children) walk(child);
+  };
+  walk(object);
+  if (target.isEmpty()) target.setFromObject(object);
+  return target;
+}
+
 function normalizeObject(object, target = 2.22) {
-  const box = new THREE.Box3().setFromObject(object);
+  const box = visibleMeshBounds(object);
   const size = box.getSize(new THREE.Vector3());
   const maxDimension = Math.max(size.x, size.y, size.z) || 1;
   object.scale.multiplyScalar(target / maxDimension);
   object.updateMatrixWorld(true);
-  const center = new THREE.Box3().setFromObject(object).getCenter(new THREE.Vector3());
+  const center = visibleMeshBounds(object).getCenter(new THREE.Vector3());
   object.position.sub(center);
 }
 
@@ -1111,6 +1132,53 @@ function placeGround(ground, object) {
   object.updateMatrixWorld(true);
   const bounds = new THREE.Box3().setFromObject(object);
   if (Number.isFinite(bounds.min.y)) ground.position.y = bounds.min.y - 0.012;
+}
+
+// Keeps the posed device centered and fully inside the frame: the projected
+// footprint of the rotated model must fit the reference frustum with even
+// breathing room, so orbiting, rolling, or a short stage never crop the device.
+// The reference frustum ignores the live zoom/FOV on purpose — those sliders
+// must keep their framing effect (zooming past the fit is the requested crop).
+// Pan stays a deliberate user offset and is applied after the centering.
+function refitStage(runtime, panX = 0, panY = 0) {
+  const { model, root, camera, modelHalf } = runtime;
+  if (!model || !modelHalf) return;
+  const quaternion = root.quaternion;
+  const ax = new THREE.Vector3(modelHalf.x, 0, 0).applyQuaternion(quaternion);
+  const ay = new THREE.Vector3(0, modelHalf.y, 0).applyQuaternion(quaternion);
+  const az = new THREE.Vector3(0, 0, modelHalf.z).applyQuaternion(quaternion);
+  const extentX = Math.abs(ax.x) + Math.abs(ay.x) + Math.abs(az.x);
+  const extentY = Math.abs(ax.y) + Math.abs(ay.y) + Math.abs(az.y);
+  const refHalfH = Math.tan(THREE.MathUtils.degToRad(24) / 2) * Math.max(0.5, camera.position.z);
+  const refHalfW = refHalfH * Math.max(0.2, camera.aspect || 1);
+  // extentX/extentY are already half-heights of the rotated box (computed
+  // from the model's half extents), so they compare against refHalf directly.
+  const fit = Math.min(
+    1,
+    (0.85 * refHalfH) / Math.max(1e-3, extentY),
+    (0.85 * refHalfW) / Math.max(1e-3, extentX),
+  );
+  root.scale.setScalar(Math.max(0.25, fit));
+  // Perspective makes the rotated device's on-screen bounds asymmetric, so
+  // centering the world-space box is not enough — project the scaled box and
+  // nudge the root until the projected bounds are centered. Pan is a
+  // deliberate user offset and is applied on top of the correction.
+  camera.updateMatrixWorld();
+  const corner = new THREE.Vector3();
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (let index = 0; index < 8; index += 1) {
+    corner.set(
+      (index & 1 ? modelHalf.x : -modelHalf.x) * fit,
+      (index & 2 ? modelHalf.y : -modelHalf.y) * fit,
+      (index & 4 ? modelHalf.z : -modelHalf.z) * fit,
+    ).applyQuaternion(quaternion).project(camera);
+    minX = Math.min(minX, corner.x); maxX = Math.max(maxX, corner.x);
+    minY = Math.min(minY, corner.y); maxY = Math.max(maxY, corner.y);
+  }
+  const halfHWorldLive = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * camera.position.z / Math.max(0.05, camera.zoom);
+  root.position.x = panX * 0.5 - ((minX + maxX) / 2) * halfHWorldLive * Math.max(0.2, camera.aspect || 1);
+  root.position.y = -panY * 0.5 - ((minY + maxY) / 2) * halfHWorldLive;
+  runtime.renderer.domElement.dataset.openmockFit = fit.toFixed(3);
 }
 
 function enableModelShadows(object) {
@@ -1348,7 +1416,7 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
 
     const disposables = [];
     const screenTexture = loadScreenTexture(media, disposables);
-    const runtime = { renderer, scene, camera, root, key, rim, fill, ground, model: null, materials: null, screenTexture, disposables, switching: false };
+    const runtime = { renderer, scene, camera, root, key, rim, fill, ground, model: null, materials: null, screenTexture, disposables, switching: false, modelHalf: null, lastPanX: 0, lastPanY: 0, lastFitAspect: 1 };
     runtimeRef.current = runtime;
 
     const resize = () => {
@@ -1378,6 +1446,18 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
       if (asset) applyLoadedModelMaterials(runtime.model, finish, reflection);
       fitScreenTextures(runtime.model);
       placeGround(ground, runtime.model);
+      // Cache the model's axis-aligned half extents in root space so the
+      // framing fit can react to rotation without re-traversing the mesh tree.
+      const savedRotation = root.rotation.clone();
+      const savedPosition = root.position.clone();
+      root.rotation.set(0, 0, 0);
+      root.position.set(0, 0, 0);
+      root.updateMatrixWorld(true);
+      const localBox = visibleMeshBounds(runtime.model);
+      runtime.modelHalf = localBox.getSize(new THREE.Vector3()).multiplyScalar(0.5);
+      root.rotation.copy(savedRotation);
+      root.position.copy(savedPosition);
+      root.updateMatrixWorld(true);
       setFailed(false);
       setReady(true);
       onStatusChange("ready");
@@ -1412,6 +1492,13 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
       if (runtime.switching) {
         renderer.clear(true, true, true);
       } else {
+        // Re-fit when the stage shape changes (responsive resize) so the
+        // device stays centered and fully visible at every aspect ratio.
+        if (runtime.modelHalf && Math.abs((camera.aspect || 0) - (runtime.lastFitAspect ?? -1)) > 0.005) {
+          refitStage(runtime, runtime.lastPanX, runtime.lastPanY);
+          runtime.lastFitAspect = camera.aspect;
+          placeGround(ground, runtime.model);
+        }
         fitScreenTextures(runtime.model);
         renderer.render(scene, camera);
       }
@@ -1465,31 +1552,23 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
       const yAxis = Number(cameraData.yAxis) || 0;
       const zAxis = Number(cameraData.zAxis) || 0;
       const rollFactor = mockup === "Flat" ? 0 : laptopMockup || displayMockup ? 0.1 : headsetMockup ? 0.03 : watchMockup ? 0.22 : tabletMockup ? 0.18 : 0.65;
-      const turnFactor = mockup === "iPhone 17"
-        ? -0.75
-        : phoneMockup
-          ? -0.62
-          : tabletMockup
-            ? 0.52
-            : laptopMockup || displayMockup
-              ? 0.48
-              : headsetMockup
-                ? 0.42
-                : watchMockup
-                  ? 0.48
-                  : 0.22;
-      if (cameraPreset === "Back" && (phoneMockup || tabletMockup || watchMockup)) {
-        root.rotation.set(THREE.MathUtils.degToRad(8), Math.PI - THREE.MathUtils.degToRad(10), 0);
-      } else {
-        root.rotation.set(
-          mockup === "Flat" ? 0 : THREE.MathUtils.degToRad(yAxis) * 0.25,
-          mockup === "Flat" ? 0 : THREE.MathUtils.degToRad(xAxis) * turnFactor + THREE.MathUtils.degToRad(zAxis) * 0.3,
-          -THREE.MathUtils.degToRad(xAxis) * rollFactor + THREE.MathUtils.degToRad(zAxis) * 0.4,
-        );
-      }
-      root.position.x = (Number(cameraData.panX) || 0) * 0.5;
-      const verticalOffset = mockup === "Flat" ? 0 : displayMockup ? -0.04 : laptopMockup ? -0.02 : headsetMockup ? 0 : watchMockup ? -0.02 : tabletMockup ? -0.04 : tallViewport ? -0.12 : mockup === "iPhone 17" ? -0.26 : -0.08;
-      root.position.y = -(Number(cameraData.panY) || 0) * 0.5 + verticalOffset;
+      const yawSign = phoneMockup ? -1 : 1;
+      const backView = cameraPreset === "Back" && (phoneMockup || tabletMockup || watchMockup);
+      const basePitch = backView ? 8 : 0;
+      const baseYaw = backView ? 180 : 0;
+      // Camera axes are actual degrees now. Keep a small device-specific roll
+      // contribution from X for the existing editorial presets, while Z is an
+      // independent full-turn roll control.
+      root.rotation.order = "YXZ";
+      root.rotation.set(
+        mockup === "Flat" ? 0 : THREE.MathUtils.degToRad(basePitch + yAxis),
+        mockup === "Flat" ? 0 : THREE.MathUtils.degToRad(baseYaw + xAxis * yawSign),
+        mockup === "Flat" ? 0 : THREE.MathUtils.degToRad(zAxis - xAxis * rollFactor),
+      );
+      refitStage(runtime, Number(cameraData.panX) || 0, Number(cameraData.panY) || 0);
+      runtime.lastPanX = Number(cameraData.panX) || 0;
+      runtime.lastPanY = Number(cameraData.panY) || 0;
+      runtime.lastFitAspect = camera.aspect;
       placeGround(ground, root);
     }
     if (model && !runtime.materials) applyLoadedModelMaterials(model, finish, reflection);

@@ -104,12 +104,37 @@ export const presetBackgrounds = {
   Ember: { backgroundColor: "#805a48", backgroundImage: "linear-gradient(135deg,#2f1714,#ed9c65 50%,#492d27)" },
 };
 
+// Camera axes are expressed as real degrees so the controls can describe a
+// complete turn instead of stopping at the old ±225° prototype range.
+export const CAMERA_AXIS_MIN = -360;
+export const CAMERA_AXIS_MAX = 360;
+export const ROTATION_WHEEL_SCALE = 0.65;
+export const ROTATION_DRAG_SCALE = 0.42;
+
+export function wheelRotationAxis(event = {}) {
+  if (event.altKey) return "zAxis";
+  if (event.shiftKey) return "yAxis";
+  return "xAxis";
+}
+
+export function wheelDeltaToDegrees(event = {}, viewportHeight = 900) {
+  const deltaX = Number(event.deltaX) || 0;
+  const deltaY = Number(event.deltaY) || 0;
+  const delta = Math.abs(deltaY) >= Math.abs(deltaX) ? deltaY : deltaX;
+  if (!delta) return 0;
+  const mode = Number(event.deltaMode) || 0;
+  const unit = mode === 1 ? 16 : mode === 2 ? Math.max(1, Number(viewportHeight) || 900) : 1;
+  // A capped per-event delta keeps high-resolution trackpads fluid while
+  // making ordinary wheel notches cover a full turn in only a few gestures.
+  return clamp(delta * unit * ROTATION_WHEEL_SCALE, -90, 90);
+}
+
 export const cameraPresets = {
-  Hero: { xAxis: -7, yAxis: 4, zAxis: 0, fov: 29, zoom: 2.16, panX: 0.02, panY: -0.12 },
-  Angled: { xAxis: -24, yAxis: 48, zAxis: 0, fov: 24, zoom: 1.9, panX: 0.06, panY: -0.17 },
+  Hero: { xAxis: -7, yAxis: 1, zAxis: 0, fov: 29, zoom: 2.16, panX: 0.02, panY: -0.12 },
+  Angled: { xAxis: -24, yAxis: 12, zAxis: 0, fov: 24, zoom: 1.9, panX: 0.06, panY: -0.17 },
   Flat: { xAxis: 0, yAxis: 0, zAxis: 0, fov: 32, zoom: 1.35, panX: 0, panY: 0 },
-  Bottom: { xAxis: 20, yAxis: -8, zAxis: 0, fov: 26, zoom: 1.95, panX: -0.04, panY: 0.05 },
-  Detail: { xAxis: -34, yAxis: 15, zAxis: 0, fov: 22, zoom: 2.55, panX: -0.08, panY: -0.1 },
+  Bottom: { xAxis: 20, yAxis: -2, zAxis: 0, fov: 26, zoom: 1.95, panX: -0.04, panY: 0.05 },
+  Detail: { xAxis: -34, yAxis: 4, zAxis: 0, fov: 22, zoom: 2.55, panX: -0.08, panY: -0.1 },
   Back: { xAxis: 0, yAxis: 0, zAxis: 0, fov: 28, zoom: 1.85, panX: 0, panY: -0.08 },
 };
 
@@ -255,8 +280,8 @@ export function composeAutoMotionKeyframes({ areas, camera, blur, duration = 6, 
       panY: clamp((centerY - 0.5) * 0.9, -1, 1),
     };
     if (motionType === "3d") {
-      cameraFrame.xAxis = clamp(Number(camera.xAxis) + (0.5 - centerX) * 26, -225, 225);
-      cameraFrame.yAxis = clamp(Number(camera.yAxis) + (centerY - 0.5) * 18, -225, 225);
+      cameraFrame.xAxis = clamp(Number(camera.xAxis) + (0.5 - centerX) * 26, CAMERA_AXIS_MIN, CAMERA_AXIS_MAX);
+      cameraFrame.yAxis = clamp(Number(camera.yAxis) + (centerY - 0.5) * 18, CAMERA_AXIS_MIN, CAMERA_AXIS_MAX);
     }
     return {
       id: `auto-${index + 1}`,

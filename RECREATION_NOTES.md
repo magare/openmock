@@ -183,7 +183,7 @@ The clone implements the tour restart, timeline-tour feedback, Auto-motion launc
 The first desktop visit shows an 8-step dark tour modal. The reference copy is:
 
 1. `WELCOME TO OPENMOCK` — a roughly 30-second editor tour that can be skipped or restarted from Help.
-2. `THE VIEWPORT` — use mouse or trackpad to interact with the 3D mockup. Controls: tilt with click-drag, move with Space + click-drag, zoom with scroll.
+2. `THE VIEWPORT` — use mouse or trackpad to interact with the 3D mockup. Controls: orbit with scroll or click-drag, tilt with Shift + scroll, roll with Option + scroll, zoom with Cmd/Ctrl + scroll, and move with Space + click-drag.
 3. `ADD MEDIA` — drag and drop an image/video on the viewport or paste with `⌘V`.
 4. `THE TIMELINE` — set keyframes and animate the camera for dynamic videos.
 5. `CONTROLS` — camera, lighting, depth of field, background, and effects are in the sidebar; collapse sections to keep it tidy.
@@ -585,7 +585,7 @@ This is a frontend recreation. It does not:
 
 - Project state is persisted to browser storage and supports undo/redo, reset, keyboard shortcuts, and mobile history controls.
 - Local image/video files can be selected through the source card, dragged onto the stage, or pasted from the clipboard. Object URLs are cleaned up when replaced or unmounted.
-- Camera tilt, pan, zoom/FOV, wheel zoom, Space-drag camera movement, manual camera controls, presets, center guides, and the mobile camera modes update the shared project state.
+- Camera orbit/tilt/roll, pan, zoom/FOV, scroll-axis camera movement, Space-drag camera movement, manual camera controls, presets, center guides, and the mobile camera modes update the shared project state.
 - Image export writes local JPG, PNG, or WEBP files at the selected orientation/size and respects the free watermark and transparent-background switches. Video export writes a local WEBM recording through `MediaRecorder` with free landscape, square, and portrait sizes, quality, frame-rate, motion-blur, and transparency controls.
 - Captures are unlimited; the toolbar exposes `FREE CAPTURES` and no capture counter or upgrade prompt is used.
 - Timeline controls include Simple/Advanced modes, shots and tracks, scrub/play/loop, duration, zoom, presets, auto-keyframe recording, keyframe selection/deletion/easing, minimized mode, and the Auto-motion focus-area workspace.

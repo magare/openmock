@@ -34,7 +34,7 @@ page.on("console", (msg) => {
   if (msg.type() === "warning" || msg.type() === "error") logs.push([msg.type(), msg.text().slice(0, 400)]);
 });
 
-await page.goto("http://localhost:5173/", { waitUntil: "domcontentloaded" });
+await page.goto("http://localhost:5199/", { waitUntil: "domcontentloaded" });
 
 const report = [];
 for (const [name, slug] of devices) {

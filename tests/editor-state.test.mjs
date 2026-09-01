@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  CAMERA_AXIS_MAX,
+  CAMERA_AXIS_MIN,
   cameraPresets,
   createDefaultProject,
   blurAtTime,
@@ -18,6 +20,8 @@ import {
   sceneOptions,
   mockupOptions,
   effectOptions,
+  wheelDeltaToDegrees,
+  wheelRotationAxis,
 } from "../src/editorState.js";
 
 test("creates a source-shaped default project", () => {
@@ -63,6 +67,19 @@ test("keeps editor utility values predictable", () => {
   assert.equal(clamp(4, 0, 2), 2);
   assert.equal(clamp(-1, 0, 2), 0);
   assert.equal(clamp("1.5", 0, 2), 1.5);
+});
+
+test("maps short wheel gestures across the full camera axes", () => {
+  assert.equal(CAMERA_AXIS_MIN, -360);
+  assert.equal(CAMERA_AXIS_MAX, 360);
+  assert.equal(wheelRotationAxis({}), "xAxis");
+  assert.equal(wheelRotationAxis({ shiftKey: true }), "yAxis");
+  assert.equal(wheelRotationAxis({ altKey: true }), "zAxis");
+  assert.equal(wheelDeltaToDegrees({ deltaY: 120 }), 78);
+  assert.equal(wheelDeltaToDegrees({ deltaY: -120 }), -78);
+  assert.equal(wheelDeltaToDegrees({ deltaY: 100, deltaMode: 1 }), 90);
+  assert.equal(wheelDeltaToDegrees({ deltaX: 40, deltaY: 10 }), 26);
+  assert.equal(wheelDeltaToDegrees({}), 0);
 });
 
 test("template patches carry functional camera, scene, and effect changes", () => {

@@ -1,5 +1,22 @@
 # OpenMock recreation design QA
 
+## Editor UI iteration 2 — centered framing + axis HUD — 2026-09-01
+
+- Goal: finish the "centered and fully visible" pass (iteration 1 left the device bottom-heavy with a ~2% bottom margin at the default state) and add live on-canvas feedback for the stage gestures.
+- Framing: `refitStage` now applies an 0.85 reference-frame fit and centers the projected bounds of the rotated box (8-corner projection nudge compensates perspective magnification), removing the preset vertical offsets. Verified numerically at 1440×900 default state: device height 81.6% of frame, horizontal center within 0.5%, vertical center within ~1% of frame center after correction, clear of all edges.
+- Root-caused and fixed a latent bug while verifying: the fit denominator double-halved `extentY` (half-extent projections are already half-heights), which clamped the fit to 1 and silently disabled the framing clamp in earlier rounds. Also added `visibleMeshBounds` (skips invisible nodes, fully transparent and shadow-material meshes) for normalization, cached extents, and ground placement so hidden helper geometry cannot de-center devices.
+- Live axis HUD (`.stage-axis-hud`): shows `X/Y/Z` angles plus zoom while a drag or scroll drives the camera; imperative updates only (no React re-render at 60Hz); auto-hides after ~900ms; first gesture dismisses the hint chip (hint state lifted to `App`). Shown in `qa-captures/ui-goal-r3/hud-during-scroll.png`.
+- Evidence: `qa-captures/ui-goal-final/` full matrix; `qa-captures/ui-goal-r3-sweep/` all 17 catalog devices re-rendered `ready` on the new bounds path; `scripts/gesture-probe.mjs` all PASS (gestures, fit engagement, HUD, edge clearance, centering) with zero console errors. Gates: test:editor 14/14; build + test:sites 4/4.
+
+## Editor UI clarity + framing pass — 2026-09-01
+
+- Scope: goal round — spacious responsive canvas with the device centered and fully visible, explicit communication of the stage gestures (drag orbit, scroll rotate, Shift/Option axes, Cmd/Ctrl zoom), grouped X/Y/Z controls with ±360° ranges and live values, reduced panel clutter, consistent spacing/typography/contrast, desktop + mobile.
+- Before/after evidence: `qa-captures/ui-goal-baseline/` vs `qa-captures/ui-goal-r1/` + `qa-captures/ui-goal-r2/` (18-shot matrix at 1440/1100/900/390, both themes, plus `zoom-camera-panel.png` close-up and `17b-mobile-settled.png`). Baseline defect: at the default desktop state (Fill + minimized timeline) the iPhone's lower bezel was cropped by the stage edge in both themes; also visible at 1100/900.
+- Framing fix: `refitStage` in `src/ThreeStage.jsx` (details in `AGENTS.md` prototype feedback 2026-09-01). Verified by `scripts/gesture-probe.mjs`: drag orbit, plain scroll, Shift scroll, Option scroll, Ctrl scroll, and direct slider input all drive the axes; a canvas-edge alpha probe reports the device clear of all four stage edges at the default pose; zero console errors.
+- Contrast: `--ink-3` raised to #6e6e69 (light) / #9da0a2 (dark) — small mono labels now ≥ ~4.5:1 on card and panel surfaces. Range inputs gained accent hover rings; global `:focus-visible` outline unchanged.
+- Mobile: camera dock now includes X/Y/Z rotation sliders (±360°, live °) with the existing move/tilt/zoom radios and FOV dial; the floating dock grows upward over the stage bottom-right corner, accepted as the established mobile pattern.
+- Gates: `npm run test:editor` 14/14, `npm run build` leaves `dist/client/index.html`, `dist/server/index.js`, `dist/.openai/hosting.json`, `npm run test:sites` 4/4.
+
 ## Device realism pass — 2026-08-31 (all-catalog manufacturer models)
 
 - Scope: the user reported some device mockups did not look like the physical hardware. Every catalog entry was re-audited front-on, at the Angled preset, and (for camera hardware) from the Back preset.
