@@ -1,29 +1,20 @@
 import { chromium } from "playwright-core";
 import { mkdir, writeFile } from "node:fs/promises";
+import { mockupOptions, slugify } from "../src/editorState.js";
 
-const devices = process.argv[2]
+const rawDevices = process.argv[2]
   ? JSON.parse(process.argv[2])
-  : [
-      ["Flat", "flat"],
-      ["iPhone 17", "iphone-17"],
-      ["iPhone 17 Pro", "iphone-17-pro"],
-      ["iPhone 17 Pro Max", "iphone-17-pro-max"],
-      ["Galaxy S26 Ultra", "galaxy-s26-ultra"],
-      ["Pixel 10 Pro", "pixel-10-pro"],
-      ["Apple Watch Ultra 3", "watch-ultra-3"],
-      ["iPad Pro", "ipad-pro"],
-      ["iPad mini", "ipad-mini"],
-      ["MacBook Neo", "macbook-neo"],
-      ["MacBook Air 13\"", "macbook-air-13"],
-      ["MacBook Pro 14\"", "macbook-pro-14"],
-      ["MacBook Pro 16\"", "macbook-pro-16"],
-      ["iMac 24\"", "imac-24"],
-      ["Studio Display", "studio-display"],
-      ["Apple Vision Pro", "vision-pro"],
-      ["XDR Display", "xdr-display"],
-    ];
+  : mockupOptions.map(([name]) => [name, slugify(name)]);
+const usedSlugs = new Map();
+const devices = rawDevices.map(([name, slug]) => {
+  const baseSlug = name.includes("+") && !slug.includes("plus") ? `${slug}-plus` : slug;
+  const occurrence = usedSlugs.get(baseSlug) || 0;
+  usedSlugs.set(baseSlug, occurrence + 1);
+  return [name, occurrence ? `${baseSlug}-${occurrence + 1}` : baseSlug];
+});
 
 const outDir = process.argv[3] || "qa-captures/goal-sweep";
+const cameraPreset = process.argv[4] || "Angled";
 await mkdir(outDir, { recursive: true });
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
@@ -38,13 +29,14 @@ await page.goto("http://localhost:5199/", { waitUntil: "domcontentloaded" });
 
 const report = [];
 for (const [name, slug] of devices) {
-  await page.evaluate((dev) => {
+  await page.evaluate(({ dev, preset }) => {
     const proj = JSON.parse(localStorage.getItem("openmock-project") || "{}");
     proj.mockup = dev;
+    proj.cameraPreset = preset;
     localStorage.setItem("openmock-project", JSON.stringify(proj));
     localStorage.setItem("openmock-tour-seen", "1");
     localStorage.setItem("openmock-mobile-onboarded", "1");
-  }, name);
+  }, { dev: name, preset: cameraPreset });
   await page.reload({ waitUntil: "domcontentloaded" });
   let status = "none";
   for (let i = 0; i < 40; i += 1) {

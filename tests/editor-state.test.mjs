@@ -19,6 +19,9 @@ import {
   scenePatch,
   sceneOptions,
   mockupOptions,
+  deviceArchetype,
+  deviceGroup,
+  isAndroidMockup,
   effectOptions,
   wheelDeltaToDegrees,
   wheelRotationAxis,
@@ -227,4 +230,48 @@ test("Auto-motion requires a path and respects 2D versus 3D motion", () => {
   const threeDimensional = composeAutoMotionKeyframes({ areas, camera: project.camera, blur: project.blur, duration: 4, motionType: "3d" });
   assert.notEqual(threeDimensional[0].camera.xAxis, project.camera.xAxis);
   assert.equal(threeDimensional[1].time, 4);
+});
+
+test("maps every catalog mockup onto a device archetype", () => {
+  const names = mockupOptions.map(([name]) => name);
+  assert.equal(new Set(names).size, names.length, "catalog names must stay unique");
+  for (const name of names) assert.equal(typeof deviceArchetype(name), "string", name);
+
+  assert.equal(deviceArchetype("iPhone 16"), "phone");
+  assert.equal(deviceArchetype("iPhone 17 Air"), "phone");
+  assert.equal(deviceArchetype("Galaxy S26+"), "phone");
+  assert.equal(deviceArchetype("Galaxy Z Fold 8"), "foldable");
+  assert.equal(deviceArchetype("Galaxy Z Flip 8"), "foldable");
+  assert.equal(deviceArchetype("Apple Watch SE 3"), "watch");
+  assert.equal(deviceArchetype("Galaxy Watch 8"), "watch");
+  assert.equal(deviceArchetype("Pixel Watch 4"), "watch");
+  assert.equal(deviceArchetype("Galaxy Tab S11 Ultra"), "tablet");
+  assert.equal(deviceArchetype("iPad Air 13\""), "tablet");
+  assert.equal(deviceArchetype("Kindle Paperwhite"), "ereader");
+  assert.equal(deviceArchetype("Nintendo Switch 2"), "handheld");
+  assert.equal(deviceArchetype("Steam Deck"), "handheld");
+  assert.equal(deviceArchetype("Browser Window"), "browser");
+  assert.equal(deviceArchetype("TV 65\""), "tv");
+  assert.equal(deviceArchetype("Surface Laptop 15\""), "laptop");
+  assert.equal(deviceArchetype("Dell XPS 16"), "laptop");
+  assert.equal(deviceArchetype("Apple Vision Pro"), "headset");
+  assert.equal(deviceArchetype("Flat"), "flat");
+});
+
+test("groups the picker catalog into labeled sections", () => {
+  const groups = mockupOptions.map(([name]) => deviceGroup(name));
+  assert.equal(groups[0], "Stage");
+  assert.equal(groups.filter((label) => label === "Phones").length, 13);
+  assert.equal(groups.filter((label) => label === "Watches").length, 5);
+  assert.equal(groups.at(-1), "Spatial");
+  assert.equal(new Set(groups).size < groups.length, true);
+});
+
+test("flags Samsung and Google devices for punch-hole and round-watch rendering", () => {
+  for (const name of ["Galaxy S26", "Galaxy S26+", "Galaxy S26 Ultra", "Galaxy Z Fold 8", "Galaxy Z Flip 8", "Galaxy Tab S11 Ultra", "Galaxy Watch 8", "Pixel 10", "Pixel 10 Pro", "Pixel 10 Pro XL", "Pixel Watch 4"]) {
+    assert.equal(isAndroidMockup(name), true, name);
+  }
+  for (const name of ["iPhone 16", "iPhone 17", "iPhone 17 Pro Max", "iPad Pro", "Apple Watch Ultra 3", "MacBook Neo", "Surface Laptop 15\"", "Flat", "Browser Window"]) {
+    assert.equal(isAndroidMockup(name), false, name);
+  }
 });

@@ -7,6 +7,7 @@ import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import { USDLoader } from "three/examples/jsm/loaders/USDLoader.js";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
+import { deviceArchetype, isAndroidMockup } from "./editorState.js";
 
 const localAssetUrl = (path) => `${import.meta.env.BASE_URL}assets/${path}`;
 const modelUrl = localAssetUrl("source/iphone-17-p-sim.glb");
@@ -59,6 +60,38 @@ const exactDeviceAssets = {
     },
     screenAspect: 1440 / 3120,
   },
+  "Galaxy S26": {
+    type: "gltf",
+    url: localAssetUrl("devices/galaxy-s26.glb"),
+    screenNames: ["M1_Display_Activearea"],
+    nativeScreenUv: true,
+    screenAspect: 1080 / 2340,
+    slab: true,
+  },
+  "Galaxy S26+": {
+    type: "gltf",
+    url: localAssetUrl("devices/galaxy-s26-plus.glb"),
+    screenNames: ["M2_Display_Activearea"],
+    nativeScreenUv: true,
+    screenAspect: 1080 / 2340,
+    slab: true,
+  },
+  "Pixel 10": {
+    type: "gltf",
+    url: localAssetUrl("devices/pixel-10.glb"),
+    slab: true,
+    forceOverlay: true,
+    screenOverlay: {
+      width: 0.06545,
+      height: 0.14635,
+      position: [0, 0.0014, -0.00442],
+      rotation: [0, 0, 0],
+      facing: -1,
+      flipU: true,
+      radius: 0.0032,
+    },
+    screenAspect: 1080 / 2424,
+  },
   "Pixel 10 Pro": {
     type: "gltf",
     url: localAssetUrl("devices/pixel-10-pro.glb"),
@@ -75,6 +108,60 @@ const exactDeviceAssets = {
     },
     screenAspect: 1280 / 2856,
   },
+  "Pixel 10 Pro XL": {
+    type: "gltf",
+    url: localAssetUrl("devices/pixel-10-pro.glb"),
+    slab: true,
+    forceOverlay: true,
+    screenOverlay: {
+      width: 0.06545,
+      height: 0.14635,
+      position: [0, 0.0014, -0.00442],
+      rotation: [0, 0, 0],
+      facing: -1,
+      flipU: true,
+      radius: 0.0032,
+    },
+    screenAspect: 1344 / 2992,
+  },
+  "iPhone 17 Air": {
+    type: "usd",
+    url: localAssetUrl("devices/iphone-air.usdz"),
+    screenNames: ["tppzCQmnlKcHIpP"],
+    nativeScreenUv: true,
+    screenAspect: 1260 / 2736,
+    shapeRotateY: Math.PI / 2,
+    slab: true,
+  },
+  "iPad (A16)": {
+    type: "usd",
+    url: localAssetUrl("devices/ipad-a16.usdz"),
+    screenNames: ["YnQokSaETxDhiat"],
+    nativeScreenUv: true,
+    screenAspect: 1640 / 2360,
+    slab: true,
+  },
+  "iPad Air 13\"": {
+    type: "usd",
+    url: localAssetUrl("devices/ipad-air.usdz"),
+    screenNames: ["duUosXawNfgWFdH"],
+    nativeScreenUv: true,
+    screenAspect: 2732 / 2048,
+    textureRotation: -Math.PI / 2,
+    removeSubtrees: ["QdVymQOGxMntlvX", "woLibcGqiFnwmFQ"],
+    uprightScreen: true,
+  },
+  "iPad Air 11\"": {
+    type: "usd",
+    url: localAssetUrl("devices/ipad-air.usdz"),
+    screenNames: ["duUosXawNfgWFdH"],
+    nativeScreenUv: true,
+    screenAspect: 2360 / 1640,
+    textureRotation: -Math.PI / 2,
+    removeSubtrees: ["QdVymQOGxMntlvX", "woLibcGqiFnwmFQ"],
+    uprightScreen: true,
+    shapeScale: [0.8824, 0.8306, 0.84],
+  },
   "Apple Watch Ultra 3": {
     type: "usd",
     url: localAssetUrl("devices/watch-ultra-3.usdz"),
@@ -90,7 +177,9 @@ const exactDeviceAssets = {
     screenAspect: 2420 / 1668,
     textureRotation: -Math.PI / 2,
     stripBelow: 0.3,
-    removeSubtrees: ["UlaXKoqepypaGMQ"],
+    // The AR download includes a Magic Keyboard and pencil rail as sibling
+    // assemblies. Keep the bare iPad assembly (which owns the screen mesh).
+    removeSubtrees: ["UlaXKoqepypaGMQ", "PoBqSMmyhhcJsBX"],
     uprightScreen: true,
   },
   "iPad mini": {
@@ -159,6 +248,42 @@ const exactDeviceAssets = {
   },
 };
 
+// Real AR assets (Apple product pages) and viewer models (Samsung compare
+// tooling) for the new watches and foldables. Both Samsung GLBs are posed
+// open: the inner display (Main_Display) faces forward, and the cover display
+// (Sub_Display) rides on the back over the hinge.
+exactDeviceAssets["Apple Watch Series 11"] = {
+  type: "usd",
+  url: localAssetUrl("devices/watch-series-11.usdz"),
+  screenNames: ["WJGSzuMjppLwYru"],
+  nativeScreenUv: true,
+  screenAspect: 416 / 496,
+};
+exactDeviceAssets["Apple Watch SE 3"] = {
+  type: "usd",
+  url: localAssetUrl("devices/watch-se-3.usdz"),
+  screenNames: ["YzRtkPWMxJWtiye"],
+  nativeScreenUv: true,
+  screenAspect: 396 / 484,
+};
+exactDeviceAssets["Galaxy Z Fold 8"] = {
+  type: "gltf",
+  url: localAssetUrl("devices/galaxy-z-fold8.glb"),
+  screenNames: ["Main_Display"],
+  nativeScreenUv: true,
+  screenAspect: 2184 / 1968,
+};
+exactDeviceAssets["Galaxy Z Flip 8"] = {
+  type: "gltf",
+  url: localAssetUrl("devices/galaxy-z-flip8.glb"),
+  // Both foldables ship posed open: the inner display faces forward, and the
+  // square cover display (Sub_Display) sits on the back over the hinge. The
+  // Flip's native UVs mirror the screen horizontally, hence flipU.
+  screenNames: ["Main_Display"],
+  nativeScreenUv: true,
+  screenAspect: 1080 / 2520,
+  flipV: true,
+};
 const finishPalette = {
   White: { body: 0xdfe5e5, metal: 0xbfc9cb, accent: 0xf0f3f2 },
   Black: { body: 0x111416, metal: 0x303536, accent: 0x0a0b0c },
@@ -182,6 +307,102 @@ function roundedMesh(width, height, depth, radius, material, segments = 6) {
   return new THREE.Mesh(new RoundedBoxGeometry(width, height, depth, segments, radius), material);
 }
 
+// A thin extruded capsule. RoundedBoxGeometry caps its corner radius at half
+// the depth, so a slab-shaped pill would render as a rounded rectangle — the
+// iPhone 16's camera pill needs the stadium profile in the face plane.
+// facing = -1 (default) points the cap toward -z for rear hardware; +1 toward
+// +z. The returned geometry spans z 0..depth with the cap at the z=0 end.
+function stadiumMesh(width, height, depth, material, facing = -1) {
+  const shape = new THREE.Shape();
+  if (width >= height) {
+    // Horizontal capsule: arcs on the short sides, straight rails top/bottom.
+    const radius = height / 2;
+    shape.moveTo(-(width / 2 - radius), -radius);
+    shape.lineTo(width / 2 - radius, -radius);
+    shape.absarc(width / 2 - radius, 0, radius, -Math.PI / 2, Math.PI / 2, false);
+    shape.lineTo(-(width / 2 - radius), radius);
+    shape.absarc(-(width / 2 - radius), 0, radius, Math.PI / 2, Math.PI * 1.5, false);
+  } else {
+    // Vertical capsule: arcs top and bottom, straight rails left/right.
+    const halfWidth = width / 2;
+    shape.moveTo(-halfWidth, -height / 2 + halfWidth);
+    shape.lineTo(-halfWidth, height / 2 - halfWidth);
+    shape.absarc(0, height / 2 - halfWidth, halfWidth, Math.PI, 0, true);
+    shape.lineTo(halfWidth, -height / 2 + halfWidth);
+    shape.absarc(0, -height / 2 + halfWidth, halfWidth, 0, Math.PI, true);
+  }
+  const bevel = Math.min(0.008, depth * 0.2);
+  const geometry = new THREE.ExtrudeGeometry(shape, { depth: Math.max(depth - bevel * 2, bevel * 2), bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 4, curveSegments: 28 });
+  geometry.translate(0, 0, bevel);
+  if (facing > 0) geometry.rotateY(Math.PI);
+  return new THREE.Mesh(geometry, material);
+}
+
+// Same idea for rounded-rectangle slabs: keeps the face corner radius that
+// RoundedBoxGeometry would clamp away, so phone bodies can show the real
+// ~11mm corner rounding instead of a squared-off shell.
+function extrudedSlabGeometry(width, height, depth, radius) {
+  const halfWidth = width / 2;
+  const halfHeight = height / 2;
+  const safeRadius = Math.min(radius, halfWidth, halfHeight);
+  const shape = new THREE.Shape();
+  shape.moveTo(-halfWidth + safeRadius, -halfHeight);
+  shape.lineTo(halfWidth - safeRadius, -halfHeight);
+  shape.quadraticCurveTo(halfWidth, -halfHeight, halfWidth, -halfHeight + safeRadius);
+  shape.lineTo(halfWidth, halfHeight - safeRadius);
+  shape.quadraticCurveTo(halfWidth, halfHeight, halfWidth - safeRadius, halfHeight);
+  shape.lineTo(-halfWidth + safeRadius, halfHeight);
+  shape.quadraticCurveTo(-halfWidth, halfHeight, -halfWidth, halfHeight - safeRadius);
+  shape.lineTo(-halfWidth, -halfHeight + safeRadius);
+  shape.quadraticCurveTo(-halfWidth, -halfHeight, -halfWidth + safeRadius, -halfHeight);
+  const bevel = Math.min(0.01, depth * 0.18);
+  const geometry = new THREE.ExtrudeGeometry(shape, { depth: Math.max(depth - bevel * 2, bevel * 2), bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 3, curveSegments: 16 });
+  geometry.translate(0, 0, -(depth - bevel * 2) / 2);
+  return geometry;
+}
+
+// The back-glass Apple logo, drawn once to a canvas from the standard apple
+// silhouette vector path (384x512 viewBox) and applied as an alpha map to a
+// polished insert — mirror-finish on every body color, like the real thing.
+let appleLogoTexture = null;
+function getAppleLogoTexture() {
+  if (appleLogoTexture) return appleLogoTexture;
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 342;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#ffffff";
+  // Draw flipped: the texture uploads with flipY disabled (Chrome rejects
+  // FLIP_Y on some upload paths) so the plane must compensate in the canvas.
+  const scale = Math.min(canvas.width / 384, canvas.height / 512) * 0.98;
+  ctx.translate((canvas.width - 384 * scale) / 2, canvas.height - (canvas.height - 512 * scale) / 2);
+  ctx.scale(scale, -scale);
+  ctx.fill(new Path2D("M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"));
+  appleLogoTexture = new THREE.CanvasTexture(canvas);
+  appleLogoTexture.flipY = false;
+  appleLogoTexture.colorSpace = THREE.NoColorSpace;
+  return appleLogoTexture;
+}
+
+function addAppleLogo(group, width, height, z) {
+  const logoWidth = width * 0.185;
+  const material = new THREE.MeshPhysicalMaterial({
+    color: 0xc7cfd2,
+    metalness: 0.65,
+    roughness: 0.24,
+    clearcoat: 1,
+    clearcoatRoughness: 0.1,
+    transparent: true,
+    alphaMap: getAppleLogoTexture(),
+  });
+  const logo = new THREE.Mesh(new THREE.PlaneGeometry(logoWidth, logoWidth * (512 / 384)), material);
+  logo.rotation.y = Math.PI;
+  logo.position.set(0, height * 0.005, z);
+  group.add(logo);
+  return logo;
+}
+
 function cloneTexture(texture, targetAspect) {
   if (!texture) return null;
   // A single live texture keeps late-loading images and video frames in sync
@@ -197,11 +418,17 @@ function cloneTexture(texture, targetAspect) {
 
 function addScreen(group, width, height, depth, texture, options = {}) {
   const targetAspect = width / Math.max(0.001, height);
-  const bezel = roundedMesh(width, height, Math.max(depth * 0.5, 0.028), Math.min(width, height) * 0.075, physicalMaterial(0x080a0c, { roughness: 0.18, metalness: 0.22, clearcoat: 0.9 }));
+  // faceRadius opts the stack into extruded slabs that keep their corner
+  // rounding (used where the phone body itself is properly rounded).
+  const faceRadius = options.faceRadius || 0;
+  const slab = (w, h, d, r, material, segments) => (faceRadius
+    ? new THREE.Mesh(extrudedSlabGeometry(w, h, d, r), material)
+    : roundedMesh(w, h, d, r, material, segments));
+  const bezel = slab(width, height, Math.max(depth * 0.5, 0.028), faceRadius || Math.min(width, height) * 0.075, physicalMaterial(0x080a0c, { roughness: 0.18, metalness: 0.22, clearcoat: 0.9 }), 6);
   bezel.position.z = options.z || 0;
   group.add(bezel);
   const screenMap = cloneTexture(texture, targetAspect);
-  const screen = roundedMesh(width * 0.955, height * 0.955, Math.max(depth * 0.18, 0.016), Math.min(width, height) * 0.058, new THREE.MeshBasicMaterial({
+  const screen = slab(width * 0.955, height * 0.955, Math.max(depth * 0.18, 0.016), faceRadius ? faceRadius * 0.955 : Math.min(width, height) * 0.058, new THREE.MeshBasicMaterial({
     map: screenMap,
     color: 0xffffff,
     toneMapped: false,
@@ -209,7 +436,7 @@ function addScreen(group, width, height, depth, texture, options = {}) {
   screen.position.z = (options.z || 0) + Math.max(depth * 0.38, 0.024);
   screen.userData.screenAspect = targetAspect;
   group.add(screen);
-  const glass = roundedMesh(width * 0.952, height * 0.952, Math.max(depth * 0.06, 0.009), Math.min(width, height) * 0.054, new THREE.MeshPhysicalMaterial({
+  const glass = slab(width * 0.952, height * 0.952, Math.max(depth * 0.06, 0.009), faceRadius ? faceRadius * 0.952 : Math.min(width, height) * 0.054, new THREE.MeshPhysicalMaterial({
     color: 0xffffff,
     transparent: true,
     opacity: 0.18,
@@ -248,8 +475,8 @@ function addFrontCameraDot(group, x, y, z, radius = 0.024) {
 
 function addPhoneButtons(group, width, height, depth, accent, layout = "iphone") {
   const buttonMaterial = physicalMaterial(accent, { roughness: 0.2, metalness: 0.88, clearcoat: 0.7 });
-  const sideButton = (x, y, w = 0.035, h = 0.17) => {
-    const button = roundedMesh(w, h, Math.max(depth * 0.6, 0.055), w * 0.45, buttonMaterial, 4);
+  const sideButton = (x, y, w = 0.035, h = 0.17, zDepth = Math.max(depth * 0.6, 0.055)) => {
+    const button = roundedMesh(w, h, zDepth, w * 0.45, buttonMaterial, 4);
     button.position.set(x, y, 0);
     group.add(button);
   };
@@ -259,6 +486,19 @@ function addPhoneButtons(group, width, height, depth, accent, layout = "iphone")
   } else if (layout === "pixel") {
     sideButton(width / 2 + 0.018, height * 0.16, 0.035, 0.23);
     sideButton(width / 2 + 0.018, height * 0.01, 0.035, 0.12);
+  } else if (layout === "iphone-16") {
+    // Measured from Apple's official render: the 16's keys are near-flush
+    // slivers (~1mm proud, thin blades), not tabs. Action button high on the
+    // phone's left with the volume pair below; long power key on the right
+    // with the nearly flush Camera Control lower down.
+    const blade = Math.max(depth * 0.28, 0.03);
+    sideButton(-width / 2 - 0.001, height * 0.281, 0.03, height * 0.04, blade);
+    sideButton(-width / 2 - 0.001, height * 0.191, 0.03, height * 0.064, blade);
+    sideButton(-width / 2 - 0.001, height * 0.097, 0.03, height * 0.066, blade);
+    sideButton(width / 2 + 0.001, height * 0.145, 0.03, height * 0.113, blade);
+    const cameraControl = roundedMesh(0.02, height * 0.055, blade * 0.8, 0.007, buttonMaterial, 4);
+    cameraControl.position.set(width / 2 - 0.002, -height * 0.1, 0);
+    group.add(cameraControl);
   } else {
     sideButton(-width / 2 - 0.018, height * 0.18, 0.04, 0.2);
     sideButton(-width / 2 - 0.018, height * 0.03, 0.04, 0.14);
@@ -269,15 +509,24 @@ function addPhoneButtons(group, width, height, depth, accent, layout = "iphone")
 }
 
 function addPhoneIsland(group, width, height, depth) {
-  const island = roundedMesh(width * 0.34, height * 0.04, Math.max(depth * 0.42, 0.04), height * 0.018, physicalMaterial(0x050607, { roughness: 0.14, metalness: 0.08, clearcoat: 0.9 }), 6);
-  island.position.set(0, height * 0.405, depth * 0.78);
+  // Full-capsule Dynamic Island: RoundedBoxGeometry clamps radius to half the
+  // depth, which squashes it into a plain rounded bar. Size/height measured
+  // off Apple's official iPhone 16 renders (~19mm capsule high on the face).
+  const islandDepth = Math.max(depth * 0.42, 0.04);
+  const island = stadiumMesh(width * 0.28, height * 0.04, islandDepth, physicalMaterial(0x050607, { roughness: 0.14, metalness: 0.08, clearcoat: 0.9 }), 1);
+  island.position.set(0, height * 0.454, depth * 0.99);
   group.add(island);
-  addFrontCameraDot(group, width * 0.09, height * 0.405, depth * 0.99, height * 0.012);
+  addFrontCameraDot(group, width * 0.09, height * 0.454, depth * 0.99, height * 0.012);
 }
 
 function addBackCameraSystem(group, width, height, depth, kind, palette) {
-  const bumpColor = kind === "iphone" ? 0x8b9699 : kind === "pixel" ? 0x2b3336 : kind === "ipad" ? palette.metal : palette.accent;
+  const isGalaxyBase = kind === "galaxy-s26";
+  const bumpColor = kind === "iphone" || kind === "iphone-16" || kind === "iphone-air" ? palette.metal : kind === "pixel" ? 0x2b3336 : kind === "ipad" || kind === "ipad-air" ? palette.metal : isGalaxyBase ? palette.body : palette.accent;
   const bumpMaterial = physicalMaterial(bumpColor, { roughness: 0.19, metalness: 0.7, clearcoat: 0.82 });
+  if (isGalaxyBase) {
+    bumpMaterial.transparent = true;
+    bumpMaterial.opacity = 0.78;
+  }
   const lensMaterial = new THREE.MeshPhysicalMaterial({
     color: 0x071219,
     roughness: 0.09,
@@ -289,8 +538,9 @@ function addBackCameraSystem(group, width, height, depth, kind, palette) {
     iridescenceIOR: 1.32,
   });
   const ringMaterial = new THREE.MeshPhysicalMaterial({ color: palette.metal, roughness: 0.18, metalness: 0.82, clearcoat: 0.9 });
-  const bumpRole = kind === "ipad" || kind === "iphone" ? "metal" : "accent";
-  const finishables = [{ material: ringMaterial, role: "metal" }, ...(kind === "pixel" ? [] : [{ material: bumpMaterial, role: bumpRole }])];
+  const extraFinishables = [];
+  const bumpRole = kind === "ipad" || kind === "ipad-air" || kind === "iphone" || kind === "iphone-16" || kind === "iphone-air" ? "metal" : isGalaxyBase ? "body" : "accent";
+  const finishables = [{ material: ringMaterial, role: "metal" }, ...(kind === "pixel" ? [] : [{ material: bumpMaterial, role: bumpRole }]), ...extraFinishables];
   const camera = (x, y, radius = 0.075) => {
     const ring = new THREE.Mesh(new THREE.CylinderGeometry(radius * 1.16, radius * 1.16, 0.028, 28), ringMaterial);
     ring.rotation.x = Math.PI / 2;
@@ -301,6 +551,11 @@ function addBackCameraSystem(group, width, height, depth, kind, palette) {
     lens.position.set(x, y, -depth / 2 - 0.064);
     group.add(lens);
   };
+  const flash = (x, y, radius = 0.026, depthOffset = 0.067) => {
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 10), new THREE.MeshPhysicalMaterial({ color: 0xe8d6a7, roughness: 0.26, metalness: 0.08 }));
+    mesh.position.set(x, y, -depth / 2 - depthOffset);
+    group.add(mesh);
+  };
   if (kind === "pixel") {
     const bar = roundedMesh(width * 0.82, height * 0.12, 0.055, height * 0.045, bumpMaterial, 6);
     bar.position.set(0, height * 0.32, -depth / 2 - 0.03);
@@ -308,25 +563,91 @@ function addBackCameraSystem(group, width, height, depth, kind, palette) {
     camera(-width * 0.22, height * 0.32, 0.07);
     camera(0, height * 0.32, 0.07);
     camera(width * 0.22, height * 0.32, 0.055);
-    const flash = new THREE.Mesh(new THREE.SphereGeometry(0.026, 16, 10), new THREE.MeshPhysicalMaterial({ color: 0xe8d6a7, roughness: 0.26, metalness: 0.08 }));
-    flash.position.set(width * 0.3, height * 0.32, -depth / 2 - 0.067);
-    group.add(flash);
+    flash(width * 0.3, height * 0.32);
+  } else if (kind === "galaxy-s26") {
+    // The S26/S26+ use one translucent ambient-island carrying three lenses;
+    // this is intentionally a separate treatment from the four-lens Ultra.
+    const island = roundedMesh(width * 0.31, height * 0.39, 0.052, height * 0.06, bumpMaterial, 8);
+    island.position.set(width * 0.22, height * 0.3, -depth / 2 - 0.03);
+    group.add(island);
+    camera(width * 0.22, height * 0.42, 0.066);
+    camera(width * 0.22, height * 0.3, 0.061);
+    camera(width * 0.22, height * 0.18, 0.056);
+    flash(width * 0.35, height * 0.15, 0.022);
+  } else if (kind === "iphone-16") {
+    // Geometry measured from Apple's official iPhone 16 renders: a compact
+    // vertical stadium pill hugging the top corner (0.28w x 0.24h, center at
+    // +0.32w/+0.36h), two snug lens rings a quarter-pill apart, a tiny rear
+    // mic INSIDE the pill near its center-side edge, and a small flash just
+    // past the centerline at pill mid-height. Lenses get their own materials:
+    // bright aluminum rings around deep glossy black glass with a small
+    // offset inner element — flat gray discs read as nothing.
+    // Fractions rebalanced for the narrower body so the pill, flash and mic
+    // keep their measured absolute sizes on the face.
+    const pillCenterX = width * 0.33;
+    const pillCenterY = height * 0.36;
+    const pill = stadiumMesh(width * 0.29, height * 0.24, 0.05, bumpMaterial);
+    pill.position.set(pillCenterX, pillCenterY, -depth / 2 - 0.062);
+    group.add(pill);
+    const ringMetal = physicalMaterial(palette.metal, { roughness: 0.11, metalness: 0.95, clearcoat: 1, clearcoatRoughness: 0.06 });
+    extraFinishables.push({ material: ringMetal, role: "metal" });
+    const glassBlack = physicalMaterial(0x04060a, { roughness: 0.05, metalness: 0.08, clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 0.32 });
+    const innerElement = physicalMaterial(0x8fa9bd, { roughness: 0.16, metalness: 0.7, clearcoat: 1, clearcoatRoughness: 0.05 });
+    const lensPitch = height * 0.062;
+    const ringOuter = 0.09 * 1.16;
+    for (const y of [pillCenterY + lensPitch, pillCenterY - lensPitch]) {
+      const ring = new THREE.Mesh(new THREE.CylinderGeometry(ringOuter, ringOuter, 0.028, 40), ringMetal);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(pillCenterX, y, -depth / 2 - 0.073);
+      group.add(ring);
+      // The glass cap must sit PROUD of the solid ring cylinder's face or the
+      // ring's cap occludes it entirely from straight-on views.
+      const glass = new THREE.Mesh(new THREE.CylinderGeometry(0.086, 0.086, 0.026, 40), glassBlack);
+      glass.rotation.x = Math.PI / 2;
+      glass.position.set(pillCenterX, y, -depth / 2 - 0.08);
+      group.add(glass);
+      const pupil = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.012, 28), innerElement);
+      pupil.rotation.x = Math.PI / 2;
+      pupil.position.set(pillCenterX + 0.012, y + 0.012, -depth / 2 - 0.0875);
+      group.add(pupil);
+    }
+    const rearMic = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.012, 16), glassBlack);
+    rearMic.rotation.x = Math.PI / 2;
+    rearMic.position.set(width * 0.247, pillCenterY, -depth / 2 - 0.064);
+    group.add(rearMic);
+    // Flash: cream dome with a faint dark bezel ring, like the real window.
+    const flashRing = new THREE.Mesh(new THREE.TorusGeometry(0.036, 0.004, 10, 28), glassBlack);
+    flashRing.position.set(width * 0.11, pillCenterY, -depth / 2 - 0.024);
+    group.add(flashRing);
+    flash(width * 0.114, pillCenterY, 0.0294, 0.03);
+  } else if (kind === "iphone-air") {
+    // iPhone Air has one large Fusion camera on a broad top camera plateau.
+    const island = roundedMesh(width * 0.57, height * 0.18, 0.052, height * 0.045, bumpMaterial, 8);
+    island.position.set(width * 0.13, height * 0.36, -depth / 2 - 0.03);
+    group.add(island);
+    camera(width * 0.28, height * 0.36, 0.084);
+    flash(width * 0.02, height * 0.36, 0.021);
+    const mic = new THREE.Mesh(new THREE.SphereGeometry(0.014, 12, 8), lensMaterial);
+    mic.position.set(-width * 0.13, height * 0.36, -depth / 2 - 0.068);
+    group.add(mic);
   } else if (kind === "galaxy") {
     camera(width * 0.25, height * 0.32, 0.076);
     camera(width * 0.25, height * 0.12, 0.07);
     camera(width * 0.25, -height * 0.08, 0.06);
     camera(-width * 0.08, height * 0.31, 0.052);
-    const flash = new THREE.Mesh(new THREE.SphereGeometry(0.026, 16, 10), new THREE.MeshPhysicalMaterial({ color: 0xe8d6a7, roughness: 0.26, metalness: 0.08 }));
-    flash.position.set(-width * 0.09, height * 0.14, -depth / 2 - 0.067);
-    group.add(flash);
-  } else if (kind === "ipad") {
+    flash(-width * 0.09, height * 0.14);
+  } else if (kind === "galaxy-tab") {
+    // The Tab S11 Ultra uses two clean, separate camera rings on its very
+    // thin rear shell; a phone-like rectangular camera island looks wrong.
+    camera(width * 0.39, height * 0.4, 0.054);
+    camera(width * 0.39, height * 0.29, 0.049);
+    flash(width * 0.27, height * 0.34, 0.018);
+  } else if (kind === "ipad" || kind === "ipad-air") {
     const bump = roundedMesh(width * 0.22, height * 0.16, 0.05, height * 0.04, bumpMaterial, 6);
     bump.position.set(width * 0.25, height * 0.35, -depth / 2 - 0.03);
     group.add(bump);
     camera(width * 0.25, height * 0.37, 0.072);
-    const flash = new THREE.Mesh(new THREE.SphereGeometry(0.026, 16, 10), new THREE.MeshPhysicalMaterial({ color: 0xe8d6a7, roughness: 0.26, metalness: 0.08 }));
-    flash.position.set(width * 0.37, height * 0.31, -depth / 2 - 0.066);
-    group.add(flash);
+    flash(width * 0.37, height * 0.31);
   } else {
     const bump = roundedMesh(width * 0.42, height * 0.29, 0.06, height * 0.07, bumpMaterial, 6);
     bump.position.set(width * 0.22, height * 0.3, -depth / 2 - 0.032);
@@ -343,23 +664,46 @@ function addBackCameraSystem(group, width, height, depth, kind, palette) {
 
 function createPhone(mockup, texture, finish) {
   const palette = finishPalette[finish] || finishPalette.White;
-  const isGalaxy = mockup === "Galaxy S26 Ultra";
-  const isPixel = mockup === "Pixel 10 Pro";
+  const isGalaxy = mockup.startsWith("Galaxy");
+  const isPixel = mockup.startsWith("Pixel");
+  const isGalaxyBase = mockup === "Galaxy S26" || mockup === "Galaxy S26+";
+  const isIPhone16 = mockup === "iPhone 16";
+  const isUltra = mockup.includes("Ultra");
   const isProMax = mockup.includes("Pro Max");
-  const width = isGalaxy ? 1.08 : isPixel ? 1.04 : isProMax ? 1.16 : 1.07;
-  const height = isGalaxy ? 2.25 : isPixel ? 2.18 : isProMax ? 2.34 : 2.2;
-  const depth = isGalaxy ? 0.12 : isPixel ? 0.125 : 0.145;
+  const isXL = mockup.includes("XL");
+  const isPlus = mockup.includes("+");
+  const isAir = mockup.includes("Air");
+  // Apple's official renders show the 16 body at ~0.47 width-to-height —
+  // slimmer than the old 1.07/2.2 shell read.
+  const width = isUltra ? 1.08 : isProMax ? 1.16 : isXL ? 1.1 : isPlus ? 1.08 : isAir ? 1.04 : isIPhone16 || isGalaxy || isPixel ? 1.03 : 1.07;
+  const height = isUltra ? 2.25 : isProMax ? 2.34 : isXL ? 2.38 : isPlus ? 2.28 : isAir ? 2.27 : isIPhone16 ? 2.2 : 2.2;
+  // The 16/16 Plus are 7.8mm thin — noticeably slimmer than the Pro shells.
+  const depth = isAir ? 0.085 : isIPhone16 ? 0.115 : isUltra ? 0.12 : isPixel ? 0.125 : isProMax ? 0.145 : 0.13;
   const group = new THREE.Group();
-  const body = roundedMesh(width, height, depth, isGalaxy ? 0.15 : 0.12, physicalMaterial(palette.metal, { roughness: isGalaxy ? 0.17 : 0.2, metalness: 0.9, clearcoat: 0.78 }));
+  // The 16's unibody keeps its real ~11mm corner rounding: RoundedBoxGeometry
+  // clamps radius to half the depth, which squares thin phone shells, so this
+  // body uses an extruded rounded-rect profile instead.
+  const bodyRadius = width * 0.15;
+  const body = isIPhone16
+    ? new THREE.Mesh(extrudedSlabGeometry(width, height, depth, bodyRadius), physicalMaterial(palette.metal, { roughness: 0.2, metalness: 0.9, clearcoat: 0.78 }))
+    : roundedMesh(width, height, depth, isGalaxy ? 0.15 : 0.12, physicalMaterial(palette.metal, { roughness: isGalaxy ? 0.17 : 0.2, metalness: 0.9, clearcoat: 0.78 }));
   group.add(body);
-  const backPanel = roundedMesh(width * 0.972, height * 0.976, 0.024, isGalaxy ? 0.14 : 0.11, physicalMaterial(palette.body, { roughness: 0.24, metalness: 0.16, clearcoat: 0.92, clearcoatRoughness: 0.045 }));
+  // The 16's back is matte frosted glass, not gloss — low sheen keeps the
+  // highlight wash-out that made earlier renders read plasticky.
+  const backPanel = isIPhone16
+    ? new THREE.Mesh(extrudedSlabGeometry(width * 0.972, height * 0.976, 0.024, bodyRadius * 0.88), physicalMaterial(palette.body, { roughness: 0.46, metalness: 0.06, clearcoat: 0.24, clearcoatRoughness: 0.3 }))
+    : roundedMesh(width * 0.972, height * 0.976, 0.024, isGalaxy ? 0.14 : 0.11, physicalMaterial(palette.body, { roughness: 0.24, metalness: 0.16, clearcoat: 0.92, clearcoatRoughness: 0.045 }));
   backPanel.position.z = -depth / 2 - 0.009;
   group.add(backPanel);
-  const screens = addScreen(group, width * 0.91, height * 0.93, depth, texture, { z: depth * 0.42 });
+  if (isIPhone16) addAppleLogo(group, width, height, -depth / 2 - 0.026);
+  // The 16's screen glass runs nearly edge to edge: content ≈ 0.9w with thin
+  // even bezels, per Apple's official renders.
+  const screens = addScreen(group, width * (isIPhone16 ? 0.94 : 0.91), height * (isIPhone16 ? 0.985 : 0.93), depth, texture, { z: depth * 0.42, ...(isIPhone16 ? { faceRadius: bodyRadius * 0.8 } : {}) });
   if (isGalaxy || isPixel) addFrontCameraDot(group, 0, height * 0.42, depth * 0.83, 0.026);
   else addPhoneIsland(group, width, height, depth);
-  const buttonMaterial = addPhoneButtons(group, width, height, depth, palette.metal, isGalaxy ? "galaxy" : isPixel ? "pixel" : "iphone");
-  const cameraSystem = addBackCameraSystem(group, width, height, depth, isGalaxy ? "galaxy" : isPixel ? "pixel" : "iphone", palette);
+  const buttonMaterial = addPhoneButtons(group, width, height, depth, palette.metal, isGalaxy ? "galaxy" : isPixel ? "pixel" : isIPhone16 ? "iphone-16" : "iphone");
+  const cameraKind = isGalaxyBase ? "galaxy-s26" : isPixel ? "pixel" : isIPhone16 ? "iphone-16" : isAir ? "iphone-air" : isGalaxy ? "galaxy" : "iphone";
+  const cameraSystem = addBackCameraSystem(group, width, height, depth, cameraKind, palette);
   return {
     group,
     materials: {
@@ -379,9 +723,14 @@ function createPhone(mockup, texture, finish) {
 function createTablet(mockup, texture, finish) {
   const palette = finishPalette[finish] || finishPalette.White;
   const isMini = mockup === "iPad mini";
-  const width = isMini ? 1.42 : 1.64;
-  const height = isMini ? 2.16 : 2.34;
-  const depth = 0.105;
+  const isGalaxyTab = mockup.includes("Tab");
+  const isTabUltra = isGalaxyTab && mockup.includes("Ultra");
+  const isA16 = mockup === "iPad (A16)";
+  const isAir = mockup.includes("iPad Air");
+  const isAir13 = mockup === "iPad Air 13\"";
+  const width = isMini ? 1.42 : isTabUltra ? 1.68 : isAir13 ? 1.78 : isAir ? 1.68 : isA16 ? 1.7 : 1.68;
+  const height = isMini ? 2.16 : isTabUltra ? 2.63 : isAir13 ? 2.34 : isAir ? 2.25 : isA16 ? 2.35 : 2.34;
+  const depth = isTabUltra ? 0.054 : 0.105;
   const group = new THREE.Group();
   const body = roundedMesh(width, height, depth, 0.12, physicalMaterial(palette.metal, { roughness: 0.2, metalness: 0.88, clearcoat: 0.78 }));
   group.add(body);
@@ -389,9 +738,19 @@ function createTablet(mockup, texture, finish) {
   backPanel.position.z = -depth / 2 - 0.008;
   group.add(backPanel);
   const screens = addScreen(group, width * 0.935, height * 0.925, depth, texture, { z: depth * 0.42 });
-  addFrontCameraDot(group, 0, height * 0.437, depth * 0.83, 0.019);
-  const buttonMaterial = addPhoneButtons(group, width, height, depth, palette.metal, "pixel");
-  const cameraSystem = addBackCameraSystem(group, width, height, depth, "ipad", palette);
+  if (isGalaxyTab || isAir || isA16) addFrontCameraDot(group, width * 0.437, 0, depth * 0.83, 0.019);
+  else addFrontCameraDot(group, 0, height * 0.437, depth * 0.83, 0.019);
+  const buttonMaterial = addPhoneButtons(group, width, height, depth, palette.metal, isGalaxyTab ? "galaxy" : "pixel");
+  const cameraSystem = addBackCameraSystem(group, width, height, depth, isGalaxyTab ? "galaxy-tab" : isAir || isA16 ? "ipad-air" : "ipad", palette);
+  if (isGalaxyTab) {
+    const stylus = roundedMesh(0.068, height * 0.48, 0.046, 0.028, physicalMaterial(0x252a2c, { roughness: 0.42, metalness: 0.44 }), 6);
+    stylus.position.set(-width * 0.31, -height * 0.01, -depth / 2 - 0.033);
+    group.add(stylus);
+    const stylusTip = new THREE.Mesh(new THREE.CylinderGeometry(0.034, 0.034, 0.052, 18), physicalMaterial(0x939b9d, { roughness: 0.3, metalness: 0.72 }));
+    stylusTip.rotation.z = Math.PI / 2;
+    stylusTip.position.set(-width * 0.31, -height * 0.255, -depth / 2 - 0.034);
+    group.add(stylusTip);
+  }
   return {
     group,
     materials: {
@@ -420,44 +779,74 @@ function createLaptop(mockup, texture, finish) {
   const palette = finishPalette[finish] || finishPalette.White;
   const isNeo = mockup === "MacBook Neo";
   const isAir = mockup.includes("Air");
+  const isSurface = mockup.includes("Surface");
+  const isXPS = mockup.includes("XPS");
   const isPro16 = mockup.includes("16");
-  const width = isNeo ? 2.42 : isPro16 ? 2.86 : isAir ? 2.48 : 2.58;
-  const height = isNeo ? 1.48 : isPro16 ? 1.7 : 1.6;
-  const depth = isNeo ? 1.42 : isPro16 ? 1.68 : 1.54;
+  const width = isNeo ? 2.42 : isXPS ? 2.74 : isPro16 ? 2.86 : isAir ? 2.48 : isSurface ? 2.62 : 2.58;
+  // Match the real footprints: the XPS 16 is 358.18 x 240.05 mm and the
+  // 15-inch Surface is notably deeper than a 16:10 MacBook-style base.
+  const depth = isNeo ? 1.42 : isPro16 ? 1.68 : isXPS ? 1.84 : isSurface ? 1.88 : 1.54;
+  const displayAspect = isSurface ? 3 / 2 : 16 / 10;
+  const displayHeight = width / displayAspect;
+  const baseY = 0.18 - displayHeight / 2 - 0.01;
   const group = new THREE.Group();
   const displayAssembly = new THREE.Group();
   displayAssembly.position.set(0, 0.18, -depth * 0.39);
   displayAssembly.rotation.x = -THREE.MathUtils.degToRad(8);
   group.add(displayAssembly);
-  const displayShell = roundedMesh(width, height, 0.13, 0.105, physicalMaterial(palette.body, { roughness: 0.18, metalness: 0.84 }));
+  const displayShell = roundedMesh(width, displayHeight, 0.11, isXPS ? 0.045 : isSurface ? 0.1 : 0.09, physicalMaterial(isXPS ? 0x24282a : palette.body, { roughness: 0.18, metalness: 0.84 }));
+  if (isXPS) displayShell.material.userData.openmockFixedColor = true;
   displayAssembly.add(displayShell);
-  const displayScreen = addScreen(displayAssembly, width * 0.905, height * 0.83, 0.07, texture, { z: 0.078 });
-  addFrontCameraDot(displayAssembly, 0, height * 0.405, 0.14, 0.016);
-  const base = roundedMesh(width * 1.055, 0.18, depth, 0.075, physicalMaterial(palette.metal, { roughness: 0.3, metalness: 0.78 }));
-  base.position.set(0, -0.67, 0.16);
+  const screenInsetWidth = isXPS ? 0.958 : isSurface ? 0.89 : 0.925;
+  const screenInsetHeight = isXPS ? 0.9 : isSurface ? 0.86 : 0.87;
+  const displayScreen = addScreen(displayAssembly, width * screenInsetWidth, displayHeight * screenInsetHeight, 0.06, texture, { z: 0.068 });
+  addFrontCameraDot(displayAssembly, 0, displayHeight * 0.435, 0.13, 0.014);
+  const baseMaterial = physicalMaterial(isXPS ? 0x202426 : palette.metal, { roughness: isXPS ? 0.38 : 0.3, metalness: 0.78 });
+  if (isXPS) baseMaterial.userData.openmockFixedColor = true;
+  const base = roundedMesh(width * 1.055, 0.14, depth, 0.06, baseMaterial);
+  base.position.set(0, baseY, 0.16);
   group.add(base);
-  const keyboard = roundedMesh(width * 0.89, 0.038, depth * 0.72, 0.038, physicalMaterial(0x1c2022, { roughness: 0.48, metalness: 0.18 }));
-  keyboard.position.set(0, -0.56, 0.23);
-  group.add(keyboard);
-  const keyMaterial = physicalMaterial(0x555d60, { roughness: 0.5, metalness: 0.12 });
-  const keyRows = 4;
-  const keyColumns = 12;
-  const keyWidth = width * 0.052;
-  const keyDepth = depth * 0.072;
+  // Recessed keyboard well with a six-row key matrix (function row on top,
+  // wide spacebar at the bottom) sitting inside it, trackpad below.
+  const well = roundedMesh(width * (isXPS ? 0.94 : 0.88), 0.03, depth * (isSurface ? 0.7 : 0.66), 0.024, physicalMaterial(isXPS ? 0x202426 : isSurface ? 0x202527 : 0x111416, { roughness: 0.55, metalness: 0.14 }));
+  well.position.set(0, baseY + 0.09, -depth * 0.09);
+  group.add(well);
+  const keyMaterial = physicalMaterial(isXPS ? 0x313738 : isSurface ? 0x2d3335 : 0x3c4346, { roughness: 0.5, metalness: 0.12 });
+  const keyRows = 6;
+  const keyColumns = isXPS ? 14 : 13;
+  const keyWidth = width * (isXPS ? 0.052 : 0.049);
+  const keyDepth = depth * 0.07;
+  if (isXPS) {
+    // XPS 16's capacitive function row is a continuous glass strip rather
+    // than another row of raised keys.
+    const functionStrip = roundedMesh(width * 0.82, 0.018, depth * 0.055, 0.014, physicalMaterial(0x111416, { roughness: 0.2, metalness: 0.22, clearcoat: 0.88 }), 5);
+    functionStrip.position.set(0, baseY + 0.124, -depth * 0.305);
+    group.add(functionStrip);
+  }
   for (let row = 0; row < keyRows; row += 1) {
+    const isFunctionRow = row === 0;
+    if (isXPS && isFunctionRow) continue;
     for (let column = 0; column < keyColumns; column += 1) {
-      const isSpacebar = row === 3 && column >= 4 && column <= 7;
-      const key = roundedMesh(isSpacebar ? keyWidth * 1.7 : keyWidth, 0.025, keyDepth, 0.011, keyMaterial, 3);
-      key.position.set((column - (keyColumns - 1) / 2) * width * 0.068, -0.53, 0.02 + (row - 1.5) * depth * 0.108);
+      const isSpacebar = row === keyRows - 1 && column >= 4 && column <= 8;
+      const key = roundedMesh(isSpacebar ? keyWidth * 3.6 : isFunctionRow ? keyWidth * 1.15 : keyWidth, 0.022, isFunctionRow ? keyDepth * 0.8 : keyDepth, 0.009, keyMaterial, 3);
+      key.position.set((column - (keyColumns - 1) / 2) * width * (isXPS ? 0.055 : 0.064), baseY + 0.12, -depth * 0.3 + row * depth * 0.098);
       group.add(key);
     }
   }
-  const trackpad = roundedMesh(width * 0.24, 0.028, depth * 0.25, 0.026, physicalMaterial(0xaeb5b6, { roughness: 0.32, metalness: 0.38 }));
-  trackpad.position.set(0, -0.53, 0.65);
+  const trackpad = roundedMesh(width * (isXPS ? 0.4 : isSurface ? 0.3 : 0.3), 0.02, depth * (isXPS ? 0.31 : 0.26), 0.022, physicalMaterial(isXPS ? 0x292e30 : isSurface ? 0x8f9798 : 0x9fa6a8, { roughness: isXPS ? 0.32 : 0.26, metalness: 0.42, clearcoat: 0.8 }));
+  trackpad.position.set(0, baseY + 0.083, depth * 0.42);
   group.add(trackpad);
-  const hinge = roundedMesh(width * 0.8, 0.06, 0.13, 0.03, physicalMaterial(palette.metal, { roughness: 0.25, metalness: 0.8 }));
-  hinge.position.set(0, -0.55, -depth * 0.39);
+  const hingeMaterial = physicalMaterial(isXPS ? 0x202426 : palette.metal, { roughness: 0.25, metalness: 0.8 });
+  if (isXPS) hingeMaterial.userData.openmockFixedColor = true;
+  const hinge = roundedMesh(width * 0.82, 0.06, 0.12, 0.03, hingeMaterial);
+  hinge.position.set(0, baseY + 0.095, -depth * 0.39);
   group.add(hinge);
+  const footMaterial = physicalMaterial(0x15181a, { roughness: 0.7, metalness: 0.05 });
+  for (const side of [-1, 1]) {
+    const foot = roundedMesh(width * 0.08, 0.05, 0.1, 0.02, footMaterial, 3);
+    foot.position.set(side * width * 0.4, baseY - 0.08, -depth * 0.3);
+    group.add(foot);
+  }
   return {
     group,
     materials: {
@@ -478,34 +867,45 @@ function createDisplay(texture, finish, variant = "xdr") {
   const group = new THREE.Group();
   const isIMac = variant === "imac";
   const isStudio = variant === "studio";
-  const width = isIMac ? 2.5 : isStudio ? 2.95 : 2.78;
-  const height = isIMac ? 1.68 : isStudio ? 1.72 : 1.76;
-  const body = roundedMesh(width, height, 0.14, 0.105, physicalMaterial(palette.body, { roughness: 0.17, metalness: 0.84 }));
+  const isTV = variant === "tv";
+  const width = isTV ? 3.5 : isIMac ? 2.5 : isStudio ? 2.95 : 2.78;
+  const height = isTV ? 2.0 : isIMac ? 1.68 : isStudio ? 1.72 : 1.76;
+  // TV bezels stay black regardless of the chosen finish, like real hardware.
+  const body = roundedMesh(width, height, isTV ? 0.08 : 0.14, 0.105, isTV ? physicalMaterial(0x0b0d0f, { roughness: 0.34, metalness: 0.32, clearcoat: 0.62 }) : physicalMaterial(palette.body, { roughness: 0.17, metalness: 0.84 }));
   group.add(body);
-  const screen = addScreen(group, width * (isIMac ? 0.91 : 0.945), height * (isIMac ? 0.79 : 0.905), 0.07, texture, { z: 0.08 });
+  const screen = addScreen(group, width * (isTV ? 0.972 : isIMac ? 0.91 : 0.945), height * (isTV ? 0.945 : isIMac ? 0.79 : 0.905), 0.07, texture, { z: 0.08 });
   let chin = null;
   if (isIMac) {
     chin = roundedMesh(width * 0.91, height * 0.105, 0.05, 0.025, physicalMaterial(palette.body, { roughness: 0.22, metalness: 0.78 }));
     chin.position.set(0, -height * 0.39, 0.11);
     group.add(chin);
   }
-  addFrontCameraDot(group, 0, height * 0.415, 0.15, isIMac ? 0.015 : 0.013);
-  const neck = roundedMesh(isIMac ? 0.18 : 0.16, isIMac ? 0.64 : isStudio ? 0.6 : 0.68, 0.16, 0.05, physicalMaterial(palette.metal, { roughness: 0.3, metalness: 0.72 }));
-  neck.position.y = isIMac ? -1.12 : isStudio ? -1.14 : -1.15;
-  group.add(neck);
-  const foot = roundedMesh(isIMac ? 0.92 : isStudio ? 1.02 : 0.86, 0.09, isIMac ? 0.62 : 0.56, 0.045, physicalMaterial(palette.metal, { roughness: 0.26, metalness: 0.78 }));
-  foot.position.set(0, isIMac ? -1.47 : isStudio ? -1.49 : -1.5, 0.08);
-  group.add(foot);
+  if (!isTV) addFrontCameraDot(group, 0, height * 0.415, 0.15, isIMac ? 0.015 : 0.013);
+  // TVs keep their real black hardware: nothing in finishables, so the
+  // finish picker never repaints the panel or feet.
+  const finishables = isTV ? [] : [{ material: body.material, role: "body" }, ...(chin ? [{ material: chin.material, role: "body" }] : [])];
+  if (isTV) {
+    // Two slim feet at the panel edges, like a living-room TV.
+    const footMaterial = physicalMaterial(0x1c1f21, { roughness: 0.4, metalness: 0.5 });
+    for (const side of [-1, 1]) {
+      const tvFoot = roundedMesh(0.1, 0.34, 0.5, 0.035, footMaterial, 3);
+      tvFoot.position.set(side * width * 0.4, -height * 0.5 - 0.14, 0);
+      group.add(tvFoot);
+    }
+  } else {
+    const neck = roundedMesh(isIMac ? 0.18 : 0.16, isIMac ? 0.64 : isStudio ? 0.6 : 0.68, 0.16, 0.05, physicalMaterial(palette.metal, { roughness: 0.3, metalness: 0.72 }));
+    neck.position.y = isIMac ? -1.12 : isStudio ? -1.14 : -1.15;
+    group.add(neck);
+    const foot = roundedMesh(isIMac ? 0.92 : isStudio ? 1.02 : 0.86, 0.09, isIMac ? 0.62 : 0.56, 0.045, physicalMaterial(palette.metal, { roughness: 0.26, metalness: 0.78 }));
+    foot.position.set(0, isIMac ? -1.47 : isStudio ? -1.49 : -1.5, 0.08);
+    group.add(foot);
+    finishables.push({ material: neck.material, role: "metal" }, { material: foot.material, role: "metal" });
+  }
   return {
     group,
     materials: {
-      body,
-      finishables: [
-        { material: body.material, role: "body" },
-        ...(chin ? [{ material: chin.material, role: "body" }] : []),
-        { material: neck.material, role: "metal" },
-        { material: foot.material, role: "metal" },
-      ],
+      body: isTV ? null : body,
+      finishables,
       screen: screen.screen,
       glass: screen.glass,
     },
@@ -573,7 +973,8 @@ function createVisionPro(texture, finish) {
   return { group, materials: { body: null, finishables: [], screen: { material: lensScreenMaterial }, glass: { material: frontGlass.material } } };
 }
 
-function createWatch(texture, finish) {
+function createWatch(texture, finish, { style = "apple" } = {}) {
+  if (style === "galaxy" || style === "pixel") return createRoundWatch(texture, finish, style);
   const palette = finishPalette[finish] || finishPalette.White;
   const group = new THREE.Group();
   const strapMaterial = physicalMaterial(0x252c2f, { roughness: 0.62, metalness: 0.08, clearcoat: 0.18 });
@@ -623,17 +1024,388 @@ function createWatch(texture, finish) {
   return { group, materials: { body, finishables: [{ material: body.material, role: "body" }], screen: screen.screen, glass: screen.glass } };
 }
 
+// Round Samsung/Google watches. Their identity comes from the case transition
+// and band attachment: Watch8 has a slim cushion chassis with a Dynamic Lug,
+// while Pixel Watch 4 is an edgeless domed circle with an integrated band.
+function createRoundWatch(texture, finish, style) {
+  void finish;
+  const isPixel = style === "pixel";
+  const group = new THREE.Group();
+  const caseRadius = isPixel ? 0.52 : 0.535;
+  const caseHeight = isPixel ? 0.22 : 0.17;
+  const faceZ = caseHeight / 2;
+  const bandWidth = isPixel ? 0.385 : 0.43;
+  const bandMaterial = physicalMaterial(isPixel ? 0x2a3032 : 0x202426, { roughness: 0.62, metalness: 0.06, clearcoat: 0.16 });
+  const caseMaterial = physicalMaterial(isPixel ? 0xaeb7b9 : 0x32393b, { roughness: isPixel ? 0.16 : 0.28, metalness: 0.88, clearcoat: 0.68 });
+  caseMaterial.userData.openmockFixedColor = true;
+
+  // A continuous band with a slight backwards pitch reads as flexible
+  // silicone from every preset without the toy-like grooves of stacked parts.
+  for (const sign of [-1, 1]) {
+    const connector = roundedMesh(isPixel ? 0.35 : 0.29, 0.19, 0.12, 0.055, isPixel ? bandMaterial : caseMaterial, 7);
+    connector.position.set(0, sign * caseRadius * 0.88, -0.035);
+    group.add(connector);
+    const strap = roundedMesh(bandWidth, 0.93, 0.09, 0.062, bandMaterial, 9);
+    strap.position.set(0, sign * (caseRadius + 0.43), -0.13);
+    strap.rotation.x = -sign * THREE.MathUtils.degToRad(7);
+    group.add(strap);
+  }
+
+  const body = isPixel
+    ? new THREE.Mesh(new THREE.CylinderGeometry(caseRadius, caseRadius * 0.97, caseHeight, 72), caseMaterial)
+    : roundedMesh(1.025, 1.025, caseHeight, 0.31, caseMaterial, 10);
+  if (isPixel) body.rotation.x = Math.PI / 2;
+  group.add(body);
+
+  const sensorHousing = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.038, 56), new THREE.MeshPhysicalMaterial({ color: 0x151a1c, roughness: 0.2, metalness: 0.42, clearcoat: 0.9 }));
+  sensorHousing.rotation.x = Math.PI / 2;
+  sensorHousing.position.z = -faceZ - 0.015;
+  group.add(sensorHousing);
+  const sensorGlass = new THREE.Mesh(new THREE.CylinderGeometry(0.175, 0.175, 0.03, 48), new THREE.MeshPhysicalMaterial({ color: 0x18383d, roughness: 0.14, metalness: 0.28, clearcoat: 1, envMapIntensity: 0.56 }));
+  sensorGlass.rotation.x = Math.PI / 2;
+  sensorGlass.position.z = -faceZ - 0.036;
+  group.add(sensorGlass);
+  const sensorLensMaterial = new THREE.MeshPhysicalMaterial({ color: 0x071013, roughness: 0.1, metalness: 0.3, clearcoat: 1, envMapIntensity: 0.62 });
+  for (const [x, y, radius] of [[-0.08, 0.06, 0.033], [0.08, 0.06, 0.033], [-0.08, -0.06, 0.027], [0.08, -0.06, 0.027]]) {
+    const lens = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, 0.02, 24), sensorLensMaterial);
+    lens.rotation.x = Math.PI / 2;
+    lens.position.set(x, y, -faceZ - 0.055);
+    group.add(lens);
+  }
+
+  const screenRadius = isPixel ? 0.505 : 0.455;
+  if (!isPixel) {
+    const bezel = new THREE.Mesh(new THREE.TorusGeometry(0.478, 0.025, 16, 72), physicalMaterial(0x121517, { roughness: 0.28, metalness: 0.5, clearcoat: 0.55 }));
+    bezel.position.z = faceZ + 0.004;
+    group.add(bezel);
+  }
+  const screenMap = cloneTexture(texture, 1);
+  const screen = new THREE.Mesh(new THREE.CircleGeometry(screenRadius, 72), new THREE.MeshBasicMaterial({ map: screenMap, color: 0xffffff, toneMapped: false }));
+  screen.position.z = faceZ + 0.009;
+  screen.userData.screenAspect = 1;
+  group.add(screen);
+
+  // A shallow hemisphere produces the Pixel's signature domed edge without
+  // the opaque, mirror-like bubble that hid the display in the old mockup.
+  const glassMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: isPixel ? 0.055 : 0.04,
+    roughness: 0.1,
+    metalness: 0,
+    transmission: 0.08,
+    clearcoat: 1,
+    clearcoatRoughness: 0.035,
+    depthWrite: false,
+  });
+  glassMaterial.userData.openmockOpacityScale = 0.24;
+  const glass = new THREE.Mesh(new THREE.SphereGeometry(screenRadius + 0.014, 72, 18, 0, Math.PI * 2, 0, Math.PI / 2), glassMaterial);
+  glass.scale.y = isPixel ? 0.13 : 0.08;
+  glass.rotation.x = Math.PI / 2;
+  glass.position.z = faceZ + 0.008;
+  glass.userData.screenAspect = 1;
+  group.add(glass);
+
+  if (isPixel) {
+    const crownMaterial = physicalMaterial(0x9da7a9, { roughness: 0.2, metalness: 0.9, clearcoat: 0.7 });
+    const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.073, 0.073, 0.095, 32), crownMaterial);
+    crown.rotation.z = Math.PI / 2;
+    crown.position.set(caseRadius + 0.035, 0.01, 0);
+    group.add(crown);
+    const sideButton = roundedMesh(0.065, 0.115, 0.085, 0.028, crownMaterial, 5);
+    sideButton.position.set(caseRadius + 0.01, 0.17, -0.015);
+    group.add(sideButton);
+  } else {
+    const buttonMaterial = physicalMaterial(0x646e70, { roughness: 0.25, metalness: 0.86, clearcoat: 0.6 });
+    for (const y of [-0.135, 0.135]) {
+      const button = roundedMesh(0.065, 0.17, 0.09, 0.03, buttonMaterial, 5);
+      button.position.set(0.545, y, -0.005);
+      group.add(button);
+    }
+    const speakerGrille = roundedMesh(0.035, 0.16, 0.018, 0.01, physicalMaterial(0x0e1112, { roughness: 0.5, metalness: 0.28 }), 3);
+    speakerGrille.position.set(-0.537, 0, -0.005);
+    group.add(speakerGrille);
+  }
+
+  return { group, materials: { body, finishables: [{ material: body.material, role: "body" }], screen: { material: screen.material }, glass: { material: glass.material } } };
+}
+
+// Desktop browser chrome: a flat window with a traffic-light toolbar and URL
+// pill above the media panel. Chrome takes the finish accent, the body the
+// finish color, so the finish picker still personalizes the frame.
+function createBrowserWindow(texture, finish) {
+  const palette = finishPalette[finish] || finishPalette.White;
+  const group = new THREE.Group();
+  const width = 2.66;
+  const height = 1.74;
+  const depth = 0.1;
+  const windowBody = roundedMesh(width, height, depth, 0.07, physicalMaterial(palette.body, { roughness: 0.3, metalness: 0.4, clearcoat: 0.66 }));
+  group.add(windowBody);
+  const toolbar = roundedMesh(width * 0.955, height * 0.125, 0.024, 0.03, physicalMaterial(palette.accent, { roughness: 0.4, metalness: 0.16 }));
+  toolbar.position.set(0, height * 0.4325, depth * 0.44);
+  group.add(toolbar);
+  const tabRow = roundedMesh(width * 0.955, height * 0.062, 0.02, 0.018, physicalMaterial(palette.body, { roughness: 0.46, metalness: 0.12 }));
+  tabRow.position.set(0, height * 0.3395, depth * 0.46);
+  group.add(tabRow);
+  const dotColors = [0xec6a5e, 0xf4bf4f, 0x61c554];
+  for (const [index, color] of dotColors.entries()) {
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.021, 18, 12), physicalMaterial(color, { roughness: 0.3, metalness: 0.05 }));
+    dot.position.set(-width * 0.43 + index * 0.075, height * 0.4325, depth * 0.5);
+    group.add(dot);
+  }
+  for (const x of [-width * 0.1, width * 0.16]) {
+    const tab = roundedMesh(width * 0.24, height * 0.055, 0.016, 0.014, physicalMaterial(0xffffff, { roughness: 0.4, metalness: 0.03 }), 4);
+    tab.position.set(x, height * 0.4325, depth * 0.5);
+    group.add(tab);
+  }
+  const urlPill = roundedMesh(width * 0.82, height * 0.042, 0.014, 0.01, physicalMaterial(0xf6f7f7, { roughness: 0.42, metalness: 0.04 }));
+  urlPill.position.set(0, height * 0.3395, depth * 0.52);
+  group.add(urlPill);
+  const screens = addScreen(group, width * 0.955, height * 0.66, depth, texture, { z: depth * 0.44 });
+  screens.screen.position.y = screens.glass.position.y = screens.bezel.position.y = -height * 0.09;
+  return {
+    group,
+    materials: {
+      body: windowBody,
+      finishables: [
+        { material: windowBody.material, role: "body" },
+        { material: toolbar.material, role: "accent" },
+      ],
+      screen: screens.screen,
+      glass: screens.glass,
+    },
+  };
+}
+
+// Foldables. The Fold renders open like the real device: a near-square inner
+// display with a vertical crease, a hinge spine along the left edge, and the
+// Samsung camera column on the back-right. The Flip renders closed-tall with
+// a horizontal crease and a cover-display window with cameras on the back.
+function createFoldable(mockup, texture, finish) {
+  const palette = finishPalette[finish] || finishPalette.White;
+  const isFlip = mockup.includes("Flip");
+  const width = isFlip ? 1.02 : 2.06;
+  const height = isFlip ? 2.24 : 1.86;
+  const depth = 0.13;
+  const group = new THREE.Group();
+  const body = roundedMesh(width, height, depth, isFlip ? 0.13 : 0.11, physicalMaterial(palette.metal, { roughness: 0.17, metalness: 0.9, clearcoat: 0.78 }));
+  group.add(body);
+  const backPanel = roundedMesh(width * 0.972, height * 0.976, 0.024, 0.1, physicalMaterial(palette.body, { roughness: 0.24, metalness: 0.16, clearcoat: 0.92, clearcoatRoughness: 0.045 }));
+  backPanel.position.z = -depth / 2 - 0.009;
+  group.add(backPanel);
+  const screens = addScreen(group, width * 0.94, height * 0.94, depth, texture, { z: depth * 0.42 });
+  const crease = roundedMesh(isFlip ? width * 0.9 : 0.014, isFlip ? 0.014 : height * 0.9, 0.006, 0.002, physicalMaterial(0x0b0d0e, { roughness: 0.22, metalness: 0.18 }), 3);
+  crease.position.set(0, 0, depth * 0.42 + 0.048);
+  group.add(crease);
+  if (isFlip) {
+    addFrontCameraDot(group, width * 0.15, height * 0.41, depth * 0.83, 0.022);
+    const coverWindow = roundedMesh(width * 0.74, height * 0.3, 0.014, 0.05, physicalMaterial(0x0c0f11, { roughness: 0.1, metalness: 0.3, clearcoat: 1 }), 4);
+    coverWindow.position.set(0, height * 0.28, -depth / 2 - 0.02);
+    group.add(coverWindow);
+  } else {
+    const spine = new THREE.Mesh(new THREE.CylinderGeometry(depth * 0.52, depth * 0.52, height * 0.985, 28), physicalMaterial(palette.metal, { roughness: 0.24, metalness: 0.85 }));
+    spine.position.set(-width / 2 + depth * 0.1, 0, 0);
+    group.add(spine);
+    addFrontCameraDot(group, width * 0.26, height * 0.42, depth * 0.83, 0.018);
+  }
+  const buttonMaterial = addPhoneButtons(group, width, height, depth, palette.metal, "galaxy");
+  const cameraSystem = addBackCameraSystem(group, width, height, depth, "galaxy", palette);
+  return {
+    group,
+    materials: {
+      body,
+      finishables: [
+        { material: body.material, role: "metal" },
+        { material: backPanel.material, role: "body" },
+        { material: buttonMaterial, role: "metal" },
+        ...(cameraSystem?.finishables || []),
+      ],
+      screen: screens.screen,
+      glass: screens.glass,
+    },
+  };
+}
+
+// Gaming handhelds, modeled on the real hardware colorways. The Switch 2 is a
+// thin black slate with detachable dark rails (blue/red inner accent lines),
+// sticks and diamond button clusters; the Deck is an all-black body with
+// integrated angled grips, dual trackpads, a d-pad, and diamond face buttons.
+// Finish is intentionally not applied: these devices ship in fixed colorways.
+function createHandheld(mockup, texture, finish) {
+  void finish;
+  const isDeck = mockup.includes("Steam");
+  const group = new THREE.Group();
+  const bodyMaterial = physicalMaterial(isDeck ? 0x17191b : 0x131517, { roughness: 0.44, metalness: 0.22, clearcoat: 0.38 });
+  const railMaterial = physicalMaterial(isDeck ? 0x101215 : 0x282c2e, { roughness: 0.5, metalness: 0.16, clearcoat: 0.3 });
+  const detailMaterial = physicalMaterial(0x0a0c0d, { roughness: 0.4, metalness: 0.34 });
+  const capMaterial = physicalMaterial(0x1e2224, { roughness: 0.55, metalness: 0.18 });
+  // Real overall proportions: Steam Deck is 298 x 117 x 49 mm; Switch 2 is
+  // 272 x 116 x 13.9 mm, with a 7.9-inch display occupying most of the slate.
+  const bodyWidth = isDeck ? 2.98 : 2.12;
+  const bodyHeight = isDeck ? 1.17 : 1.12;
+  const depth = isDeck ? 0.36 : 0.15;
+  const body = roundedMesh(bodyWidth, bodyHeight, depth, isDeck ? 0.13 : 0.1, bodyMaterial);
+  group.add(body);
+  const screenWidth = bodyWidth * (isDeck ? 0.535 : 0.825);
+  const screenHeight = isDeck ? screenWidth / 1.6 : screenWidth / (16 / 9);
+  const screens = addScreen(group, screenWidth, screenHeight, depth * 0.7, texture, { z: depth * 0.52 });
+  const accentMaterial = (side) => physicalMaterial(side < 0 ? 0x00b8c8 : 0xff2d55, { roughness: 0.42, metalness: 0.1 });
+  const stick = (x, y, ringColor = null) => {
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.105, 0.115, 0.045, 28), detailMaterial);
+    base.rotation.x = Math.PI / 2;
+    base.position.set(x, y, depth * 0.52);
+    group.add(base);
+    if (ringColor !== null) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.012, 12, 36), physicalMaterial(ringColor, { roughness: 0.4, metalness: 0.12 }));
+      ring.position.set(x, y, depth * 0.55);
+      group.add(ring);
+    }
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.07, 24, 16), capMaterial);
+    cap.scale.z = 0.6;
+    cap.position.set(x, y, depth * 0.58);
+    group.add(cap);
+  };
+  const roundButton = (x, y, radius = 0.042) => {
+    const button = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, 0.035, 20), detailMaterial);
+    button.rotation.x = Math.PI / 2;
+    button.position.set(x, y, depth * 0.52);
+    group.add(button);
+  };
+  const rearButton = (x, y, radius = 0.038) => {
+    const button = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, 0.028, 20), detailMaterial);
+    button.rotation.x = Math.PI / 2;
+    button.position.set(x, y, -depth * 0.54);
+    group.add(button);
+  };
+  if (isDeck) {
+    const gripMaterial = physicalMaterial(0x111316, { roughness: 0.58, metalness: 0.14, clearcoat: 0.24 });
+    for (const side of [-1, 1]) {
+      const grip = roundedMesh(0.62, 1.16, 0.5, 0.2, gripMaterial);
+      grip.position.set(side * bodyWidth * 0.4, -bodyHeight * 0.25, -0.06);
+      grip.rotation.x = -0.42;
+      grip.rotation.z = side * 0.14;
+      group.add(grip);
+      const trigger = roundedMesh(0.4, 0.07, 0.16, 0.03, detailMaterial, 3);
+      trigger.position.set(side * bodyWidth * 0.4, bodyHeight * 0.52, -0.04);
+      group.add(trigger);
+      stick(side * bodyWidth * 0.37, bodyHeight * 0.27);
+      roundButton(side * bodyWidth * 0.37, -bodyHeight * 0.02, 0.052);
+      const trackpad = roundedMesh(0.345, 0.335, 0.022, 0.046, physicalMaterial(0x0d0f11, { roughness: 0.24, metalness: 0.2, clearcoat: 0.9 }));
+      trackpad.position.set(side * bodyWidth * 0.285, -bodyHeight * 0.31, depth * 0.5);
+      group.add(trackpad);
+    }
+    const dpadX = roundedMesh(0.24, 0.07, 0.03, 0.014, detailMaterial, 3);
+    dpadX.position.set(-bodyWidth * 0.31, -bodyHeight * 0.1, depth * 0.52);
+    group.add(dpadX);
+    const dpadY = roundedMesh(0.07, 0.24, 0.03, 0.014, detailMaterial, 3);
+    dpadY.position.set(-bodyWidth * 0.31, -bodyHeight * 0.1, depth * 0.52);
+    group.add(dpadY);
+    for (const [dx, dy] of [[1, 0], [0, 1], [-1, 0], [0, -1]]) {
+      roundButton(bodyWidth * 0.31 + dx * 0.075, bodyHeight * 0.27 + dy * 0.075, 0.045);
+    }
+    for (const x of [-screenWidth * 0.42, screenWidth * 0.42]) {
+      const speaker = roundedMesh(0.06, 0.22, 0.012, 0.028, physicalMaterial(0x0b0d0f, { roughness: 0.5, metalness: 0.2 }), 3);
+      speaker.position.set(x, 0, depth * 0.5);
+      group.add(speaker);
+    }
+  } else {
+    const railWidth = 0.29;
+    for (const side of [-1, 1]) {
+      const rail = roundedMesh(railWidth, bodyHeight * 1.03, depth * 1.12, railWidth * 0.42, railMaterial);
+      rail.position.set(side * (bodyWidth / 2 + railWidth * 0.46), 0, 0);
+      group.add(rail);
+      const accent = roundedMesh(0.018, bodyHeight * 0.92, depth * 0.9, 0.008, accentMaterial(side), 3);
+      accent.position.set(side * (bodyWidth / 2 - 0.012), 0, 0);
+      group.add(accent);
+      const trigger = roundedMesh(railWidth * 0.9, 0.06, 0.14, 0.026, detailMaterial, 3);
+      trigger.position.set(side * (bodyWidth / 2 + railWidth * 0.46), bodyHeight * 0.52, 0);
+      group.add(trigger);
+      const railX = side * (bodyWidth / 2 + railWidth * 0.46);
+      if (side < 0) {
+        stick(railX, bodyHeight * 0.21);
+        roundButton(railX + 0.058, -bodyHeight * 0.08, 0.036);
+        roundButton(railX - 0.058, -bodyHeight * 0.08, 0.036);
+        roundButton(railX, -bodyHeight * 0.08 + 0.058, 0.036);
+        roundButton(railX, -bodyHeight * 0.08 - 0.058, 0.036);
+        roundButton(railX, bodyHeight * 0.42, 0.026);
+      } else {
+        for (const [dx, dy] of [[1, 0], [0, 1], [-1, 0], [0, -1]]) {
+          roundButton(railX + dx * 0.064, bodyHeight * 0.24 + dy * 0.064, 0.044);
+        }
+        stick(railX, -bodyHeight * 0.12);
+        roundButton(railX + 0.045, -bodyHeight * 0.34, 0.026);
+        roundButton(railX - 0.045, -bodyHeight * 0.34, 0.026);
+      }
+    }
+  }
+  if (isDeck) {
+    // Steam Deck's rear shell has a broad exhaust near the top and four rear
+    // grip buttons, which become visible when the editor is turned to Back.
+    const ventMaterial = physicalMaterial(0x090b0c, { roughness: 0.58, metalness: 0.18 });
+    for (let index = -3; index <= 3; index += 1) {
+      const vent = roundedMesh(0.07, 0.035, 0.014, 0.014, ventMaterial, 3);
+      vent.position.set(index * 0.085, bodyHeight * 0.34, -depth * 0.54);
+      group.add(vent);
+    }
+    for (const side of [-1, 1]) {
+      rearButton(side * bodyWidth * 0.36, bodyHeight * 0.02, 0.034);
+      rearButton(side * bodyWidth * 0.36, -bodyHeight * 0.2, 0.034);
+    }
+  } else {
+    // Switch 2's wide U-shaped kickstand spans most of the tablet rear.
+    const kickstand = roundedMesh(bodyWidth * 0.9, bodyHeight * 0.41, 0.026, 0.035, physicalMaterial(0x202426, { roughness: 0.46, metalness: 0.28 }), 6);
+    kickstand.position.set(0, -bodyHeight * 0.17, -depth * 0.58);
+    group.add(kickstand);
+    const kickstandHinge = roundedMesh(bodyWidth * 0.82, 0.035, 0.02, 0.014, detailMaterial, 3);
+    kickstandHinge.position.set(0, bodyHeight * 0.035, -depth * 0.6);
+    group.add(kickstandHinge);
+    const rearVent = roundedMesh(bodyWidth * 0.28, 0.05, 0.014, 0.018, detailMaterial, 3);
+    rearVent.position.set(0, bodyHeight * 0.38, -depth * 0.54);
+    group.add(rearVent);
+  }
+  return { group, materials: { body: null, finishables: [], screen: screens.screen, glass: screens.glass } };
+}
+
+// Kindle Paperwhite: dark charcoal polyurethane body, black glass front with
+// a flush matte screen, power button on the top edge. Fixed colorway — real
+// units are black, so the finish picker deliberately has no effect here.
+function createEreader(texture, finish) {
+  void finish;
+  const group = new THREE.Group();
+  const width = 1.16;
+  const height = 1.62;
+  const depth = 0.09;
+  const body = roundedMesh(width, height, depth, 0.055, physicalMaterial(0x1f2224, { roughness: 0.68, metalness: 0.06, clearcoat: 0.14 }));
+  group.add(body);
+  const screens = addScreen(group, width * 0.9, height * 0.84, depth, texture, { z: depth * 0.42 });
+  screens.screen.position.y = screens.glass.position.y = screens.bezel.position.y = height * 0.06;
+  const power = roundedMesh(0.16, 0.03, 0.02, 0.012, physicalMaterial(0x101213, { roughness: 0.55, metalness: 0.15 }), 3);
+  power.position.set(width * 0.26, height * 0.5, 0);
+  group.add(power);
+  return {
+    group,
+    materials: { body: null, finishables: [], screen: screens.screen, glass: screens.glass },
+  };
+}
+
 function createProceduralDevice(mockup, texture, finish) {
-  if (mockup === "Flat") return createFlatDisplay(texture);
-  if (mockup === "iPad Pro" || mockup === "iPad mini") return createTablet(mockup, texture, finish);
-  if (mockup.includes("MacBook")) return createLaptop(mockup, texture, finish);
-  if (mockup === "iMac 24\"") return createDisplay(texture, finish, "imac");
-  if (mockup === "Studio Display") return createDisplay(texture, finish, "studio");
-  if (mockup === "XDR Display") return createDisplay(texture, finish);
-  if (mockup === "Apple Vision Pro") return createVisionPro(texture, finish);
-  if (mockup.includes("Watch")) return createWatch(texture, finish);
-  const result = createPhone(mockup, texture, finish);
-  return result;
+  switch (deviceArchetype(mockup)) {
+    case "flat": return createFlatDisplay(texture);
+    case "browser": return createBrowserWindow(texture, finish);
+    case "tv": return createDisplay(texture, finish, "tv");
+    case "headset": return createVisionPro(texture, finish);
+    case "watch": return createWatch(texture, finish, isAndroidMockup(mockup) ? { style: mockup.startsWith("Pixel") ? "pixel" : "galaxy" } : {});
+    case "foldable": return createFoldable(mockup, texture, finish);
+    case "handheld": return createHandheld(mockup, texture, finish);
+    case "ereader": return createEreader(texture, finish);
+    case "tablet": return createTablet(mockup, texture, finish);
+    case "laptop": return createLaptop(mockup, texture, finish);
+    case "display":
+      if (mockup === "iMac 24\"") return createDisplay(texture, finish, "imac");
+      if (mockup === "Studio Display") return createDisplay(texture, finish, "studio");
+      return createDisplay(texture, finish);
+    default: return createPhone(mockup, texture, finish);
+  }
 }
 
 function meshCount(object) {
@@ -1070,6 +1842,15 @@ function flipScreenV(screen) {
   uv.needsUpdate = true;
 }
 
+// Companion to flipScreenV for meshes whose UVs store the screen mirrored
+// horizontally (the Z Flip's inner display does).
+function flipScreenU(screen) {
+  if (!screen?.geometry?.attributes.uv) return;
+  const uv = screen.geometry.attributes.uv;
+  for (let index = 0; index < uv.count; index += 1) uv.setX(index, 1 - uv.getX(index));
+  uv.needsUpdate = true;
+}
+
 function prepareExactDevice(model, mockup, asset, screenTexture) {
   let prepared = model;
   if (asset.variant) prepared = isolateIPhoneProVariant(prepared, asset.variant);
@@ -1080,11 +1861,18 @@ function prepareExactDevice(model, mockup, asset, screenTexture) {
     prepared.rotation.z += asset.shapeRotateZ;
     prepared.updateMatrixWorld(true);
   }
+  if (asset.shapeRotateY) {
+    prepared.rotation.y += asset.shapeRotateY;
+    prepared.updateMatrixWorld(true);
+  }
   if (asset.shapeScale) prepared.scale.multiply(new THREE.Vector3().fromArray(asset.shapeScale));
+  if (asset.yawFlip) prepared.rotation.y += Math.PI;
   hideNamedMeshes(prepared, asset.hideMeshes);
   let screen = bindExactScreen(prepared, asset, screenTexture);
   if (asset.uprightScreen) uprightScreenToCamera(prepared, screen);
   if (asset.slab) faceSlabTowardCamera(prepared, screen);
+  if (asset.flipU) flipScreenU(screen);
+  if (asset.flipV) flipScreenV(screen);
   if (screen && !asset.forceOverlay && !asset.nativeScreenUv) {
     alignScreenUvToWorld(screen);
     if (asset.screenFlipV) flipScreenV(screen);
@@ -1190,15 +1978,26 @@ function enableModelShadows(object) {
 }
 
 function fitTarget(mockup) {
-  if (mockup === "iPhone 17" || mockup.includes("iPhone") || mockup === "Galaxy S26 Ultra" || mockup === "Pixel 10 Pro") return 1.55;
-  if (mockup.includes("Watch")) return 1.48;
-  if (mockup === "iPad Pro") return 1.5;
-  if (mockup === "iPad mini") return 1.58;
-  if (mockup === "Flat") return 1.82;
-  if (mockup === "XDR Display" || mockup === "iMac 24\"" || mockup === "Studio Display") return 1.22;
-  if (mockup === "Apple Vision Pro") return 1.55;
-  if (mockup.includes("MacBook")) return 1.26;
-  return 2.08;
+  const arch = deviceArchetype(mockup);
+  if (arch === "flat") return 1.82;
+  if (arch === "browser") return 1.78;
+  if (arch === "watch") return 1.48;
+  if (arch === "tablet") {
+    if (mockup === "iPad mini") return 1.58;
+    if (mockup === "Galaxy Tab S11 Ultra") return 1.52;
+    return 1.5;
+  }
+  if (arch === "display") return 1.22;
+  if (arch === "tv") return 1.5;
+  if (arch === "headset") return 1.55;
+  if (arch === "laptop") {
+    if (mockup === "Surface Laptop 15\"" || mockup === "Dell XPS 16") return 1.42;
+    return 1.26;
+  }
+  if (arch === "foldable") return mockup.includes("Flip") ? 1.55 : 1.7;
+  if (arch === "handheld") return 2.1;
+  if (arch === "ereader") return 1.66;
+  return 1.55;
 }
 
 function loadScreenTexture(media, disposables) {
@@ -1334,6 +2133,7 @@ function updateProceduralMaterials(runtime, finish, reflection) {
   const { body, finishables, screen, glass } = runtime.materials || {};
   const refs = finishables?.length ? finishables : body ? [{ material: body.material, role: "body" }] : [];
   refs.forEach(({ material, role }) => {
+    if (material?.userData?.openmockFixedColor) return;
     if (material?.color) material.color.setHex(palette[role] || palette.body);
   });
   if (screen?.material) {
@@ -1341,7 +2141,8 @@ function updateProceduralMaterials(runtime, finish, reflection) {
     if ("clearcoat" in screen.material) screen.material.clearcoat = 0.82;
   }
   if (glass?.material) {
-    glass.material.opacity = 0.1 + (Number(reflection?.amount) || 0.22) * 0.2;
+    const opacityScale = glass.material.userData?.openmockOpacityScale ?? 1;
+    glass.material.opacity = (0.1 + (Number(reflection?.amount) || 0.22) * 0.2) * opacityScale;
     if ("roughness" in glass.material) glass.material.roughness = Math.max(0.035, Number(reflection?.roughness) || 0.08);
   }
 }
@@ -1536,24 +2337,27 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
     camera.fov = Number(cameraData.fov) || 24;
     camera.zoom = Math.max(0.5, Math.min(2.2, (Number(cameraData.zoom) || 1.9) / 1.9));
     const tallViewport = runtime.renderer.domElement.clientHeight / Math.max(1, runtime.renderer.domElement.clientWidth) > 1.2;
-    const displayMockup = mockup === "XDR Display" || mockup === "iMac 24\"" || mockup === "Studio Display";
-    const phoneMockup = mockup.includes("iPhone") || mockup === "Galaxy S26 Ultra" || mockup === "Pixel 10 Pro";
-    const tabletMockup = mockup === "iPad Pro" || mockup === "iPad mini";
-    const watchMockup = mockup.includes("Watch");
-    const laptopMockup = mockup.includes("MacBook");
-    const headsetMockup = mockup === "Apple Vision Pro";
-    const baseCameraZ = mockup === "Flat" ? 4.35 : laptopMockup ? 4.5 : displayMockup ? 4.3 : headsetMockup ? 3.9 : watchMockup ? 3.9 : tabletMockup ? 4.05 : 3.62;
+    const arch = deviceArchetype(mockup);
+    const flatMockup = arch === "flat";
+    const displayMockup = arch === "display" || arch === "tv" || arch === "browser";
+    const phoneMockup = arch === "phone" || arch === "foldable";
+    const tabletMockup = arch === "tablet" || arch === "ereader";
+    const watchMockup = arch === "watch";
+    const laptopMockup = arch === "laptop";
+    const headsetMockup = arch === "headset";
+    const handheldMockup = arch === "handheld";
+    const baseCameraZ = flatMockup ? 4.35 : laptopMockup ? 4.5 : arch === "tv" ? 4.75 : displayMockup ? 4.3 : headsetMockup ? 3.9 : watchMockup ? 3.9 : tabletMockup ? 4.05 : handheldMockup ? 4.1 : arch === "foldable" ? 3.95 : 3.62;
     camera.position.z = baseCameraZ * (tallViewport ? 1.14 : 1);
-    camera.position.y = laptopMockup ? 0.48 : 0.04;
+    camera.position.y = laptopMockup ? 0.48 : displayMockup ? 0.1 : 0.04;
     camera.lookAt(0, laptopMockup ? -0.16 : 0, 0);
     camera.updateProjectionMatrix();
     if (root) {
       const xAxis = Number(cameraData.xAxis) || 0;
       const yAxis = Number(cameraData.yAxis) || 0;
       const zAxis = Number(cameraData.zAxis) || 0;
-      const rollFactor = mockup === "Flat" ? 0 : laptopMockup || displayMockup ? 0.1 : headsetMockup ? 0.03 : watchMockup ? 0.22 : tabletMockup ? 0.18 : 0.65;
+      const rollFactor = flatMockup ? 0 : laptopMockup || displayMockup ? 0.1 : headsetMockup ? 0.03 : watchMockup ? 0.22 : tabletMockup ? 0.18 : handheldMockup ? 0.3 : arch === "foldable" ? (mockup.includes("Flip") ? 0.6 : 0.32) : 0.65;
       const yawSign = phoneMockup ? -1 : 1;
-      const backView = cameraPreset === "Back" && (phoneMockup || tabletMockup || watchMockup);
+      const backView = cameraPreset === "Back" && (phoneMockup || tabletMockup || watchMockup || handheldMockup);
       const basePitch = backView ? 8 : 0;
       const baseYaw = backView ? 180 : 0;
       // Camera axes are actual degrees now. Keep a small device-specific roll
@@ -1561,9 +2365,9 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
       // independent full-turn roll control.
       root.rotation.order = "YXZ";
       root.rotation.set(
-        mockup === "Flat" ? 0 : THREE.MathUtils.degToRad(basePitch + yAxis),
-        mockup === "Flat" ? 0 : THREE.MathUtils.degToRad(baseYaw + xAxis * yawSign),
-        mockup === "Flat" ? 0 : THREE.MathUtils.degToRad(zAxis - xAxis * rollFactor),
+        flatMockup ? 0 : THREE.MathUtils.degToRad(basePitch + yAxis),
+        flatMockup ? 0 : THREE.MathUtils.degToRad(baseYaw + xAxis * yawSign),
+        flatMockup ? 0 : THREE.MathUtils.degToRad(zAxis - xAxis * rollFactor),
       );
       refitStage(runtime, Number(cameraData.panX) || 0, Number(cameraData.panY) || 0);
       runtime.lastPanX = Number(cameraData.panX) || 0;

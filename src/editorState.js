@@ -45,23 +45,89 @@ export function scenePatch(scene) {
 
 export const mockupOptions = [
   ["Flat", "FREE", false],
+  ["Browser Window", "FREE", false],
+  ["TV 65\"", "FREE", false],
+  ["iPhone 16", "FREE", false],
   ["iPhone 17", "FREE", false],
+  ["iPhone 17 Air", "FREE", false],
   ["iPhone 17 Pro", "FREE", false],
   ["iPhone 17 Pro Max", "FREE", false],
+  ["Galaxy S26", "FREE", false],
+  ["Galaxy S26+", "FREE", false],
   ["Galaxy S26 Ultra", "FREE", false],
+  ["Galaxy Z Fold 8", "FREE", false],
+  ["Galaxy Z Flip 8", "FREE", false],
+  ["Pixel 10", "FREE", false],
   ["Pixel 10 Pro", "FREE", false],
-  ["Apple Watch Ultra 3", "FREE", false],
-  ["iPad Pro", "FREE", false],
+  ["Pixel 10 Pro XL", "FREE", false],
+  ["Galaxy Tab S11 Ultra", "FREE", false],
+  ["iPad (A16)", "FREE", false],
+  ["iPad Air 11\"", "FREE", false],
+  ["iPad Air 13\"", "FREE", false],
   ["iPad mini", "FREE", false],
-  ["MacBook Neo", "FREE", false],
+  ["iPad Pro", "FREE", false],
+  ["Kindle Paperwhite", "FREE", false],
+  ["Apple Watch SE 3", "FREE", false],
+  ["Apple Watch Series 11", "FREE", false],
+  ["Apple Watch Ultra 3", "FREE", false],
+  ["Galaxy Watch 8", "FREE", false],
+  ["Pixel Watch 4", "FREE", false],
+  ["Nintendo Switch 2", "FREE", false],
+  ["Steam Deck", "FREE", false],
   ["MacBook Air 13\"", "FREE", false],
+  ["MacBook Neo", "FREE", false],
   ["MacBook Pro 14\"", "FREE", false],
   ["MacBook Pro 16\"", "FREE", false],
+  ["Surface Laptop 15\"", "FREE", false],
+  ["Dell XPS 16", "FREE", false],
   ["iMac 24\"", "FREE", false],
   ["Studio Display", "FREE", false],
-  ["Apple Vision Pro", "FREE", false],
   ["XDR Display", "FREE", false],
+  ["Apple Vision Pro", "FREE", false],
 ];
+
+// Single source of truth mapping a mockup name to the device family both
+// renderers (three.js stage and the DOM fallback) branch on. Order matters:
+// specific families (watch, foldable, Tab) must be tested before the generic
+// phone/tablet suffix matches.
+export function deviceArchetype(mockup) {
+  const name = String(mockup || "");
+  if (name === "Flat") return "flat";
+  if (name === "Browser Window") return "browser";
+  if (name === "TV 65\"") return "tv";
+  if (name === "Apple Vision Pro") return "headset";
+  if (name.includes("Watch")) return "watch";
+  if (name.includes("Z Fold") || name.includes("Z Flip")) return "foldable";
+  if (name.includes("Switch") || name.includes("Steam Deck")) return "handheld";
+  if (name.includes("Kindle")) return "ereader";
+  if (name.includes("MacBook") || name.includes("Surface Laptop") || name.includes("Dell XPS")) return "laptop";
+  if (name === "iMac 24\"" || name === "Studio Display" || name === "XDR Display") return "display";
+  if (name.includes("iPad") || name.includes("Tab ")) return "tablet";
+  return "phone";
+}
+
+// Samsung and Google hardware carries a punch-hole front camera instead of
+// Apple's Dynamic Island, and Samsung/Google watches are round.
+export function isAndroidMockup(mockup) {
+  const name = String(mockup || "");
+  if (!name.startsWith("Galaxy") && !name.startsWith("Pixel")) return false;
+  return ["phone", "foldable", "tablet", "watch"].includes(deviceArchetype(name));
+}
+
+// Picker section labels: groups the flat catalog without changing its order.
+export function deviceGroup(mockup) {
+  switch (deviceArchetype(mockup)) {
+    case "flat": return "Stage";
+    case "phone": case "foldable": return "Phones";
+    case "tablet": case "ereader": return "Tablets & readers";
+    case "watch": return "Watches";
+    case "handheld": return "Handhelds";
+    case "browser": case "tv": return "Web & TV";
+    case "display": return "Desktops";
+    case "laptop": return "Laptops";
+    default: return "Spatial";
+  }
+}
 export const finishOptions = ["White", "Black", "Mist Blue", "Sage", "Lavender"];
 export const lightingOptions = ["Default", "Studio Soft", "Dark Rim", "Two Tone", "Warm Glow"];
 export const presetOptions = ["None", "Mono", "Metal", "Airy", "Aurora", "Spectrum", "Sunset", "Ocean", "Violet", "Emerald", "Ember"];
