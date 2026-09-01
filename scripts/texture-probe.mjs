@@ -5,12 +5,12 @@ const page = await browser.newPage({ viewport: { width: 1121, height: 900 }, dev
 page.on("console", (msg) => { if (msg.type() === "error" || msg.type() === "warning") console.log(`[${msg.type()}]`, msg.text().slice(0, 300)); });
 await page.goto("http://localhost:5173/", { waitUntil: "domcontentloaded" });
 await page.evaluate((dev) => {
-  const proj = JSON.parse(localStorage.getItem("ultramonk-project") || "{}");
+  const proj = JSON.parse(localStorage.getItem("openmock-project") || "{}");
   proj.mockup = dev;
   proj.cameraPreset = "Flat";
   proj.camera = { xAxis: 0, yAxis: 0, zAxis: 0, fov: 24, zoom: 1.9, panX: 0, panY: -0.17 };
-  localStorage.setItem("ultramonk-project", JSON.stringify(proj));
-  localStorage.setItem("ultramonk-tour-seen", "1");
+  localStorage.setItem("openmock-project", JSON.stringify(proj));
+  localStorage.setItem("openmock-tour-seen", "1");
 }, "iPhone 17");
 await page.reload({ waitUntil: "domcontentloaded" });
 for (let i = 0; i < 40; i += 1) {
@@ -38,7 +38,7 @@ const probe = await page.evaluate(async () => {
   const gltf = await loader.loadAsync("/assets/source/iphone-17-p-sim.glb");
   const screens = [];
   gltf.scene.traverse((o) => {
-    if (o.isMesh && o.userData?.ultramonkRole === "proDisplayScreen") screens.push(o.name);
+    if (o.isMesh && Object.values(o.userData || {}).includes("proDisplayScreen")) screens.push(o.name);
   });
   const screen = screens[0];
   const mesh = gltf.scene.getObjectByName(screen);

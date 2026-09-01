@@ -243,7 +243,7 @@ export async function renderProjectCanvas(project, { width = 1920, height = 1080
     ctx.fillStyle = "#fff";
     ctx.font = `${Math.max(12, Math.round(canvas.width * 0.011))}px GeistMono, monospace`;
     ctx.textAlign = "right";
-    ctx.fillText("ULTRAMONK", canvas.width - 24, canvas.height - 22);
+    ctx.fillText("OPENMOCK", canvas.width - 24, canvas.height - 22);
     ctx.restore();
   }
   return canvas;
@@ -273,7 +273,7 @@ export async function exportImage(project) {
   const mime = format === "png" ? "image/png" : format === "webp" ? "image/webp" : "image/jpeg";
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, mime, 0.94));
   if (!blob) throw new Error("The browser could not encode this image.");
-  downloadBlob(blob, `ultramonk-export.${format}`);
+  downloadBlob(blob, `openmock-export.${format}`);
   return { width, height, format };
 }
 
@@ -330,7 +330,7 @@ export async function exportVideo(project, onProgress = () => {}) {
   window.setTimeout(() => recorder.stop(), duration + 60);
   const blob = await done;
   stream.getTracks().forEach((track) => track.stop());
-  downloadBlob(blob, "ultramonk-export.webm");
+  downloadBlob(blob, "openmock-export.webm");
   onProgress(1);
   return { width: canvas.width, height: canvas.height, format: "webm" };
 }

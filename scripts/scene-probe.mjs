@@ -10,9 +10,9 @@ await page.goto("http://localhost:5199/", { waitUntil: "domcontentloaded" });
 
 // Fresh project so the probe always starts from the documented defaults.
 await page.evaluate(() => {
-  localStorage.removeItem("ultramonk-project");
-  localStorage.setItem("ultramonk-tour-seen", "1");
-  localStorage.setItem("ultramonk-mobile-onboarded", "1");
+  localStorage.removeItem("openmock-project");
+  localStorage.setItem("openmock-tour-seen", "1");
+  localStorage.setItem("openmock-mobile-onboarded", "1");
 });
 await page.reload({ waitUntil: "domcontentloaded" });
 await page.waitForSelector(".mockup-stage", { timeout: 20000 });

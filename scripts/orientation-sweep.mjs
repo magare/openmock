@@ -44,15 +44,15 @@ await page.goto("http://localhost:5173/", { waitUntil: "domcontentloaded" });
 
 for (const [name, slug] of devices) {
   await page.evaluate(([dev, media]) => {
-    const proj = JSON.parse(localStorage.getItem("ultramonk-project") || "{}");
+    const proj = JSON.parse(localStorage.getItem("openmock-project") || "{}");
     proj.mockup = dev;
     proj.cameraPreset = "Flat";
     proj.camera = { xAxis: 0, yAxis: 0, zAxis: 0, fov: 32, zoom: 1.35, panX: 0, panY: 0 };
     proj.media = { name: "orientation-test", type: "image/svg+xml", src: media };
-    localStorage.setItem("ultramonk-project", JSON.stringify(proj));
-    localStorage.setItem("ultramonk-tour-seen", "1");
-    localStorage.setItem("ultramonk-red-test", "1");
-    localStorage.setItem("ultramonk-collapse-uv", "1");
+    localStorage.setItem("openmock-project", JSON.stringify(proj));
+    localStorage.setItem("openmock-tour-seen", "1");
+    localStorage.setItem("openmock-red-test", "1");
+    localStorage.setItem("openmock-collapse-uv", "1");
   }, [name, mediaDataUrl]);
   await page.reload({ waitUntil: "domcontentloaded" });
   let status = "none";
@@ -75,6 +75,6 @@ for (const [name, slug] of devices) {
   await writeFile(`${outDir}/${slug}.png`, shot);
   console.log(`${name}: ${status}`);
 }
-const relevant = logs.filter(([, t]) => /exact|fallback|Failed|ultramock-align/i.test(t)).slice(0, 20);
+const relevant = logs.filter(([, t]) => /exact|fallback|Failed|openmock-align/i.test(t)).slice(0, 20);
 if (relevant.length) console.log(relevant.map(([t, m]) => `[${t}] ${m}`).join("\n"));
 await browser.close();

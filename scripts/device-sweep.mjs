@@ -39,11 +39,11 @@ await page.goto("http://localhost:5173/", { waitUntil: "domcontentloaded" });
 const report = [];
 for (const [name, slug] of devices) {
   await page.evaluate((dev) => {
-    const proj = JSON.parse(localStorage.getItem("ultramonk-project") || "{}");
+    const proj = JSON.parse(localStorage.getItem("openmock-project") || "{}");
     proj.mockup = dev;
-    localStorage.setItem("ultramonk-project", JSON.stringify(proj));
-    localStorage.setItem("ultramonk-tour-seen", "1");
-    localStorage.setItem("ultramonk-mobile-onboarded", "1");
+    localStorage.setItem("openmock-project", JSON.stringify(proj));
+    localStorage.setItem("openmock-tour-seen", "1");
+    localStorage.setItem("openmock-mobile-onboarded", "1");
   }, name);
   await page.reload({ waitUntil: "domcontentloaded" });
   let status = "none";

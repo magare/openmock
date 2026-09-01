@@ -1,6 +1,6 @@
-# Ultramonk recreation notes
+# OpenMock recreation notes
 
-This folder contains a runnable local recreation of the editor at [ultramonk.io](https://www.ultramonk.io/). The reference was inspected in the Codex in-app browser on 2026-08-30. The source is an interactive editor workspace rather than a conventional marketing page.
+This folder contains the runnable local OpenMock editor prototype. Its visual reference was inspected in the Codex in-app browser on 2026-08-30. The source is an interactive editor workspace rather than a conventional marketing page.
 
 ## Run and build
 
@@ -16,10 +16,10 @@ The production build is prepared for the generated Sites packaging contract by t
 
 ## Reference identity
 
-- Page title: `Ultramonk — Turn product screens into premium visuals`.
+- Page title: `OpenMock — Turn product screens into premium visuals`.
 - Product type: browser-based 3D mockup editor for turning product screens into premium stills and animated videos.
 - Reference version shown in the Info panel: `2.42.1`.
-- Reference footer: `©2026 Ultramonk`.
+- Reference footer: `©2026 OpenMock`.
 - Reference author link: `@joshmillgate`.
 - Reference community links: Discord and X/Twitter.
 - The reference loaded a Three.js-style GLB device model and an HDR studio environment in addition to the raster UI and background assets. The exact `iphone-17-p-sim.glb` and `brown_photostudio_04_2k.hdr` files are bundled under `public/assets/source` and wired through `src/ThreeStage.jsx` with local Basis transcoder files. Browsers without WebGL automatically use the responsive local CSS device fallback so the editor remains usable in constrained preview environments.
@@ -47,7 +47,7 @@ At the captured 1121 × 789 desktop viewport:
 The reference toolbar contains these visible concepts, in order:
 
 1. Main menu button.
-2. Ultramonk circular mark.
+2. OpenMock circular mark.
 3. `INFO`.
 4. `TEMPLATES` with a down chevron.
 5. `HELP`.
@@ -71,7 +71,7 @@ The reference initial state shows:
 - A black upload toast reading `Upload media to get started — or paste / drop.` with an orange `Upload` action.
 - A subtle center point; center guides can be enabled from the timeline toolbar.
 
-The recreation keeps the same visual hierarchy and uses the captured starter screen, whisp background, white device panel, and Ultramonk mark from the source asset inventory.
+The recreation keeps the same visual hierarchy and uses the captured starter screen, whisp background, white device panel, and OpenMock mark from the source asset inventory.
 
 ## 3D renderer implementation
 
@@ -81,7 +81,7 @@ The stage is now a real Three.js renderer whenever WebGL is available. `src/Thre
 
 - The `iPhone 17`, `iPhone 17 Pro`, and `iPhone 17 Pro Max` options use `public/assets/source/iphone-17-p-sim.glb`, the exact compressed model discovered from the reference page, so the full iPhone family shares the same high-detail physical source.
 - `KTX2Loader` points at `public/assets/basis/` and calls `detectSupport(renderer)` before `GLTFLoader` loads the model, matching the model's `KHR_texture_basisu` requirement.
-- The model's `ultramonkRole: "proDisplayScreen"` mesh is identified from the GLB extras and receives the current local image/video screen texture. This keeps uploaded media mapped to the actual 3D display surface rather than only to a fallback DOM image.
+- The model's `proDisplayScreen` role metadata is identified from the GLB extras and receives the current local image/video screen texture. This keeps uploaded media mapped to the actual 3D display surface rather than only to a fallback DOM image.
 - The source `brown_photostudio_04_2k.hdr` is loaded through `HDRLoader`, converted with `PMREMGenerator`, and assigned as the local scene environment.
 - Loaded meshes use physical material properties from the source model plus controlled clearcoat, roughness, environment intensity, cast-shadow, and receive-shadow settings. Finish changes recolor the hardware while leaving the screen texture neutral.
 
@@ -125,9 +125,9 @@ The clone keeps the menu interactions and routes `Info` and `Help` into the matc
 
 ## Info panel
 
-The Info panel is a centered modal with a dark Ultramonk banner, light content, and a dark footer. Observed content:
+The Info panel is a centered modal with a dark OpenMock banner, light content, and a dark footer. Observed content:
 
-- Ultramonk mark.
+- OpenMock mark.
 - `Version 2.42.1`.
 - `Made by @joshmillgate`.
 - `Join the waitlist for V3`.
@@ -135,7 +135,7 @@ The Info panel is a centered modal with a dark Ultramonk banner, light content, 
 - `Community` heading.
 - `Join Discord`.
 - `Follow on X`.
-- `©2026 Ultramonk`.
+- `©2026 OpenMock`.
 - `Account`, `Privacy`, and `Terms` footer links.
 
 The clone includes the modal and realistic local form behavior without submitting any external form.
@@ -182,7 +182,7 @@ The clone implements the tour restart, timeline-tour feedback, Auto-motion launc
 
 The first desktop visit shows an 8-step dark tour modal. The reference copy is:
 
-1. `WELCOME TO ULTRAMONK` — a roughly 30-second editor tour that can be skipped or restarted from Help.
+1. `WELCOME TO OPENMOCK` — a roughly 30-second editor tour that can be skipped or restarted from Help.
 2. `THE VIEWPORT` — use mouse or trackpad to interact with the 3D mockup. Controls: tilt with click-drag, move with Space + click-drag, zoom with scroll.
 3. `ADD MEDIA` — drag and drop an image/video on the viewport or paste with `⌘V`.
 4. `THE TIMELINE` — set keyframes and animate the camera for dynamic videos.
@@ -226,7 +226,7 @@ The clone keeps these labels, selection state, and local ratio feedback. Ratio c
 
 - Image format selector: `JPG — SMALLEST FILE` initially.
 - Alternatives: `PNG — LOSSLESS, TRANSPARENCY` and `WEBP — MODERN, SMALL`.
-- `Ultramonk watermark` switch, unchecked initially so exports are clean by default.
+- `OpenMock watermark` switch, unchecked initially so exports are clean by default.
 - `Transparent Background` switch, off initially.
 - Orientation segmented control: Landscape selected, Square, Portrait.
 - Size selector: `16:9 — 1920×1080 (1080P)`.
@@ -466,7 +466,7 @@ The reference mobile canvas is a separate responsive editor mode rather than a c
 
 On first mobile visit:
 
-- A modal says `Welcome to Ultramonk on mobile`.
+- A modal says `Welcome to OpenMock on mobile`.
 - It recommends switching to desktop for the full video-editing and animation experience.
 - Buttons are Close and Send to yourself.
 
@@ -484,7 +484,7 @@ The clone reproduces the mobile welcome and tips overlays.
 The compact mobile toolbar shows:
 
 - Menu.
-- Ultramonk mark.
+- OpenMock mark.
 - Fill ratio.
 - Free access indicator.
 - Theme control.
@@ -556,7 +556,7 @@ These captures are retained so future visual iterations can be checked against t
 
 The asset bundle was downloaded from the loaded source page rather than hotlinked:
 
-- `public/assets/source/ultramonk.svg` — source brand mark.
+- `public/assets/source/openmock.svg` — source brand mark.
 - `public/assets/source/icon.png` — source icon raster.
 - `public/assets/source/whisp.jpeg` — source whisp background.
 - `public/assets/source/placeholder.jpg` — source upload placeholder asset.
@@ -573,9 +573,9 @@ The asset bundle was downloaded from the loaded source page rather than hotlinke
 
 This is a frontend recreation. It does not:
 
-- Sign a user into Ultramonk.
+- Sign a user into OpenMock.
 - Submit the waitlist email form.
-- Publish or save to a remote Ultramonk account.
+- Publish or save to a remote OpenMock account.
 - Export to a remote account or cloud render service.
 - Send feedback or email.
 - Charge for editor access; every local editor capability is available without a purchase.

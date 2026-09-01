@@ -16,7 +16,7 @@ const starterUrl = localAssetUrl("source/starter-screen.jpg");
 // Manufacturer-supplied product geometry. Apple models come from the AR assets
 // on each product page; Samsung and Google publish the GLBs used by their own
 // interactive product viewers. The source iPhone 17 GLB remains the baseline
-// because it includes Ultramock's explicit screen-surface metadata.
+// because it includes OpenMock's explicit screen-surface metadata.
 const exactDeviceAssets = {
   "iPhone 17": {
     type: "gltf",
@@ -692,7 +692,7 @@ function findExactScreen(model, asset) {
   model.traverse((object) => {
     if (screen || !object.isMesh) return;
     const hasName = asset.screenNames?.includes(object.name);
-    const hasRole = asset.screenRole && object.userData?.ultramonkRole === asset.screenRole;
+    const hasRole = asset.screenRole && (object.userData?.openmockRole === asset.screenRole || Object.values(object.userData || {}).includes(asset.screenRole));
     if (hasName || hasRole) screen = object;
   });
   return screen;
@@ -744,8 +744,8 @@ function addExactScreenOverlay(model, overlay, texture, screenAspect) {
     uv.needsUpdate = true;
   }
   screen.userData.screenAspect = screenAspect;
-  screen.userData.ultramonkScreen = true;
-  screen.userData.ultramonkOverlay = true;
+  screen.userData.openmockScreen = true;
+  screen.userData.openmockOverlay = true;
   model.add(screen);
   return screen;
 }
@@ -936,7 +936,7 @@ function bindExactScreen(model, asset, screenTexture) {
   });
   screen.material = screenMaterial;
   screen.userData.screenAspect = asset.screenAspect;
-  screen.userData.ultramonkScreen = true;
+  screen.userData.openmockScreen = true;
   return screen;
 }
 
@@ -949,7 +949,7 @@ function faceSlabTowardCamera(model, screen) {
     model.rotation.y += Math.PI;
     // An overlay quad would face away from the camera after the flip and show
     // mirrored media through its backside, so turn it around with the model.
-    if (screen.userData?.ultramonkOverlay) screen.rotation.y += Math.PI;
+    if (screen.userData?.openmockOverlay) screen.rotation.y += Math.PI;
   }
 }
 
@@ -964,7 +964,7 @@ function markDisplayStand(model, screen) {
     if (!object.isMesh || object === screen) return;
     const box = new THREE.Box3().setFromObject(object);
     const center = box.getCenter(new THREE.Vector3());
-    if (center.y < cutoff || box.max.y < belowScreen) object.userData.ultramonkRole = "standMetal";
+    if (center.y < cutoff || box.max.y < belowScreen) object.userData.openmockRole = "standMetal";
   });
 }
 
@@ -976,7 +976,7 @@ function swapExplicitStandMaterial(model, names = []) {
   model.traverse((object) => {
     if (!object.isMesh || !names.includes(object.name)) return;
     object.material = new THREE.MeshStandardMaterial({ color: 0xbac1c4, metalness: 0.72, roughness: 0.26, envMapIntensity: 0.65 });
-    object.userData.ultramonkRole = "standMetal";
+    object.userData.openmockRole = "standMetal";
   });
 }
 
@@ -1091,8 +1091,8 @@ function prepareExactDevice(model, mockup, asset, screenTexture) {
   }
   if (asset.standFinish) markDisplayStand(prepared, screen);
   if (asset.standMeshes) swapExplicitStandMaterial(prepared, asset.standMeshes);
-  prepared.userData.ultramockSource = "manufacturer";
-  prepared.userData.ultramockMockup = mockup;
+  prepared.userData.openmockSource = "manufacturer";
+  prepared.userData.openmockMockup = mockup;
   return prepared;
 }
 
@@ -1229,28 +1229,28 @@ function applyLoadedModelMaterials(model, finish, reflection) {
     if (!object.isMesh || !object.material) return;
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     materials.forEach((material) => {
-      const isScreen = object.userData?.ultramonkScreen || object.userData?.ultramonkRole === "proDisplayScreen";
+      const isScreen = object.userData?.openmockScreen || Object.values(object.userData || {}).includes("proDisplayScreen");
       if (isScreen) {
         material.toneMapped = false;
         return;
       }
-      material.userData.ultramockBaseColor ||= material.color?.clone();
-      material.userData.ultramockBaseRoughness ??= material.roughness;
+      material.userData.openmockBaseColor ||= material.color?.clone();
+      material.userData.openmockBaseRoughness ??= material.roughness;
       material.envMapIntensity = 0.52 + reflectionAmount * 0.58;
-      if ("roughness" in material && Number.isFinite(material.userData.ultramockBaseRoughness)) {
-        material.roughness = Math.max(0.04, Math.min(1, material.userData.ultramockBaseRoughness * 0.76 + requestedRoughness * 0.24));
+      if ("roughness" in material && Number.isFinite(material.userData.openmockBaseRoughness)) {
+        material.roughness = Math.max(0.04, Math.min(1, material.userData.openmockBaseRoughness * 0.76 + requestedRoughness * 0.24));
       }
       if ("clearcoat" in material) material.clearcoat = Math.max(material.clearcoat || 0, 0.34 + reflectionAmount * 0.34);
-      if (material.color && material.userData.ultramockBaseColor) {
-        material.color.copy(material.userData.ultramockBaseColor);
-        if (object.userData?.ultramonkRole === "standMetal") {
+      if (material.color && material.userData.openmockBaseColor) {
+        material.color.copy(material.userData.openmockBaseColor);
+        if (object.userData?.openmockRole === "standMetal") {
           material.map = null;
           material.color.setHex(finish === "White" ? 0xbac1c4 : palette.metal);
           if ("metalness" in material) material.metalness = 0.72;
           if ("roughness" in material) material.roughness = 0.26;
           return;
         }
-        const sourceHsl = material.userData.ultramockBaseColor.getHSL({ h: 0, s: 0, l: 0 });
+        const sourceHsl = material.userData.openmockBaseColor.getHSL({ h: 0, s: 0, l: 0 });
         const tintable = !material.map && sourceHsl.l > 0.12;
         if (tintable && sourceHsl.s > 0.07) material.color.lerp(tint, finish === "White" ? 0.58 : 0.64);
         else if (tintable && finish !== "White") material.color.lerp(tint, 0.22);
