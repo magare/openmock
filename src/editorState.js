@@ -216,7 +216,7 @@ export function createDefaultProject() {
     ],
     activeTrackId: "shot-1",
     selectedKeyframeId: "kf-1",
-    timeline: { mode: "advanced", minimized: true, guides: false, loop: false, playing: false, recording: false, playhead: 0, duration: 6, projectLength: "0:12", zoom: 1, presetOpen: false, trackMenuOpen: false, expandedTrack: false },
+    timeline: { mode: "advanced", minimized: true, guides: false, loop: false, playing: false, recording: false, playhead: 0, duration: 6, projectLength: "0:06", zoom: 1, presetOpen: false, trackMenuOpen: false, expandedTrack: false },
     export: { format: "jpg", watermark: false, transparent: false, orientation: "Landscape", imageSize: "16:9 — 1920×1080 (1080P)", videoOrientation: "Landscape", videoSize: "16:9 — 1280×720 (720P)", quality: "Med", fps: 30, motionBlur: "Off" },
   };
 }

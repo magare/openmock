@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Aperture, BookOpen, Box, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp,
   CircleHelp, CircleStop, Diamond, ExternalLink, Film, Gamepad2, GripVertical, HelpCircle, ImagePlus,
@@ -196,7 +196,7 @@ export function App() {
   const [mobileTip, setMobileTip] = useState(() => showTips && isMobileViewport && !window.localStorage.getItem("openmock-mobile-onboarded") ? "welcome" : "");
   const [tourStep, setTourStep] = useState(() => showTips && !isMobileViewport && !window.localStorage.getItem("openmock-tour-seen") ? 1 : 0);
   const [panelSections, setPanelSections] = useState({ source: true, scene: true, lighting: true, background: true, mockup: true, finish: true, reflection: true, camera: true, effects: true });
-  const [sceneOpen, setSceneOpen] = useState(false), [lightingOpen, setLightingOpen] = useState(false), [backgroundOpen, setBackgroundOpen] = useState(false), [backgroundPickerOpen, setBackgroundPickerOpen] = useState(false), [mockupOpen, setMockupOpen] = useState(false), [finishOpen, setFinishOpen] = useState(false), [cameraPresetOpen, setCameraPresetOpen] = useState(false), [effectsOpen, setEffectsOpen] = useState(false);
+  const [sceneOpen, setSceneOpen] = useState(false), [lightingOpen, setLightingOpen] = useState(false), [backgroundOpen, setBackgroundOpen] = useState(false), [mockupOpen, setMockupOpen] = useState(false), [finishOpen, setFinishOpen] = useState(false), [cameraPresetOpen, setCameraPresetOpen] = useState(false), [effectsOpen, setEffectsOpen] = useState(false);
   const [autoAreas, setAutoAreas] = useState([]);
   const stageRef = useRef(null), uploadRef = useRef(null), pointerRef = useRef(null), spaceDownRef = useRef(false);
   const axisHudRef = useRef(null), axisHudTimer = useRef(0);
@@ -221,8 +221,8 @@ export function App() {
     window.clearTimeout(axisHudTimer.current);
     axisHudTimer.current = window.setTimeout(() => { el.dataset.active = ""; }, 900);
   }, []);
-  const closePopovers = useCallback(() => { setPopover(""); setSceneOpen(false); setLightingOpen(false); setBackgroundOpen(false); setBackgroundPickerOpen(false); setMockupOpen(false); setFinishOpen(false); setCameraPresetOpen(false); setEffectsOpen(false); }, []);
-  const anyPopoverOpen = Boolean(popover || sceneOpen || lightingOpen || backgroundOpen || backgroundPickerOpen || mockupOpen || finishOpen || cameraPresetOpen || effectsOpen);
+  const closePopovers = useCallback(() => { setPopover(""); setSceneOpen(false); setLightingOpen(false); setBackgroundOpen(false); setMockupOpen(false); setFinishOpen(false); setCameraPresetOpen(false); setEffectsOpen(false); }, []);
+  const anyPopoverOpen = Boolean(popover || sceneOpen || lightingOpen || backgroundOpen || mockupOpen || finishOpen || cameraPresetOpen || effectsOpen);
   useEffect(() => {
     if (!anyPopoverOpen) return undefined;
     const handlePointerDown = (event) => {
@@ -392,9 +392,44 @@ export function App() {
   }, [modal, tourStep, mobileTip, preciseMovement, showAxisHud, updateCamera, updateProject]);
 
   const handleSaveProject = useCallback(() => { try { window.localStorage.setItem("openmock-project", JSON.stringify(getSerializableProject(project))); notify(project.media?.type?.startsWith("video/") ? "Project saved. Re-add the local video source next time." : "Project saved locally."); } catch { notify("Project could not be saved in this browser."); } }, [notify, project]);
-  const handleCapture = useCallback(async () => { try { await exportImage(project); notify("Image captured and downloaded."); } catch (error) { notify(error.message || "Capture failed."); } }, [notify, project]);
-  const handleExportImage = useCallback(async () => { setExporting(true); try { const result = await exportImage(project); notify(`Exported ${result.width} × ${result.height} ${result.format.toUpperCase()} image.`); } catch (error) { notify(error.message || "Image export failed."); } finally { setExporting(false); } }, [notify, project]);
-  const handleExportVideo = useCallback(async () => { setExporting(true); setExportProgress(0); try { const result = await exportVideo(project, setExportProgress); notify(`Exported ${result.width} × ${result.height} WEBM video.`); } catch (error) { notify(error.message || "Video export failed."); } finally { setExporting(false); setExportProgress(0); } }, [notify, project]);
+  const handleCapture = useCallback(async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const result = await exportImage(project);
+      notify(`Quick snapshot downloaded (${result.width} × ${result.height} ${result.format.toUpperCase()}).`);
+    } catch (error) {
+      notify(error.message || "Snapshot failed.");
+    } finally {
+      setExporting(false);
+    }
+  }, [exporting, notify, project]);
+  const handleExportImage = useCallback(async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const result = await exportImage(project);
+      notify(`Exported ${result.width} × ${result.height} ${result.format.toUpperCase()} image.`);
+    } catch (error) {
+      notify(error.message || "Image export failed.");
+    } finally {
+      setExporting(false);
+    }
+  }, [exporting, notify, project]);
+  const handleExportVideo = useCallback(async () => {
+    if (exporting) return;
+    setExporting(true);
+    setExportProgress(0);
+    try {
+      const result = await exportVideo(project, setExportProgress);
+      notify(`Exported ${result.width} × ${result.height} WEBM video.`);
+    } catch (error) {
+      notify(error.message || "Video export failed.");
+    } finally {
+      setExporting(false);
+      setExportProgress(0);
+    }
+  }, [exporting, notify, project]);
   const markTourSeen = useCallback(() => { window.localStorage.setItem("openmock-tour-seen", "1"); setTourStep(0); }, []);
   const markMobileOnboarded = useCallback(() => { window.localStorage.setItem("openmock-mobile-onboarded", "1"); setMobileTip(""); }, []);
   const updateReduceMotion = useCallback((value) => { setReduceMotion(value); window.localStorage.setItem("openmock-reduce-motion", value ? "1" : "0"); }, []);
@@ -402,9 +437,9 @@ export function App() {
   const appClass = `app-shell ${isDark ? "theme-dark" : "theme-light"} ${reduceMotion ? "reduce-motion" : ""} ${project.timeline.minimized ? "timeline-collapsed" : ""}`;
 
   return <main className={appClass}>
-    <TopBar axisHudRef={axisHudRef} isDark={isDark} popover={popover} onTogglePopover={(next) => { closePopovers(); setPopover(popover === next ? "" : next); }} onToggleTheme={() => { const next = !isDark; setIsDark(next); window.localStorage.setItem("openmock-theme", next ? "dark" : "light"); }} onOpenInfo={() => { closePopovers(); setModal("info"); }} onCapture={handleCapture} onSaveProject={handleSaveProject} viewportRatio={project.viewportRatio} onSelectRatio={(value) => { updateProject((current) => ({ ...current, viewportRatio: value })); setPopover(""); notify(`Viewport ratio set to ${value}.`); }} exportTab={exportTab} setExportTab={setExportTab} exportOptions={project.export} updateExport={(patch) => updateProject((current) => ({ ...current, export: { ...current.export, ...patch } }))} onExportImage={handleExportImage} onExportVideo={handleExportVideo} exporting={exporting} exportProgress={exportProgress} canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
-    <div className="workspace-grid"><div className="main-column"><Stage stageRef={stageRef} project={project} isDark={isDark} isMobile={isMobileViewport} focusEditing={isMobileViewport && mobileControlTab === "blur"} gesture={stageGesture} precise={preciseMovement} onPrecise={() => setPreciseMovement((value) => !value)} onMode={setStageMode} onResetView={resetStageView} onPointerDown={handleStagePointerDown} onPointerMove={handleStagePointerMove} onPointerUp={finishStageGesture} onWheel={handleStageWheel} onUpload={() => uploadRef.current?.click()} onDrop={(event) => { event.preventDefault(); handleMediaFile(event.dataTransfer?.files?.[0]); }} /><input ref={uploadRef} className="visually-hidden" type="file" accept="image/*,video/*" onChange={(event) => { handleMediaFile(event.target.files?.[0]); event.target.value = ""; }} /><Timeline project={project} updateProject={updateProject} onAutoMotion={() => setModal("auto-intro")} onOpenRecording={() => setModal("recording")} notify={notify} /></div></div>
-    {!isMobileViewport && <Inspector project={project} updateProject={updateProject} panelSections={panelSections} setPanelSections={setPanelSections} sceneOpen={sceneOpen} setSceneOpen={setSceneOpen} lightingOpen={lightingOpen} setLightingOpen={setLightingOpen} backgroundOpen={backgroundOpen} setBackgroundOpen={setBackgroundOpen} backgroundPickerOpen={backgroundPickerOpen} setBackgroundPickerOpen={setBackgroundPickerOpen} mockupOpen={mockupOpen} setMockupOpen={setMockupOpen} finishOpen={finishOpen} setFinishOpen={setFinishOpen} cameraPresetOpen={cameraPresetOpen} setCameraPresetOpen={setCameraPresetOpen} effectsOpen={effectsOpen} setEffectsOpen={setEffectsOpen} updateCamera={updateCamera} addCameraKeyframe={addCameraKeyframe} selectCameraPreset={selectCameraPreset} selectScene={selectScene} updateBackground={updateBackground} updateEffectSetting={updateEffectSetting} addEffect={addEffect} removeEffect={removeEffect} onUpload={() => uploadRef.current?.click()} onRemoveMedia={() => updateProject((current) => ({ ...current, media: null }))} onReset={handleReset} isDark={isDark} onToggleTheme={() => { const next = !isDark; setIsDark(next); window.localStorage.setItem("openmock-theme", next ? "dark" : "light"); }} notify={notify} />}
+    <TopBar axisHudRef={axisHudRef} isDark={isDark} popover={popover} onTogglePopover={(next) => { closePopovers(); setPopover(popover === next ? "" : next); }} onToggleTheme={() => { const next = !isDark; setIsDark(next); window.localStorage.setItem("openmock-theme", next ? "dark" : "light"); }} onOpenInfo={() => { closePopovers(); setModal("info"); }} onCapture={handleCapture} onSaveProject={handleSaveProject} viewportRatio={project.viewportRatio} onSelectRatio={(value) => { updateProject((current) => ({ ...current, viewportRatio: value })); setPopover(""); notify(`Viewport ratio set to ${value}.`); }} exportTab={exportTab} setExportTab={setExportTab} exportOptions={project.export} updateExport={(patch) => updateProject((current) => ({ ...current, export: { ...current.export, ...patch } }))} onExportImage={handleExportImage} onExportVideo={handleExportVideo} exporting={exporting} exportProgress={exportProgress} canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} onUpload={() => uploadRef.current?.click()} mediaName={project.media?.name} />
+    <div className="workspace-grid"><div className="main-column"><Stage stageRef={stageRef} project={project} isDark={isDark} isMobile={isMobileViewport} focusEditing={isMobileViewport && mobileControlTab === "blur"} gesture={stageGesture} precise={preciseMovement} onPrecise={() => setPreciseMovement((value) => !value)} onMode={setStageMode} onResetView={resetStageView} onPointerDown={handleStagePointerDown} onPointerMove={handleStagePointerMove} onPointerUp={finishStageGesture} onWheel={handleStageWheel} onDrop={(event) => { event.preventDefault(); handleMediaFile(event.dataTransfer?.files?.[0]); }} /><input ref={uploadRef} className="visually-hidden" type="file" accept="image/*,video/*" onChange={(event) => { handleMediaFile(event.target.files?.[0]); event.target.value = ""; }} /><Timeline project={project} updateProject={updateProject} onAutoMotion={() => setModal("auto-intro")} onOpenRecording={() => setModal("recording")} notify={notify} /></div></div>
+    {!isMobileViewport && <Inspector project={project} updateProject={updateProject} panelSections={panelSections} setPanelSections={setPanelSections} sceneOpen={sceneOpen} setSceneOpen={setSceneOpen} lightingOpen={lightingOpen} setLightingOpen={setLightingOpen} backgroundOpen={backgroundOpen} setBackgroundOpen={setBackgroundOpen} mockupOpen={mockupOpen} setMockupOpen={setMockupOpen} finishOpen={finishOpen} setFinishOpen={setFinishOpen} cameraPresetOpen={cameraPresetOpen} setCameraPresetOpen={setCameraPresetOpen} effectsOpen={effectsOpen} setEffectsOpen={setEffectsOpen} updateCamera={updateCamera} addCameraKeyframe={addCameraKeyframe} selectCameraPreset={selectCameraPreset} selectScene={selectScene} updateBackground={updateBackground} updateEffectSetting={updateEffectSetting} addEffect={addEffect} removeEffect={removeEffect} onUpload={() => uploadRef.current?.click()} onRemoveMedia={() => updateProject((current) => ({ ...current, media: null }))} onReset={handleReset} isDark={isDark} onToggleTheme={() => { const next = !isDark; setIsDark(next); window.localStorage.setItem("openmock-theme", next ? "dark" : "light"); }} notify={notify} />}
     {isMobileViewport && <MobileDock project={project} updateProject={updateProject} updateBlur={updateBlur} updateCamera={updateCamera} undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo} active={mobileControlTab} setActive={setMobileControlTab} effectsOpen={effectsOpen} setEffectsOpen={setEffectsOpen} addEffect={addEffect} removeEffect={removeEffect} onShowBlurTip={() => showTips && setMobileTip("blur-1")} onUpload={() => uploadRef.current?.click()} notify={notify} />}
     {popover === "menu" && <TopMenu canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} timelineVisible={!project.timeline.minimized} onToggleTimeline={() => updateProject((current) => ({ ...current, timeline: { ...current.timeline, minimized: !current.timeline.minimized } }))} onInfo={() => { closePopovers(); setModal("info"); }} onHelp={() => setPopover("help")} onPreferences={() => { closePopovers(); setModal("preferences"); }} onSignIn={() => { closePopovers(); setModal("account"); }} onCommunity={() => notify("Community links are available in Info.")} onChangelog={() => { closePopovers(); setModal("changelog"); }} />}
     {popover === "templates" && <TemplatesPopover onUse={selectTemplate} />}{popover === "help" && <HelpPopover onRestart={() => { closePopovers(); setTourStep(1); }} onTimeline={() => { closePopovers(); notify("Timeline tour is ready below."); }} onAuto={() => { closePopovers(); setModal("auto-intro"); }} onShortcuts={() => { closePopovers(); setModal("shortcuts"); }} onContact={() => { closePopovers(); setModal("feedback"); }} onFeedback={() => { closePopovers(); setModal("feedback"); }} />}
@@ -427,7 +462,15 @@ export function App() {
   </main>;
 }
 
-function TopBar({ axisHudRef, isDark, popover, onTogglePopover, onToggleTheme, onOpenInfo, onCapture, onSaveProject, viewportRatio, onSelectRatio, exportTab, setExportTab, exportOptions, updateExport, onExportImage, onExportVideo, exporting, exportProgress, canUndo, canRedo, onUndo, onRedo }) {
+function TopBar({ axisHudRef, isDark, popover, onTogglePopover, onToggleTheme, onOpenInfo, onCapture, onSaveProject, viewportRatio, onSelectRatio, exportTab, setExportTab, exportOptions, updateExport, onExportImage, onExportVideo, exporting, exportProgress, canUndo, canRedo, onUndo, onRedo, onUpload, mediaName }) {
+  const exportTriggerRef = useRef(null);
+  const handleCloseExport = useCallback(() => {
+    if (popover === "export") {
+      onTogglePopover("export");
+    }
+    exportTriggerRef.current?.focus();
+  }, [popover, onTogglePopover]);
+
   return <header className="topbar">
     <IconButton label="Open menu" className="menu-trigger" onClick={() => onTogglePopover("menu")}><Menu size={15} /></IconButton>
     <div className="brand-mark"><img src={asset("source/openmock.svg")} alt="OpenMock" /></div>
@@ -441,12 +484,42 @@ function TopBar({ axisHudRef, isDark, popover, onTogglePopover, onToggleTheme, o
       <IconButton label="Redo" onClick={onRedo} disabled={!canRedo}><Redo2 size={14} /></IconButton>
     </div>
     <span className="topbar-divider" />
+    <button
+      type="button"
+      className="topbar-upload-btn"
+      onClick={onUpload}
+      title={mediaName ? `Replace screen media (${mediaName})` : "Upload screen media"}
+      aria-label={mediaName ? `Replace screen media (${mediaName})` : "Upload screen media"}
+    >
+      <Upload size={13} />
+      <span>{mediaName ? "Replace" : "Upload"}</span>
+    </button>
     <TextButton className="save-project" onClick={onSaveProject}>Save project</TextButton>
     <IconButton label={isDark ? "Switch to light mode" : "Switch to dark mode"} className="theme-top-button" onClick={onToggleTheme}>{isDark ? <Sun size={14} /> : <Moon size={14} />}</IconButton>
-    <IconButton label="Capture image" className="capture-button" onClick={onCapture}><Camera size={15} /></IconButton>
-    <TextButton aria-label="Export" className="export-button" onClick={() => onTogglePopover("export")}>EXPORT <ChevronDown size={11} /></TextButton>
+    <button
+      ref={exportTriggerRef}
+      type="button"
+      aria-label="Export and snapshot options"
+      aria-haspopup="dialog"
+      aria-expanded={popover === "export"}
+      className={`text-button export-button ${popover === "export" ? "is-active" : ""}`}
+      onClick={() => onTogglePopover("export")}
+    >
+      {exporting ? (exportProgress > 0 ? `EXPORTING ${Math.round(exportProgress * 100)}%` : "EXPORTING…") : <>EXPORT <ChevronDown size={11} /></>}
+    </button>
     {popover === "ratio" && <RatioPopover value={viewportRatio} onSelect={onSelectRatio} />}
-    {popover === "export" && <ExportPopover tab={exportTab} setTab={setExportTab} options={exportOptions} update={updateExport} onExportImage={onExportImage} onExportVideo={onExportVideo} exporting={exporting} progress={exportProgress} />}
+    {popover === "export" && <ExportPopover
+      tab={exportTab}
+      setTab={setExportTab}
+      options={exportOptions}
+      update={updateExport}
+      onCapture={onCapture}
+      onExportImage={onExportImage}
+      onExportVideo={onExportVideo}
+      exporting={exporting}
+      progress={exportProgress}
+      onClose={handleCloseExport}
+    />}
   </header>;
 }
 function TopMenu({ canUndo, canRedo, onUndo, onRedo, timelineVisible, onToggleTimeline, onInfo, onHelp, onPreferences, onSignIn, onCommunity, onChangelog }) { return <div className="top-popover menu-popover" role="menu" aria-label="Open menu"><button type="button" role="menuitem" onClick={onSignIn}>Sign in</button><div className="menu-divider" /><button type="button" role="menuitem" disabled={!canUndo} onClick={onUndo}><Undo2 size={13} />Undo <kbd>⌘Z</kbd></button><button type="button" role="menuitem" disabled={!canRedo} onClick={onRedo}><Redo2 size={13} />Redo <kbd>⇧⌘Z</kbd></button><button type="button" role="menuitem" onClick={onToggleTimeline}><Film size={13} />Toggle timeline <kbd>T</kbd>{timelineVisible && <Check size={13} className="menu-check" />}</button><button type="button" role="menuitem" onClick={onPreferences}><Settings2 size={13} />Preferences</button><div className="menu-divider" /><button type="button" role="menuitem" onClick={onInfo}><Info size={13} />Info</button><button type="button" role="menuitem" onClick={onHelp}><CircleHelp size={13} />Help</button><button type="button" role="menuitem" onClick={onCommunity}><ExternalLink size={13} />Community</button><button type="button" role="menuitem" onClick={onChangelog}><ExternalLink size={13} />Changelog</button></div>; }
@@ -454,12 +527,246 @@ function HelpPopover({ onRestart, onTimeline, onAuto, onShortcuts, onContact, on
 function RatioPopover({ value, onSelect }) { return <div className="top-popover ratio-popover" role="menu" aria-label="Viewport ratio">{ratioOptions.map((option) => <button key={option} type="button" role="menuitem" className={value === option ? "is-selected" : ""} onClick={() => onSelect(option)}><span>{option}</span>{value === option && <Check size={13} />}</button>)}<div className="menu-divider" /><div className="popover-caption">APP STORE</div>{appStoreOptions.map(([label, size]) => <button key={label} type="button" role="menuitem" className="two-line-menu" onClick={() => onSelect(label)}><span>{label}</span><small>{size}</small></button>)}</div>; }
 function TemplatesPopover({ onUse }) { return <div className="templates-popover" role="dialog" aria-label="Templates"><div className="templates-head"><span>Starter</span><ChevronDown size={12} /></div><div className="template-grid">{templateItems.map(([name, file]) => <button type="button" className="template-card" key={name} onClick={() => onUse(name)} aria-label={`Use template ${name}`}><span className="template-image"><img src={asset(`templates/${file}`)} alt="" /></span><span>{name}</span></button>)}</div></div>; }
 
-function ExportPopover({ tab, setTab, options, update, onExportImage, onExportVideo, exporting, progress }) { return <div className="export-popover" role="dialog" aria-label="Export"><div className="export-tabs" role="tablist"><button type="button" role="tab" aria-selected={tab === "image"} className={tab === "image" ? "active" : ""} onClick={() => setTab("image")}>Image</button><button type="button" role="tab" aria-selected={tab === "video"} className={tab === "video" ? "active" : ""} onClick={() => setTab("video")}>Video</button></div>{tab === "image" ? <ImageExport options={options} update={update} onExport={onExportImage} exporting={exporting} /> : <VideoExport options={options} update={update} onExport={onExportVideo} exporting={exporting} progress={progress} />}</div>; }
-function ImageExport({ options, update, onExport, exporting }) { const summary = options.format === "png" ? "Lossless with transparency." : options.format === "webp" ? "Modern, small image." : "Smallest file. No transparency."; return <div className="export-body"><label className="export-label">Image format<select value={options.format} onChange={(event) => update({ format: event.target.value })}><option value="jpg">JPG — SMALLEST FILE</option><option value="png">PNG — LOSSLESS, TRANSPARENCY</option><option value="webp">WEBP — MODERN, SMALL</option></select><ChevronDown size={13} /></label><SwitchRow label="OpenMock watermark" checked={options.watermark} onChange={(value) => update({ watermark: value })} /><SwitchRow label="Transparent Background" checked={options.transparent} onChange={(value) => update({ transparent: value })} /><div className="export-label">Orientation<div className="segmented-control">{["Landscape", "Square", "Portrait"].map((item) => <button type="button" key={item} className={options.orientation === item ? "selected" : ""} onClick={() => update({ orientation: item, imageSize: item === "Square" ? "Square — 1080×1080" : item === "Portrait" ? "Portrait — 1080×1350" : "16:9 — 1920×1080 (1080P)" })}><span className={`${item.toLowerCase()}-icon`} />{item}</button>)}</div></div><select className="export-select-control" aria-label="Image size" value={options.imageSize} onChange={(event) => update({ imageSize: event.target.value })}><option>16:9 — 1920×1080 (1080P)</option><option>Square — 1080×1080</option><option>Portrait — 1080×1350</option></select><div className="export-summary"><strong>{options.imageSize.includes("Square") ? "1080×1080" : options.imageSize.includes("Portrait") ? "1080×1350" : "1920×1080"}</strong><span>{options.format.toUpperCase()}</span><small>{summary}</small></div><button type="button" className="primary-wide" onClick={onExport} disabled={exporting}>{exporting ? "Exporting…" : "Export Image"} <Camera size={14} /></button></div>; }
-const videoSizeOptions = { Landscape: ["16:9 — 1280×720 (720P)", "16:9 — 1920 × 1080 (1080P)"], Square: ["1:1 — 720×720 (720P)", "1:1 — 1080×1080 (1080P)"], Portrait: ["9:16 — 720×1280 (720P)", "9:16 — 1080 × 1920 (1080P)"] };
-function VideoExport({ options, update, onExport, exporting, progress }) { const orientation = options.videoOrientation || "Landscape"; const sizes = videoSizeOptions[orientation] || videoSizeOptions.Landscape; const selectedSize = sizes.includes(options.videoSize) ? options.videoSize : sizes[0]; const qualityMbps = { Low: 2.5, Med: 6, High: 10, Ultra: 16 }[options.quality] || 6; return <div className="export-body video-export"><div className="export-label">Orientation<div className="segmented-control">{["Landscape", "Square", "Portrait"].map((item) => <button type="button" key={item} className={orientation === item ? "selected" : ""} onClick={() => update({ videoOrientation: item, videoSize: videoSizeOptions[item][0] })}><span className={`${item.toLowerCase()}-icon`} />{item}</button>)}</div></div><select className="export-select-control" aria-label="Video size" value={selectedSize} onChange={(event) => update({ videoSize: event.target.value })}>{sizes.map((size) => <option key={size}>{size}</option>)}</select><RadioRow label="Quality" options={["Low", "Med", "High", "Ultra"]} selected={options.quality} onSelect={(value) => update({ quality: value })} /><RadioRow label="Frame rate" options={["30 fps", "60 fps"]} selected={`${options.fps} fps`} onSelect={(value) => update({ fps: Number(value.split(" ")[0]) })} /><RadioRow label="Motion Blur" options={["Off", "Low", "Med", "High"]} selected={options.motionBlur} onSelect={(value) => update({ motionBlur: value })} /><SwitchRow label="Transparent Background" checked={options.transparent} onChange={(value) => update({ transparent: value })} /><div className="export-summary"><strong>{dimensionLabel(selectedSize)}</strong><span>{options.fps} fps · ~{qualityMbps} Mbps</span><small>{options.quality} quality · active timeline.</small></div><button type="button" className="primary-wide" onClick={onExport} disabled={exporting}>{exporting ? `Exporting ${Math.round(progress * 100)}%` : "Export Video"} <Film size={14} /></button><p className="export-note">Exports the active track from start to finish, including camera, focus, and motion blur.</p><p className="export-note">Keep this tab open while exporting. If you switch tabs or minimise, the export pauses and resumes when you return.</p></div>; }
+function ExportPopover({ tab, setTab, options, update, onCapture, onExportImage, onExportVideo, exporting, progress, onClose }) {
+  const quickButtonRef = useRef(null);
 
-function Stage({ stageRef, project, isDark, isMobile, focusEditing, gesture, precise, onPrecise, onMode, onResetView, onPointerDown, onPointerMove, onPointerUp, onWheel, onUpload, onDrop }) {
+  useEffect(() => {
+    quickButtonRef.current?.focus();
+  }, []);
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.stopPropagation();
+      event.preventDefault();
+      onClose?.();
+    }
+  };
+
+  return <div className="export-popover" role="dialog" aria-modal="true" aria-label="Export and snapshot options" onKeyDown={handleKeyDown}>
+    <div className="export-popover-header">
+      <span className="export-popover-title">Export &amp; Snapshot</span>
+      <button type="button" aria-label="Close export menu" className="export-close-btn" onClick={onClose}>
+        <X size={14} />
+      </button>
+    </div>
+
+    <div className="export-quick-section">
+      <div className="export-quick-card">
+        <div className="export-quick-info">
+          <span className="export-quick-badge">QUICK ACTION</span>
+          <strong className="export-quick-title">Quick snapshot</strong>
+          <p className="export-quick-desc">Instant still of current camera view at configured export size ({dimensionLabel(options.imageSize)}, {options.format.toUpperCase()}).</p>
+        </div>
+        <button
+          ref={quickButtonRef}
+          type="button"
+          className="export-quick-btn"
+          onClick={onCapture}
+          disabled={exporting}
+          title="Download an instant snapshot at configured export size"
+        >
+          <Camera size={14} />
+          <span>Download Snapshot</span>
+        </button>
+      </div>
+    </div>
+
+    <div className="export-divider-row" role="separator" aria-label="Configured export">
+      <span className="export-divider-line" />
+      <span className="export-divider-label">CONFIGURED EXPORT</span>
+      <span className="export-divider-line" />
+    </div>
+
+    <div className="export-tabs" role="group" aria-label="Configured export format">
+      <button
+        type="button"
+        id="export-tab-image"
+        aria-pressed={tab === "image"}
+        className={tab === "image" ? "active" : ""}
+        onClick={() => setTab("image")}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowRight") {
+            e.preventDefault();
+            setTab("video");
+            document.getElementById("export-tab-video")?.focus();
+          }
+        }}
+      >
+        Still Image
+      </button>
+      <button
+        type="button"
+        id="export-tab-video"
+        aria-pressed={tab === "video"}
+        className={tab === "video" ? "active" : ""}
+        onClick={() => setTab("video")}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            setTab("image");
+            document.getElementById("export-tab-image")?.focus();
+          }
+        }}
+      >
+        Video Animation
+      </button>
+    </div>
+
+    <div id={`export-panel-${tab}`} role="tabpanel" aria-labelledby={`export-tab-${tab}`} className="export-tabpanel">
+      {tab === "image" ? (
+        <ImageExport options={options} update={update} onExport={onExportImage} exporting={exporting} />
+      ) : (
+        <VideoExport options={options} update={update} onExport={onExportVideo} exporting={exporting} progress={progress} />
+      )}
+    </div>
+  </div>;
+}
+
+function ImageExport({ options, update, onExport, exporting }) {
+  const summary = options.format === "png"
+    ? "Lossless with transparency."
+    : options.format === "webp"
+      ? "Modern, small image."
+      : "Smallest file. No transparency.";
+  return <div className="export-body image-export">
+    <label className="export-label">
+      Image format
+      <select value={options.format} onChange={(event) => update({ format: event.target.value })}>
+        <option value="jpg">JPG — SMALLEST FILE</option>
+        <option value="png">PNG — LOSSLESS, TRANSPARENCY</option>
+        <option value="webp">WEBP — MODERN, SMALL</option>
+      </select>
+      <ChevronDown size={13} />
+    </label>
+    <SwitchRow label="OpenMock watermark" checked={options.watermark} onChange={(value) => update({ watermark: value })} />
+    <SwitchRow label="Transparent Background" checked={options.transparent} onChange={(value) => update({ transparent: value })} />
+    <div className="export-label">
+      Orientation
+      <div className="segmented-control" role="group" aria-label="Image orientation">
+        {["Landscape", "Square", "Portrait"].map((item) => <button
+          type="button"
+          key={item}
+          aria-pressed={options.orientation === item}
+          className={options.orientation === item ? "selected" : ""}
+          onClick={() => update({ orientation: item, imageSize: item === "Square" ? "Square — 1080×1080" : item === "Portrait" ? "Portrait — 1080×1350" : "16:9 — 1920×1080 (1080P)" })}
+        >
+          <span className={`${item.toLowerCase()}-icon`} />
+          {item}
+        </button>)}
+      </div>
+    </div>
+    <select className="export-select-control" aria-label="Image size" value={options.imageSize} onChange={(event) => update({ imageSize: event.target.value })}>
+      <option>16:9 — 1920×1080 (1080P)</option>
+      <option>Square — 1080×1080</option>
+      <option>Portrait — 1080×1350</option>
+    </select>
+    <div className="export-summary">
+      <strong>{options.imageSize.includes("Square") ? "1080×1080" : options.imageSize.includes("Portrait") ? "1080×1350" : "1920×1080"}</strong>
+      <span>{options.format.toUpperCase()}</span>
+      <small>{summary}</small>
+    </div>
+    <button type="button" className="primary-wide" onClick={onExport} disabled={exporting}>
+      <Camera size={14} />
+      {exporting ? "Exporting…" : "Export Still Image"}
+    </button>
+  </div>;
+}
+
+const videoSizeOptions = { Landscape: ["16:9 — 1280×720 (720P)", "16:9 — 1920 × 1080 (1080P)"], Square: ["1:1 — 720×720 (720P)", "1:1 — 1080×1080 (1080P)"], Portrait: ["9:16 — 720×1280 (720P)", "9:16 — 1080 × 1920 (1080P)"] };
+
+function VideoExport({ options, update, onExport, exporting, progress }) {
+  const orientation = options.videoOrientation || "Landscape";
+  const sizes = videoSizeOptions[orientation] || videoSizeOptions.Landscape;
+  const selectedSize = sizes.includes(options.videoSize) ? options.videoSize : sizes[0];
+  const qualityMbps = { Low: 2.5, Med: 6, High: 10, Ultra: 16 }[options.quality] || 6;
+  return <div className="export-body video-export">
+    <div className="export-label">
+      Orientation
+      <div className="segmented-control" role="group" aria-label="Video orientation">
+        {["Landscape", "Square", "Portrait"].map((item) => <button
+          type="button"
+          key={item}
+          aria-pressed={orientation === item}
+          className={orientation === item ? "selected" : ""}
+          onClick={() => update({ videoOrientation: item, videoSize: videoSizeOptions[item][0] })}
+        >
+          <span className={`${item.toLowerCase()}-icon`} />
+          {item}
+        </button>)}
+      </div>
+    </div>
+    <select className="export-select-control" aria-label="Video size" value={selectedSize} onChange={(event) => update({ videoSize: event.target.value })}>
+      {sizes.map((size) => <option key={size}>{size}</option>)}
+    </select>
+    <RadioRow label="Quality" options={["Low", "Med", "High", "Ultra"]} selected={options.quality} onSelect={(value) => update({ quality: value })} />
+    <RadioRow label="Frame rate" options={["30 fps", "60 fps"]} selected={`${options.fps} fps`} onSelect={(value) => update({ fps: Number(value.split(" ")[0]) })} />
+    <RadioRow label="Motion Blur" options={["Off", "Low", "Med", "High"]} selected={options.motionBlur} onSelect={(value) => update({ motionBlur: value })} />
+    <SwitchRow label="Transparent Background" checked={options.transparent} onChange={(value) => update({ transparent: value })} />
+    <div className="export-summary">
+      <strong>{dimensionLabel(selectedSize)}</strong>
+      <span>{options.fps} fps · ~{qualityMbps} Mbps</span>
+      <small>{options.quality} quality · active timeline.</small>
+    </div>
+    {exporting && <div className="export-progress-wrap" role="status" aria-label={`Export progress ${Math.round(progress * 100)}%`}>
+      <div className="export-progress-track">
+        <div className="export-progress-bar" style={{ width: `${Math.round(progress * 100)}%` }} />
+      </div>
+      <span className="export-progress-text">Rendering video… {Math.round(progress * 100)}%</span>
+    </div>}
+    <button type="button" className="primary-wide" onClick={onExport} disabled={exporting}>
+      <Film size={14} />
+      {exporting ? `Exporting ${Math.round(progress * 100)}%` : "Export Video Animation"}
+    </button>
+    <p className="export-note">Exports the active track from start to finish, including camera, focus, and motion blur.</p>
+    <p className="export-note">Keep this tab open while exporting. If you switch tabs or minimise, the export pauses and resumes when you return.</p>
+  </div>;
+}
+
+function CameraRail({ cameraMode, focusEditing, precise, onMode, onPrecise, onResetView }) {
+  return (
+    <aside className="camera-rail" role="toolbar" aria-label="Device movement">
+      {[["tilt", "Rotate", <Move3d size={15} />], ["move", "Move", <MousePointer2 size={15} />], ["roll", "Roll", <RefreshCw size={15} />]].map(([mode, label, icon]) => (
+        <button
+          type="button"
+          key={mode}
+          aria-pressed={!focusEditing && cameraMode === mode}
+          onClick={() => onMode(mode)}
+          title={`${label} device by dragging`}
+          className="camera-rail-btn"
+        >
+          {icon}
+          <span>{label}</span>
+        </button>
+      ))}
+      <span className="camera-rail-divider" />
+      <button
+        type="button"
+        className="camera-rail-btn movement-fine"
+        aria-pressed={precise}
+        title="Slower, more precise adjustments (Shift while dragging)"
+        onClick={onPrecise}
+      >
+        <span>Fine</span>
+      </button>
+      <button
+        type="button"
+        aria-label="Reset view"
+        title="Center the device and face the front"
+        onClick={onResetView}
+        className="camera-rail-btn"
+      >
+        <RotateCcw size={15} />
+        <span>Reset view</span>
+      </button>
+      <div className="camera-rail-hint" aria-hidden="true">
+        <span>{focusEditing ? "Focus" : cameraMode === "move" ? "Move" : cameraMode === "roll" ? "Roll" : "Rotate"}</span>
+        <small>Scroll: Zoom</small>
+      </div>
+    </aside>
+  );
+}
+
+function Stage({ stageRef, project, isDark, isMobile, focusEditing, gesture, precise, onPrecise, onMode, onResetView, onPointerDown, onPointerMove, onPointerUp, onWheel, onDrop }) {
   const [dragOver, setDragOver] = useState(false);
   const [rendererState, setRendererState] = useState({ mockup: null, status: "loading" });
   const rendererStatus = rendererState.mockup === project.mockup ? rendererState.status : "loading";
@@ -502,66 +809,730 @@ function Stage({ stageRef, project, isDark, isMobile, focusEditing, gesture, pre
     : blur.mode === "tilt"
       ? `linear-gradient(180deg, #000 ${Math.max(0, blurY - focusHalf - focusFeather)}%, transparent ${Math.max(0, blurY - focusHalf)}%, transparent ${Math.min(100, blurY + focusHalf)}%, #000 ${Math.min(100, blurY + focusHalf + focusFeather)}%)`
       : `radial-gradient(ellipse var(--dof-size) var(--dof-size) at ${blurX}% ${blurY}%, transparent 34%, #000 calc(34% + var(--dof-falloff)))`;
-  const sourcePreview = project.media?.src || asset("source/starter-screen.jpg");
 
-  return <section ref={stageRef} className={stageClass} style={{ backgroundColor: background.backgroundColor }} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onLostPointerCapture={onPointerUp} onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(event) => { setDragOver(false); onDrop(event); }}>
-    <div className="stage-background-layer" style={{ backgroundImage, filter: `blur(${bgBlurPx}px)` }} aria-hidden="true" />
-    <ThreeStage enabled cameraState={project.camera} cameraPreset={project.cameraPreset} lighting={project.lighting} lightRotation={project.lightRotation} contactShadow={project.contactShadow} finish={project.finish} reflection={project.reflection} mockup={project.mockup} media={project.media} effects={project.effects} isDark={isDark} onStatusChange={handleRendererStatus} />
-    <div className="stage-background-glow" />
-    <div className={`three-effects-overlay ${effectClass}`} style={effectStyle} aria-hidden="true">
-      {(project.effects || []).includes("Glass Border") && <span className="fx fx-glass-border" />}
-      {(project.effects || []).includes("Depth") && <span className="fx fx-depth" />}
-      {(project.effects || []).includes("Sharpen") && <span className="fx fx-sharpen" />}
-      {(project.effects || []).includes("Fish Eye") && <span className="fx fx-fisheye" />}
-      {(project.effects || []).includes("Screen Fade") && <span className="fx fx-screen-fade" />}
-      {(project.effects || []).includes("Ghost") && <span className="fx fx-ghost" />}
-      {(project.effects || []).includes("Liquid Glass") && <span className="fx fx-liquid-glass" />}
-    </div>
-    {dofVisible && <div className={`stage-dof-layer dof-${slugify(blur.mode || "radial")} ${blur.bokeh ? "dof-bokeh" : ""}`} style={{ ...dofStyle, WebkitMaskImage: dofMask, maskImage: dofMask }} aria-hidden="true" />}
-    <div className="stage-movement-controls" onPointerDown={(event) => event.stopPropagation()}>
-      <div className="stage-movement-toolbar" role="toolbar" aria-label="Device movement">
-        {[["tilt", "Rotate", <Move3d size={14} />], ["move", "Move", <MousePointer2 size={14} />], ["roll", "Roll", <RefreshCw size={14} />]].map(([mode, label, icon]) => <button type="button" key={mode} aria-pressed={!focusEditing && project.cameraMode === mode} onClick={() => onMode(mode)} title={`${label} device by dragging`}>{icon}<span>{label}</span></button>)}
-        <span className="movement-divider" />
-        <button type="button" className="movement-fine" aria-pressed={precise} title="Slower, more precise adjustments (Shift while dragging)" onClick={onPrecise}>Fine</button>
-        <button type="button" aria-label="Reset view" title="Center the device and face the front" onClick={onResetView}><RotateCcw size={14} /><span>Reset view</span></button>
+  return <div className={`stage-workspace ${project.mobileDockLeft ? "left-handed" : ""}`}>
+    <CameraRail
+      cameraMode={project.cameraMode}
+      focusEditing={focusEditing}
+      precise={precise}
+      onMode={onMode}
+      onPrecise={onPrecise}
+      onResetView={onResetView}
+    />
+    <section ref={stageRef} className={stageClass} style={{ backgroundColor: background.backgroundColor }} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onLostPointerCapture={onPointerUp} onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(event) => { setDragOver(false); onDrop(event); }}>
+      <div className="stage-background-layer" style={{ backgroundImage, filter: `blur(${bgBlurPx}px)` }} aria-hidden="true" />
+      <ThreeStage enabled cameraState={project.camera} cameraPreset={project.cameraPreset} lighting={project.lighting} lightRotation={project.lightRotation} contactShadow={project.contactShadow} finish={project.finish} reflection={project.reflection} mockup={project.mockup} media={project.media} effects={project.effects} isDark={isDark} onStatusChange={handleRendererStatus} />
+      <div className="stage-background-glow" />
+      <div className={`three-effects-overlay ${effectClass}`} style={effectStyle} aria-hidden="true">
+        {(project.effects || []).includes("Glass Border") && <span className="fx fx-glass-border" />}
+        {(project.effects || []).includes("Depth") && <span className="fx fx-depth" />}
+        {(project.effects || []).includes("Sharpen") && <span className="fx fx-sharpen" />}
+        {(project.effects || []).includes("Fish Eye") && <span className="fx fx-fisheye" />}
+        {(project.effects || []).includes("Screen Fade") && <span className="fx fx-screen-fade" />}
+        {(project.effects || []).includes("Ghost") && <span className="fx fx-ghost" />}
+        {(project.effects || []).includes("Liquid Glass") && <span className="fx fx-liquid-glass" />}
       </div>
-      <p className="stage-movement-hint">{focusEditing ? "Drag to move the focus area" : project.cameraMode === "move" ? "Drag to move" : project.cameraMode === "roll" ? "Drag sideways to roll" : project.cameraMode === "zoom" ? "Drag up to zoom in" : "Drag to rotate"}<span> · </span>Scroll to zoom</p>
+      {dofVisible && <div className={`stage-dof-layer dof-${slugify(blur.mode || "radial")} ${blur.bokeh ? "dof-bokeh" : ""}`} style={{ ...dofStyle, WebkitMaskImage: dofMask, maskImage: dofMask }} aria-hidden="true" />}
+      {rendererStatus === "loading" && !dragOver && <div className="stage-loading"><span className="spinner" />Loading device…</div>}
+      <div className="stage-center-mark"><span /></div>
+      {rendererStatus === "failed" && <div className="stage-device-fallback"><StageDeviceRealistic project={project} deviceStyle={getCameraStyle(project.camera, project.mockup, project.cameraPreset)} mockupSlug={mockupSlug} /></div>}
+      {project.timeline.guides && <><span className="guide vertical" /><span className="guide horizontal" /></>}
+      {dragOver && <div className="stage-drop-overlay" aria-hidden="true"><Upload size={22} /><span>Drop image or video to apply</span></div>}
+    </section>
+  </div>;
+}
+function Timeline({ project, updateProject, onAutoMotion, onOpenRecording, notify }) {
+  const timeline = project.timeline;
+  const setTimeline = (patch, record = true) => updateProject((current) => ({ ...current, timeline: { ...current.timeline, ...patch } }), { record });
+  const selectTrack = (track) => updateProject((current) => ({
+    ...current,
+    activeTrackId: track.id,
+    selectedKeyframeId: track.keyframes[0]?.id || null,
+    camera: track.keyframes[0]?.camera ? { ...current.camera, ...track.keyframes[0].camera } : current.camera,
+    blur: track.keyframes[0]?.blur ? { ...current.blur, ...track.keyframes[0].blur } : current.blur
+  }));
+  const addShot = () => updateProject((current) => {
+    const id = `shot-${current.tracks.length + 1}`, name = `Shot ${current.tracks.length + 1}`;
+    return {
+      ...current,
+      tracks: [...current.tracks, { id, name, kind: "scene", duration: 3, selected: false, keyframes: [{ id: `${id}-kf-1`, time: current.timeline.playhead, camera: { ...current.camera }, blur: { ...current.blur }, easing: "Ease in out" }] }],
+      activeTrackId: id,
+      selectedKeyframeId: `${id}-kf-1`
+    };
+  });
+  const addTrack = (kind) => {
+    const labels = { media: "Media", text: "Title", logo: "Logo", audio: "Audio" };
+    updateProject((current) => ({ ...current, tracks: [...current.tracks, { id: `${kind}-${Date.now()}`, name: labels[kind] || "Track", kind, duration: 3, selected: false, keyframes: [] }] }));
+    notify(`${labels[kind] || "Track"} track added.`);
+  };
+  const applyPreset = (name) => {
+    const duration = 4;
+    updateProject((current) => ({
+      ...current,
+      timeline: { ...current.timeline, duration, playhead: 0, presetOpen: false },
+      tracks: current.tracks.map((track, index) => index === 0 ? {
+        ...track,
+        keyframes: [
+          { id: `${track.id}-preset-a`, time: 0, camera: { ...current.camera, ...cameraPresets.Angled }, blur: { ...current.blur }, easing: "Ease in" },
+          { id: `${track.id}-preset-b`, time: duration, camera: { ...current.camera, ...cameraPresets[name === "Flat truck" ? "Flat" : name === "Out and back" ? "Hero" : "Detail"] }, blur: { ...current.blur }, easing: "Ease out" }
+        ]
+      } : track)
+    }));
+    notify(`${name} preset applied.`);
+  };
+  const deleteKeyframe = () => updateProject((current) => ({
+    ...current,
+    selectedKeyframeId: null,
+    tracks: current.tracks.map((track) => ({ ...track, keyframes: track.keyframes.filter((frame) => frame.id !== current.selectedKeyframeId) }))
+  }));
+  const changeEasing = () => updateProject((current) => ({
+    ...current,
+    tracks: current.tracks.map((track) => ({ ...track, keyframes: track.keyframes.map((frame) => frame.id === current.selectedKeyframeId ? { ...frame, easing: frame.easing === "Linear" ? "Ease in out" : "Linear" } : frame) }))
+  }));
+
+  const activeTrack = project.tracks.find((track) => track.id === project.activeTrackId) || project.tracks[0];
+  const allKeyframes = useMemo(() => project.tracks.flatMap((t) => t.keyframes || []), [project.tracks]);
+  const selectedKeyframe = useMemo(() => allKeyframes.find((kf) => kf.id === project.selectedKeyframeId), [allKeyframes, project.selectedKeyframeId]);
+  const activeKeyframeCount = activeTrack?.keyframes?.length || 0;
+  const isStaticShot = activeKeyframeCount <= 1;
+
+  if (timeline.minimized) return <section className="timeline-shell timeline-mini" aria-label="Minimized timeline">
+    <div className="timeline-toolbar">
+      <IconButton label="Maximize timeline" onClick={() => setTimeline({ minimized: false })}>
+        <Maximize2 size={14} />
+      </IconButton>
+      <TimelineTransport timeline={timeline} setTimeline={setTimeline} />
+      <span className="mini-time" title="Current playhead time / Total duration">
+        <strong>{formatTime(timeline.playhead)}</strong> / {formatTime(timeline.duration)}
+      </span>
     </div>
-    {rendererStatus === "loading" && !dragOver && <div className="stage-loading"><span className="spinner" />Loading device…</div>}
-    <button type="button" className="background-chip" aria-label="Source media" onClick={onUpload}><img src={sourcePreview} alt="" /></button>
-    <div className="stage-center-mark"><span /></div>
-    {rendererStatus === "failed" && <div className="stage-device-fallback"><StageDeviceRealistic project={project} deviceStyle={getCameraStyle(project.camera, project.mockup, project.cameraPreset)} mockupSlug={mockupSlug} /></div>}
-    <div className="stage-caption">{isMobile ? "CAMERA" : project.mockup === "Flat" ? "FLAT" : "SHOT 1"}</div>
-    {project.timeline.guides && <><span className="guide vertical" /><span className="guide horizontal" /></>}
-    {!isMobile && !project.media && <div className="upload-toast"><Upload size={14} /><span>Upload media to get started — or paste / drop.</span><button type="button" onClick={onUpload}>Upload</button></div>}
-    {project.media && <div className="media-badge" title={project.media.name}>{project.media.name}</div>}
+  </section>;
+
+  return <section className="timeline-shell" aria-label="Animation timeline">
+    <div className="timeline-toolbar">
+      <div className="timeline-mode" role="group" aria-label="Timeline mode">
+        <button
+          type="button"
+          aria-pressed={timeline.mode === "simple"}
+          className={timeline.mode === "simple" ? "selected" : ""}
+          onClick={() => setTimeline({ mode: "simple" })}
+          title="Simple mode: arrange shots and apply camera motion presets"
+        >
+          SIMPLE
+          <small>Shots</small>
+        </button>
+        <button
+          type="button"
+          aria-pressed={timeline.mode === "advanced"}
+          className={timeline.mode === "advanced" ? "selected" : ""}
+          onClick={() => setTimeline({ mode: "advanced" })}
+          title="Advanced mode: position keyframes and record motion live"
+        >
+          ADVANCED
+          <small>Keyframes</small>
+        </button>
+      </div>
+      <span className="timeline-mode-hint" title={timeline.mode === "simple" ? "Simple mode: arrange shots & apply camera motion presets" : "Advanced mode: position keyframes & record motion live"}>
+        {timeline.mode === "simple" ? "Shots & Presets" : "Keyframes & Recording"}
+      </span>
+      <TimelineTransport timeline={timeline} setTimeline={setTimeline} />
+      <span className="timeline-time" aria-label="Playhead time" title="Current playhead time / Total duration">
+        <strong>{formatTime(timeline.playhead)}</strong> / {formatTime(timeline.duration)}
+      </span>
+      <span className="timeline-spacer" />
+      <div className="timeline-actions">
+        <button
+          type="button"
+          aria-expanded={timeline.presetOpen}
+          aria-haspopup="dialog"
+          className={`timeline-action ${timeline.presetOpen ? "active" : ""}`}
+          onClick={() => setTimeline({ presetOpen: !timeline.presetOpen, trackMenuOpen: false })}
+          title="Choose a 4-second camera motion preset"
+        >
+          PRESETS
+        </button>
+        <button
+          type="button"
+          className="timeline-action"
+          onClick={onAutoMotion}
+          title="Auto-motion: generate cinematic camera paths"
+        >
+          <span className="timeline-long">AUTO-MOTION</span>
+          <span className="timeline-short">AUTO</span>
+        </button>
+        {timeline.mode === "advanced" ? (
+          <button
+            type="button"
+            aria-label={timeline.recording ? "Recording — click to stop auto-keyframe" : "Enable auto-keyframe recording"}
+            className={`record-button ${timeline.recording ? "recording" : ""}`}
+            onClick={timeline.recording ? () => setTimeline({ recording: false }) : onOpenRecording}
+            title={timeline.recording ? "Stop recording motion" : "Record camera motion as you move"}
+          >
+            {timeline.recording ? <>
+              <CircleStop size={12} />
+              <span className="timeline-long">Recording</span>
+              <span className="timeline-short">STOP</span>
+            </> : <>
+              <span className="record-dot" />
+              <span className="timeline-long">RECORD KEYFRAMES</span>
+              <span className="timeline-short">REC</span>
+            </>}
+          </button>
+        ) : (
+          <button
+            type="button"
+            aria-label="Add shot — captures current camera and focus as a new shot"
+            className="record-button add-shot"
+            onClick={() => {
+              addShot();
+              notify("Shot added at the current playhead.");
+            }}
+            title="Capture current camera position as a new shot"
+          >
+            <Plus size={13} /> <span className="timeline-long">ADD SHOT</span><span className="timeline-short">SHOT</span>
+          </button>
+        )}
+      </div>
+      <span className="toolbar-divider" />
+      <label className="duration-field" title="Project length — sets the timeline duration">
+        <span>LENGTH</span>
+        <input
+          aria-label="Project length (minutes:seconds)"
+          value={timeline.projectLength}
+          onChange={(event) => {
+            const value = event.target.value;
+            const match = value.match(/(\d+)\s*[:.]?\s*(\d+)?/);
+            const seconds = match ? (match[2] ? Number(match[1]) * 60 + Number(match[2]) : Number(match[1])) : null;
+            if (seconds && seconds >= 1 && seconds <= 180) setTimeline({ projectLength: value, duration: seconds, playhead: Math.min(timeline.playhead, seconds) });
+            else setTimeline({ projectLength: value });
+          }}
+        />
+      </label>
+      <IconButton label={timeline.guides ? "Hide center guides" : "Show center guides"} className={timeline.guides ? "active-control" : ""} onClick={() => setTimeline({ guides: !timeline.guides })}>
+        <Scan size={14} />
+      </IconButton>
+      <input
+        className="timeline-zoom"
+        aria-label="Timeline zoom"
+        type="range"
+        min="0.5"
+        max="2"
+        step="0.1"
+        value={timeline.zoom}
+        style={{ "--fill": `${(timeline.zoom - 0.5) / 1.5 * 100}%` }}
+        onChange={(event) => setTimeline({ zoom: Number(event.target.value) }, false)}
+      />
+      <IconButton label="Add track" className="add-track-button" onClick={() => setTimeline({ trackMenuOpen: !timeline.trackMenuOpen, presetOpen: false })}>
+        <Plus size={14} />
+      </IconButton>
+      <IconButton label="Minimize timeline" onClick={() => setTimeline({ minimized: true })}>
+        <Minimize2 size={14} />
+      </IconButton>
+    </div>
+
+    {timeline.presetOpen && <TimelinePresetPopover onSelect={applyPreset} onClose={() => setTimeline({ presetOpen: false })} />}
+    {timeline.trackMenuOpen && <TrackMenu onSelect={(kind) => { addTrack(kind); setTimeline({ trackMenuOpen: false }); }} onClose={() => setTimeline({ trackMenuOpen: false })} />}
+
+    <input
+      className="scrub-track"
+      aria-label="Scrub timeline"
+      type="range"
+      min="0"
+      max={timeline.duration}
+      step="0.1"
+      value={timeline.playhead}
+      style={{ "--fill": `${Math.min(100, timeline.playhead / timeline.duration * 100)}%` }}
+      onChange={(event) => setTimeline({ playhead: Number(event.target.value) }, false)}
+    />
+
+    <div className="timeline-content">
+      {timeline.mode === "advanced" && <div className="timeline-subtools">
+        <IconButton
+          label={selectedKeyframe ? `Delete keyframe at ${formatTime(selectedKeyframe.time)}` : "Delete selected keyframe"}
+          onClick={deleteKeyframe}
+          disabled={!project.selectedKeyframeId}
+        >
+          <Trash2 size={13} />
+        </IconButton>
+        <IconButton
+          label={selectedKeyframe ? `Toggle easing (${selectedKeyframe.easing === "Linear" ? "Linear → Ease in out" : "Ease in out → Linear"})` : "Toggle easing (Linear / Ease in out)"}
+          title={selectedKeyframe ? `Selected keyframe easing: ${selectedKeyframe.easing} (click to toggle)` : "Toggle easing"}
+          onClick={changeEasing}
+          disabled={!project.selectedKeyframeId}
+        >
+          <Wand2 size={13} />
+        </IconButton>
+        {selectedKeyframe ? (
+          <span className="selected-keyframe-badge" title="Selected keyframe time and easing">
+            Keyframe @ <strong>{formatTime(selectedKeyframe.time)}</strong> · {selectedKeyframe.easing}
+          </span>
+        ) : (
+          <span className="selected-keyframe-badge unselected">
+            No keyframe selected
+          </span>
+        )}
+        <span className="timeline-spacer" />
+        <span className="track-title">TRACKS</span>
+        <button type="button" className="tiny-action" onClick={() => setTimeline({ expandedTrack: !timeline.expandedTrack })}>
+          <Layers3 size={12} /> {timeline.expandedTrack ? "Collapse layer" : "Expand layer"}
+        </button>
+      </div>}
+
+      {isStaticShot && <div className="timeline-static-guidance" role="status">
+        <Sparkles size={11} className="guidance-icon" />
+        <span>Static camera ({activeKeyframeCount} {activeKeyframeCount === 1 ? "position" : "keyframes"}). To animate:</span>
+        <button
+          type="button"
+          className="guidance-action-link"
+          onClick={() => setTimeline({ presetOpen: true, trackMenuOpen: false })}
+        >
+          Apply Motion Preset →
+        </button>
+        <span className="guidance-divider">·</span>
+        {timeline.mode === "advanced" ? (
+          <button
+            type="button"
+            className="guidance-action-link"
+            onClick={onOpenRecording}
+          >
+            Record Live
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="guidance-action-link"
+            onClick={() => {
+              addShot();
+              notify("Shot added at the current playhead.");
+            }}
+          >
+            + Add Shot
+          </button>
+        )}
+      </div>}
+
+      {project.tracks.map((track, index) => <TrackRow
+        key={track.id}
+        track={track}
+        active={project.activeTrackId === track.id}
+        expanded={timeline.expandedTrack && index === 0}
+        simple={timeline.mode === "simple"}
+        selectedKeyframeId={project.selectedKeyframeId}
+        onSelect={() => selectTrack(track)}
+        onToggle={() => setTimeline({ expandedTrack: !timeline.expandedTrack })}
+        onSelectKeyframe={(frame) => updateProject((current) => ({
+          ...current,
+          activeTrackId: track.id,
+          selectedKeyframeId: frame.id,
+          camera: { ...current.camera, ...frame.camera },
+          blur: frame.blur ? { ...current.blur, ...frame.blur } : current.blur
+        }))}
+      />)}
+      <button type="button" className="add-track-row" onClick={() => setTimeline({ trackMenuOpen: true })}>
+        <Plus size={12} /> Add track
+      </button>
+    </div>
   </section>;
 }
-function Timeline({ project, updateProject, onAutoMotion, onOpenRecording, notify }) { const timeline = project.timeline; const setTimeline = (patch, record = true) => updateProject((current) => ({ ...current, timeline: { ...current.timeline, ...patch } }), { record }); const selectTrack = (track) => updateProject((current) => ({ ...current, activeTrackId: track.id, selectedKeyframeId: track.keyframes[0]?.id || null, camera: track.keyframes[0]?.camera ? { ...current.camera, ...track.keyframes[0].camera } : current.camera, blur: track.keyframes[0]?.blur ? { ...current.blur, ...track.keyframes[0].blur } : current.blur })); const addShot = () => updateProject((current) => { const id = `shot-${current.tracks.length + 1}`, name = `Shot ${current.tracks.length + 1}`; return { ...current, tracks: [...current.tracks, { id, name, kind: "scene", duration: 3, selected: false, keyframes: [{ id: `${id}-kf-1`, time: current.timeline.playhead, camera: { ...current.camera }, blur: { ...current.blur }, easing: "Ease in out" }] }], activeTrackId: id, selectedKeyframeId: `${id}-kf-1` }; }); const addTrack = (kind) => { const labels = { media: "Media", text: "Title", logo: "Logo", audio: "Audio" }; updateProject((current) => ({ ...current, tracks: [...current.tracks, { id: `${kind}-${Date.now()}`, name: labels[kind] || "Track", kind, duration: 3, selected: false, keyframes: [] }] })); notify(`${labels[kind] || "Track"} track added.`); }; const applyPreset = (name) => { const duration = 4; updateProject((current) => ({ ...current, timeline: { ...current.timeline, duration, playhead: 0, presetOpen: false }, tracks: current.tracks.map((track, index) => index === 0 ? { ...track, keyframes: [{ id: `${track.id}-preset-a`, time: 0, camera: { ...current.camera, ...cameraPresets.Angled }, blur: { ...current.blur }, easing: "Ease in" }, { id: `${track.id}-preset-b`, time: duration, camera: { ...current.camera, ...cameraPresets[name === "Flat truck" ? "Flat" : name === "Out and back" ? "Hero" : "Detail"] }, blur: { ...current.blur }, easing: "Ease out" }] } : track) })); notify(`${name} preset applied.`); }; const deleteKeyframe = () => updateProject((current) => ({ ...current, selectedKeyframeId: null, tracks: current.tracks.map((track) => ({ ...track, keyframes: track.keyframes.filter((frame) => frame.id !== current.selectedKeyframeId) })) })); const changeEasing = () => updateProject((current) => ({ ...current, tracks: current.tracks.map((track) => ({ ...track, keyframes: track.keyframes.map((frame) => frame.id === current.selectedKeyframeId ? { ...frame, easing: frame.easing === "Linear" ? "Ease in out" : "Linear" } : frame) })) })); if (timeline.minimized) return <section className="timeline-shell timeline-mini"><div className="timeline-toolbar"><IconButton label="Maximize timeline" onClick={() => setTimeline({ minimized: false })}><Maximize2 size={14} /></IconButton><TimelineTransport timeline={timeline} setTimeline={setTimeline} /><span className="mini-time">{formatTime(timeline.playhead)} / {formatTime(timeline.duration)}</span></div></section>; return <section className="timeline-shell"><div className="timeline-toolbar"><div className="timeline-mode" role="radiogroup" aria-label="Timeline mode"><button type="button" role="radio" aria-checked={timeline.mode === "simple"} className={timeline.mode === "simple" ? "selected" : ""} onClick={() => setTimeline({ mode: "simple" })}>SIMPLE</button><button type="button" role="radio" aria-checked={timeline.mode === "advanced"} className={timeline.mode === "advanced" ? "selected" : ""} onClick={() => setTimeline({ mode: "advanced" })}>ADVANCED</button></div><TimelineTransport timeline={timeline} setTimeline={setTimeline} /><span className="timeline-time" aria-label="Playhead time">{formatTime(timeline.playhead)} / {formatTime(timeline.duration)}</span><span className="timeline-spacer" /><div className="timeline-actions"><button type="button" className="timeline-action" onClick={() => setTimeline({ presetOpen: !timeline.presetOpen, trackMenuOpen: false })}>PRESETS</button><button type="button" className="timeline-action" onClick={onAutoMotion}><span className="timeline-long">AUTO-MOTION</span><span className="timeline-short">AUTO</span></button>{timeline.mode === "advanced" ? <button type="button" aria-label={timeline.recording ? "Recording — click to stop auto-keyframe" : "Enable auto-keyframe recording"} className={`record-button ${timeline.recording ? "recording" : ""}`} onClick={timeline.recording ? () => setTimeline({ recording: false }) : onOpenRecording}>{timeline.recording ? <><CircleStop size={12} /><span className="timeline-long">Recording</span><span className="timeline-short">STOP</span></> : <><span className="record-dot" /><span className="timeline-long">RECORD KEYFRAMES</span><span className="timeline-short">REC</span></>}</button> : <button type="button" aria-label="Add shot — captures the current camera and focus as a new shot" className="record-button add-shot" onClick={() => { addShot(); notify("Shot added at the current playhead."); }}><Plus size={13} /> ADD SHOT</button>}</div><span className="toolbar-divider" /><label className="duration-field" title="Project length — sets the timeline duration"><span>LENGTH</span><input aria-label="Project length (minutes:seconds)" value={timeline.projectLength} onChange={(event) => { const value = event.target.value; const match = value.match(/(\d+)\s*[:.]?\s*(\d+)?/); const seconds = match ? (match[2] ? Number(match[1]) * 60 + Number(match[2]) : Number(match[1])) : null; if (seconds && seconds >= 1 && seconds <= 180) setTimeline({ projectLength: value, duration: seconds, playhead: Math.min(timeline.playhead, seconds) }); else setTimeline({ projectLength: value }); }} /></label><IconButton label={timeline.guides ? "Hide center guides" : "Show center guides"} className={timeline.guides ? "active-control" : ""} onClick={() => setTimeline({ guides: !timeline.guides })}><Scan size={14} /></IconButton><input className="timeline-zoom" aria-label="Timeline zoom" type="range" min="0.5" max="2" step="0.1" value={timeline.zoom} style={{ "--fill": `${(timeline.zoom - 0.5) / 1.5 * 100}%` }} onChange={(event) => setTimeline({ zoom: Number(event.target.value) }, false)} /><IconButton label="Add track" className="add-track-button" onClick={() => setTimeline({ trackMenuOpen: !timeline.trackMenuOpen, presetOpen: false })}><Plus size={14} /></IconButton><IconButton label="Minimize timeline" onClick={() => setTimeline({ minimized: true })}><Minimize2 size={14} /></IconButton></div>{timeline.presetOpen && <TimelinePresetPopover onSelect={applyPreset} />}{timeline.trackMenuOpen && <TrackMenu onSelect={(kind) => { addTrack(kind); setTimeline({ trackMenuOpen: false }); }} />}<input className="scrub-track" aria-label="Scrub timeline" type="range" min="0" max={timeline.duration} step="0.1" value={timeline.playhead} style={{ "--fill": `${Math.min(100, timeline.playhead / timeline.duration * 100)}%` }} onChange={(event) => setTimeline({ playhead: Number(event.target.value) }, false)} /><div className="timeline-content">{timeline.mode === "advanced" && <div className="timeline-subtools"><IconButton label="Delete selected keyframe" onClick={deleteKeyframe} disabled={!project.selectedKeyframeId}><Trash2 size={13} /></IconButton><IconButton label="Edit easing for selected keyframe" onClick={changeEasing} disabled={!project.selectedKeyframeId}><Wand2 size={13} /></IconButton><span className="track-title">TRACKS</span><button type="button" className="tiny-action" onClick={() => setTimeline({ expandedTrack: !timeline.expandedTrack })}><Layers3 size={12} /> {timeline.expandedTrack ? "Collapse layer" : "Expand layer"}</button></div>}{project.tracks.map((track, index) => <TrackRow key={track.id} track={track} active={project.activeTrackId === track.id} expanded={timeline.expandedTrack && index === 0} simple={timeline.mode === "simple"} selectedKeyframeId={project.selectedKeyframeId} onSelect={() => selectTrack(track)} onToggle={() => setTimeline({ expandedTrack: !timeline.expandedTrack })} onSelectKeyframe={(frame) => updateProject((current) => ({ ...current, activeTrackId: track.id, selectedKeyframeId: frame.id, camera: { ...current.camera, ...frame.camera }, blur: frame.blur ? { ...current.blur, ...frame.blur } : current.blur }))} />)}<button type="button" className="add-track-row" onClick={() => setTimeline({ trackMenuOpen: true })}><Plus size={12} /> Add track</button></div></section>; }
-function TimelineTransport({ timeline, setTimeline }) { return <div className="transport-controls"><IconButton label="Back to start" onClick={() => setTimeline({ playhead: 0 })}><ChevronLeft size={14} /></IconButton><IconButton label={timeline.playing ? "Pause" : "Play"} className="play-control" onClick={() => setTimeline({ playing: !timeline.playing })}>{timeline.playing ? <Pause size={14} /> : <Play size={14} />}</IconButton><IconButton label={timeline.loop ? "Disable loop" : "Enable loop"} className={timeline.loop ? "active-control" : ""} onClick={() => setTimeline({ loop: !timeline.loop })}><RefreshCw size={13} /></IconButton></div>; }
-function TrackRow({ track, active, expanded, simple, selectedKeyframeId, onSelect, onToggle, onSelectKeyframe }) { const keyframes = track.keyframes || []; return <div className={`track-row ${active ? "active" : ""}`}><div className="track-label"><IconButton label={expanded ? "Collapse layer" : "Expand layer"} onClick={onToggle}>{expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</IconButton><GripVertical size={11} /><span>{track.name}</span><button type="button" className="row-more" aria-label={`More options for ${track.name}`} onClick={onSelect}><MoreHorizontal size={13} /></button></div><div className={`track-lane ${simple ? "simple-lane" : ""} track-${track.kind}`}><button type="button" className={`shot-segment ${active ? "selected" : ""}`} onClick={onSelect}><span>{track.kind === "scene" ? track.name : track.kind.toUpperCase()}</span>{!simple && keyframes.slice(0, 4).map((frame) => <i key={frame.id} className={frame.id === selectedKeyframeId ? "selected" : ""} onClick={(event) => { event.stopPropagation(); onSelectKeyframe(frame); }} />)}</button></div>{expanded && <div className="keyframe-rows">{keyframes.map((frame) => <button type="button" key={frame.id} className={`keyframe-chip ${frame.id === selectedKeyframeId ? "selected" : ""}`} onClick={() => onSelectKeyframe(frame)}><span>{formatTime(frame.time)}</span><b>{frame.easing}</b><i /></button>)}</div>}</div>; }
-function TimelinePresetPopover({ onSelect }) { const presets = ["Scan left to right", "Left – top to bottom", "Low-angle pan up", "Slow zoom out", "Overhead pan", "Out and back", "Fold up", "Flat truck"]; return <div className="timeline-popover preset-popover"><div className="preset-grid">{presets.map((preset, index) => <button type="button" key={preset} onClick={() => onSelect(preset)}><span className={`preset-thumb preset-${index + 1}`} /><span>{preset}</span><small>4s</small></button>)}</div></div>; }
-function TrackMenu({ onSelect }) { return <div className="timeline-popover track-popover"><strong>Add to timeline</strong><button type="button" onClick={() => onSelect("media")}><ImagePlus size={14} />Media <small>New shot from image or video</small></button><button type="button" onClick={() => onSelect("text")}><TextCursorInput size={14} />Text <small>Title or caption shot</small></button><button type="button" onClick={() => onSelect("logo")}><Aperture size={14} />Logo <small>Brand mark shot</small></button><button type="button" onClick={() => onSelect("audio")}><Music2 size={14} />Audio <small>Music or voiceover track</small></button></div>; }
 
-function Inspector({ project, updateProject, panelSections, setPanelSections, sceneOpen, setSceneOpen, lightingOpen, setLightingOpen, backgroundOpen, setBackgroundOpen, backgroundPickerOpen, setBackgroundPickerOpen, mockupOpen, setMockupOpen, finishOpen, setFinishOpen, cameraPresetOpen, setCameraPresetOpen, effectsOpen, setEffectsOpen, updateCamera, addCameraKeyframe, selectCameraPreset, selectScene, updateBackground, updateEffectSetting, addEffect, removeEffect, onUpload, onRemoveMedia, onReset, isDark, onToggleTheme, notify }) {
+function TimelineTransport({ timeline, setTimeline }) {
+  return <div className="transport-controls" role="group" aria-label="Playback controls">
+    <IconButton
+      label="Back to start (Home)"
+      title="Back to start"
+      onClick={() => setTimeline({ playhead: 0 })}
+    >
+      <ChevronLeft size={14} />
+    </IconButton>
+    <IconButton
+      label={timeline.playing ? "Pause animation (Space)" : "Play animation (Space)"}
+      title={timeline.playing ? "Pause animation" : "Play animation"}
+      className="play-control"
+      onClick={() => setTimeline({ playing: !timeline.playing })}
+    >
+      {timeline.playing ? <Pause size={14} /> : <Play size={14} />}
+    </IconButton>
+    <IconButton
+      label={timeline.loop ? "Disable loop" : "Enable loop"}
+      title={timeline.loop ? "Loop playback: On" : "Loop playback: Off"}
+      className={timeline.loop ? "active-control" : ""}
+      aria-pressed={timeline.loop}
+      onClick={() => setTimeline({ loop: !timeline.loop })}
+    >
+      <RefreshCw size={13} />
+    </IconButton>
+  </div>;
+}
+
+function TrackRow({ track, active, expanded, simple, selectedKeyframeId, onSelect, onToggle, onSelectKeyframe }) {
+  const keyframes = track.keyframes || [];
+  return <div className={`track-row ${active ? "active" : ""}`}>
+    <div className="track-label">
+      <IconButton label={expanded ? "Collapse layer" : "Expand layer"} onClick={onToggle}>
+        {expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+      </IconButton>
+      <GripVertical size={11} className="track-grip" />
+      <button type="button" className="track-name-wrap" onClick={onSelect} title={`Select ${track.name}`}>
+        <span className="track-name">{track.name}</span>
+        {active && <span className="track-active-badge">ACTIVE</span>}
+      </button>
+      <span className="track-duration-pill">{track.duration || 3}s</span>
+      <button type="button" className="row-more" aria-label={`More options for ${track.name}`} onClick={onSelect}>
+        <MoreHorizontal size={13} />
+      </button>
+    </div>
+    <div className={`track-lane ${simple ? "simple-lane" : ""} track-${track.kind}`}>
+      <button
+        type="button"
+        aria-pressed={active}
+        aria-label={`${track.name} shot track, ${track.duration || 3} seconds${active ? ", active" : ""}`}
+        className={`shot-segment ${active ? "selected" : ""}`}
+        onClick={onSelect}
+      >
+        <span className="shot-segment-title">{track.kind === "scene" ? track.name : track.kind.toUpperCase()}</span>
+      </button>
+      {!simple && <div className="shot-keyframes-row" role="group" aria-label="Keyframes on track">
+        {keyframes.slice(0, 8).map((frame) => {
+          const isSelected = frame.id === selectedKeyframeId;
+          return <button
+            key={frame.id}
+            type="button"
+            aria-pressed={isSelected}
+            aria-label={`Keyframe at ${formatTime(frame.time)} (${frame.easing})`}
+            title={`Keyframe @ ${formatTime(frame.time)} · ${frame.easing}`}
+            className={`keyframe-marker ${isSelected ? "selected" : ""}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onSelectKeyframe(frame);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.stopPropagation();
+              }
+            }}
+          >
+            <span className="keyframe-diamond" />
+          </button>;
+        })}
+      </div>}
+    </div>
+    {expanded && <div className="keyframe-rows" role="group" aria-label="Expanded keyframe details">
+      {keyframes.map((frame) => {
+        const isSelected = frame.id === selectedKeyframeId;
+        return <button
+          type="button"
+          key={frame.id}
+          aria-pressed={isSelected}
+          className={`keyframe-chip ${isSelected ? "selected" : ""}`}
+          onClick={() => onSelectKeyframe(frame)}
+          title={`Select keyframe at ${formatTime(frame.time)} (${frame.easing})`}
+        >
+          <span>{formatTime(frame.time)}</span>
+          <b>{frame.easing}</b>
+          <span className="keyframe-diamond" />
+        </button>;
+      })}
+    </div>}
+  </div>;
+}
+
+function TimelinePresetPopover({ onSelect, onClose }) {
+  const presets = [
+    { name: "Scan left to right", desc: "Horizontal sweep across device" },
+    { name: "Left – top to bottom", desc: "Diagonal top-down hero angle" },
+    { name: "Low-angle pan up", desc: "Dramatic upward pedestal view" },
+    { name: "Slow zoom out", desc: "Subtle reveal into full framing" },
+    { name: "Overhead pan", desc: "Top-down layout tracking" },
+    { name: "Out and back", desc: "Dynamic push-in then return" },
+    { name: "Fold up", desc: "Angular tilt into flat view" },
+    { name: "Flat truck", desc: "Front-parallel horizontal dolly" },
+  ];
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.stopPropagation();
+      event.preventDefault();
+      onClose?.();
+    }
+  };
+
+  return <div
+    className="timeline-popover preset-popover"
+    role="dialog"
+    aria-label="Camera motion presets"
+    onKeyDown={handleKeyDown}
+  >
+    <div className="preset-popover-header">
+      <div className="preset-header-text">
+        <strong>Camera motion presets</strong>
+        <small>4-second animations · replaces active track keyframes</small>
+      </div>
+      <button
+        type="button"
+        className="preset-close-btn"
+        aria-label="Close presets"
+        onClick={onClose}
+      >
+        <X size={12} />
+      </button>
+    </div>
+    <div className="preset-grid" role="group" aria-label="Preset list">
+      {presets.map(({ name, desc }, index) => <button
+        type="button"
+        key={name}
+        onClick={() => onSelect(name)}
+        title={`${name} — ${desc}`}
+      >
+        <span className={`preset-thumb preset-${index + 1}`} />
+        <span className="preset-label-wrap">
+          <span className="preset-title">{name}</span>
+          <span className="preset-desc">{desc}</span>
+        </span>
+        <small className="preset-dur">4s</small>
+      </button>)}
+    </div>
+  </div>;
+}
+
+function TrackMenu({ onSelect, onClose }) {
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.stopPropagation();
+      event.preventDefault();
+      onClose?.();
+    }
+  };
+
+  return <div
+    className="timeline-popover track-popover"
+    role="menu"
+    aria-label="Add to timeline"
+    onKeyDown={handleKeyDown}
+  >
+    <div className="track-popover-header">
+      <strong>Add to timeline</strong>
+      <button type="button" className="preset-close-btn" aria-label="Close track menu" onClick={onClose}>
+        <X size={12} />
+      </button>
+    </div>
+    <button type="button" role="menuitem" onClick={() => onSelect("media")}>
+      <ImagePlus size={14} />
+      <span>Media <small>New shot from image or video</small></span>
+    </button>
+    <button type="button" role="menuitem" onClick={() => onSelect("text")}>
+      <TextCursorInput size={14} />
+      <span>Text <small>Title or caption shot</small></span>
+    </button>
+    <button type="button" role="menuitem" onClick={() => onSelect("logo")}>
+      <Aperture size={14} />
+      <span>Logo <small>Brand mark shot</small></span>
+    </button>
+    <button type="button" role="menuitem" onClick={() => onSelect("audio")}>
+      <Music2 size={14} />
+      <span>Audio <small>Music or voiceover track</small></span>
+    </button>
+  </div>;
+}
+
+function Inspector({ project, updateProject, panelSections, setPanelSections, sceneOpen, setSceneOpen, lightingOpen, setLightingOpen, backgroundOpen, setBackgroundOpen, mockupOpen, setMockupOpen, finishOpen, setFinishOpen, cameraPresetOpen, setCameraPresetOpen, effectsOpen, setEffectsOpen, updateCamera, addCameraKeyframe, selectCameraPreset, selectScene, updateBackground, updateEffectSetting, addEffect, removeEffect, onUpload, onRemoveMedia, onReset, isDark, onToggleTheme, notify }) {
+  const mockupSectionRef = useRef(null);
+  const mockupChangeButtonRef = useRef(null);
+  const backgroundExpanderRef = useRef(null);
   const sectionToggle = (key) => setPanelSections((current) => ({ ...current, [key]: !current[key] }));
   const sceneLabel = project.scene === "custom" ? "CUSTOM SCENE" : (sceneOptions.find((item) => item[3] === project.scene)?.[0] || "CUSTOM SCENE").toUpperCase();
-  const backgroundLabel = project.background.tab === "Color" ? "Color" : project.background.tab === "Preset" ? `Preset · ${project.background.preset}` : `Image · ${project.background.image}`;
+  const backgroundLabel = project.background.tab === "Color" ? `Color · ${project.background.color || "#f2f2f2"}` : project.background.tab === "Preset" ? `Preset · ${project.background.preset}` : `Image · ${project.background.image}`;
+
+  const closeMockupPicker = useCallback(() => {
+    setMockupOpen(false);
+    requestAnimationFrame(() => {
+      mockupChangeButtonRef.current?.focus();
+    });
+  }, [setMockupOpen]);
+
+  const selectMockup = useCallback((value) => {
+    updateProject((current) => ({ ...current, mockup: value }));
+    setMockupOpen(false);
+    notify(`${value} mockup selected.`);
+    requestAnimationFrame(() => {
+      mockupChangeButtonRef.current?.focus();
+    });
+  }, [updateProject, setMockupOpen, notify]);
+
+  const handleNextStepFromSource = useCallback(() => {
+    setPanelSections((current) => ({ ...current, mockup: true }));
+    setMockupOpen(true);
+    window.requestAnimationFrame(() => {
+      mockupSectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+      const target = mockupSectionRef.current?.querySelector('.mockup-filter-btn[aria-pressed="true"]') ||
+                     mockupSectionRef.current?.querySelector('.mockup-filter-btn') ||
+                     mockupSectionRef.current?.querySelector('.mockup-picker-scroll button.selected') ||
+                     mockupChangeButtonRef.current;
+      target?.focus({ preventScroll: true });
+    });
+  }, [setPanelSections, setMockupOpen]);
+
   return <aside className="inspector-panel">
     <div className="inspector-top"><IconButton label="Reset all" onClick={onReset}><RotateCcw size={14} /></IconButton><span className="inspector-top-title">EDITOR</span><IconButton label={isDark ? "Switch to light mode" : "Switch to dark mode"} onClick={onToggleTheme}>{isDark ? <Sun size={14} /> : <Moon size={14} />}</IconButton></div>
-    <InspectorSection label="SOURCE" meta="SHOT 1" icon={<ImagePlus size={13} />} open={panelSections.source} onToggle={() => sectionToggle("source")}><SourceCard media={project.media} onUpload={onUpload} onRemove={onRemoveMedia} /></InspectorSection>
-    <InspectorSection label="SCENE" icon={<SunMedium size={13} />} open={panelSections.scene} onToggle={() => sectionToggle("scene")}><div className="scene-summary"><div className="scene-summary-icon"><Settings2 size={15} /></div><div><strong>{sceneLabel}</strong><span>{project.scene === "custom" ? "CUSTOM LIGHTING + BACKGROUND" : "LIGHTING + BACKGROUND PRESET"}</span></div><button type="button" aria-label="Change scene" className="change-button" onClick={() => setSceneOpen((value) => !value)}>CHANGE</button></div>{sceneOpen && <ScenePicker scene={project.scene} onSelect={selectScene} />}<button type="button" aria-label={`Lighting ${project.lighting}`} className="wide-select" onClick={() => setLightingOpen((value) => !value)}><span><SunMedium size={14} />LIGHTING</span><b>{project.lighting.toUpperCase()}</b><ChevronDown size={12} /></button><div className="lighting-controls"><SliderRow label="LIGHT ROTATION X" value={project.lightRotation.x} min="-360" max="360" step="1" unit="°" onChange={(value) => updateProject((current) => ({ ...current, scene: "custom", lightRotation: { ...current.lightRotation, x: Number(value) } }))} /><SliderRow label="LIGHT ROTATION Y" value={project.lightRotation.y} min="-360" max="360" step="1" unit="°" onChange={(value) => updateProject((current) => ({ ...current, scene: "custom", lightRotation: { ...current.lightRotation, y: Number(value) } }))} /><SwitchRow label="CONTACT SHADOW" checked={project.contactShadow} onChange={(value) => updateProject((current) => ({ ...current, scene: "custom", contactShadow: value }))} /><SliderRow label="BG BLUR" value={project.bgBlur} min="0" max="1" step="0.01" onChange={(value) => updateProject((current) => ({ ...current, scene: "custom", bgBlur: Number(value) }))} /></div>{lightingOpen && <ChoicePopover items={lightingOptions} selected={project.lighting} onSelect={(value) => { updateProject((current) => ({ ...current, scene: "custom", lighting: value })); setLightingOpen(false); notify(`${value} lighting applied.`); }} />}<button type="button" aria-label="Background Image" className="wide-select" onClick={() => setBackgroundOpen((value) => !value)}><span><Palette size={14} />BACKGROUND</span><b>{backgroundLabel}</b><ChevronDown size={12} /></button>{project.background.tab === "Image" && <button type="button" aria-label="Background source" className="background-image-row" onClick={() => setBackgroundPickerOpen((value) => !value)}><span>BG IMAGE</span><span className="background-image-thumb" style={{ backgroundImage: `url(${asset(backgroundAssetMap[project.background.image] || backgroundAssetMap.Whisp)})` }} /><b>{project.background.image.toUpperCase()}</b><ChevronDown size={12} /></button>}{backgroundOpen && <BackgroundPicker background={project.background} update={updateBackground} pickerOpen={backgroundPickerOpen} setPickerOpen={setBackgroundPickerOpen} />}</InspectorSection>
-    <InspectorSection label="MOCKUP" icon={<Smartphone size={13} />} open={panelSections.mockup} onToggle={() => sectionToggle("mockup")}><div className="mockup-summary"><div className="mockup-thumb">{project.mockup === "iPhone 17" ? <img src={asset("source/iphone17.png")} alt="" /> : <MockupGlyph name={project.mockup} size={22} />}</div><div><strong>{project.mockup.toUpperCase()}</strong><span>{project.mockup === "iPhone 17" ? "1,206 × 2,622" : "ANY SIZE"}</span></div><button type="button" aria-label="Change mockup" className="change-button" onClick={() => setMockupOpen((value) => !value)}>CHANGE</button></div>{mockupOpen && <MockupPicker mockup={project.mockup} onSelect={(value) => (updateProject((current) => ({ ...current, mockup: value })), setMockupOpen(false), notify(`${value} mockup selected.`))} />}<button type="button" aria-label={`Finish ${project.finish}`} className="wide-select" onClick={() => setFinishOpen((value) => !value)}><span><Box size={14} />FINISH</span><b>{project.finish.toUpperCase()}</b><ChevronDown size={12} /></button>{finishOpen && <ChoicePopover items={finishOptions} selected={project.finish} onSelect={(value) => { updateProject((current) => ({ ...current, finish: value })); setFinishOpen(false); notify(`${value} finish selected.`); }} finish />}<div className="mockup-detail-controls"><SliderRow label="Reflection" value={project.reflection.amount} min="0" max="1" step="0.01" onChange={(value) => updateProject((current) => ({ ...current, reflection: { ...current.reflection, amount: Number(value) } }))} /><SliderRow label="Roughness" value={project.reflection.roughness} min="0" max="1" step="0.01" onChange={(value) => updateProject((current) => ({ ...current, reflection: { ...current.reflection, roughness: Number(value) } }))} /></div></InspectorSection>
+    <InspectorSection label="SOURCE" meta={project.media ? "ACTIVE" : "EMPTY"} icon={<ImagePlus size={13} />} open={panelSections.source} onToggle={() => sectionToggle("source")}><SourceCard media={project.media} onUpload={onUpload} onRemove={onRemoveMedia} mockupName={project.mockup} onNextStep={handleNextStepFromSource} /></InspectorSection>
+    <InspectorSection sectionRef={mockupSectionRef} label="MOCKUP" icon={<Smartphone size={13} />} open={panelSections.mockup} onToggle={() => sectionToggle("mockup")}><div className="mockup-summary"><div className="mockup-thumb">{project.mockup === "iPhone 17" ? <img src={asset("source/iphone17.png")} alt="" /> : <MockupGlyph name={project.mockup} size={22} />}</div><div><strong>{project.mockup.toUpperCase()}</strong><span>{deviceGroup(project.mockup)} · {project.mockup === "Flat" ? "2D CANVAS" : project.mockup === "iPhone 17" ? "1,206 × 2,622" : "3D MODEL"}</span></div><button ref={mockupChangeButtonRef} type="button" aria-label={mockupOpen ? "Close device picker" : "Change device mockup"} className={`change-button ${mockupOpen ? "active" : ""}`} onClick={() => setMockupOpen((value) => !value)}>{mockupOpen ? "DONE" : "CHANGE"}</button></div>{mockupOpen && <MockupPicker mockup={project.mockup} onSelect={selectMockup} onClose={closeMockupPicker} />}<button type="button" aria-label={`Finish ${project.finish}`} className="wide-select" onClick={() => setFinishOpen((value) => !value)}><span><Box size={14} />FINISH</span><b>{project.finish.toUpperCase()}</b><ChevronDown size={12} /></button>{finishOpen && <ChoicePopover items={finishOptions} selected={project.finish} onSelect={(value) => { updateProject((current) => ({ ...current, finish: value })); setFinishOpen(false); notify(`${value} finish selected.`); }} finish />}<div className="mockup-detail-controls"><SliderRow label="Reflection" value={project.reflection.amount} min="0" max="1" step="0.01" onChange={(value) => updateProject((current) => ({ ...current, reflection: { ...current.reflection, amount: Number(value) } }))} /><SliderRow label="Roughness" value={project.reflection.roughness} min="0" max="1" step="0.01" onChange={(value) => updateProject((current) => ({ ...current, reflection: { ...current.reflection, roughness: Number(value) } }))} /></div></InspectorSection>
+    <InspectorSection label="SCENE" icon={<SunMedium size={13} />} open={panelSections.scene} onToggle={() => sectionToggle("scene")}><div className="scene-summary"><div className="scene-summary-icon"><Settings2 size={15} /></div><div><strong>{sceneLabel}</strong><span>{project.scene === "custom" ? "CUSTOM LIGHTING + BACKGROUND" : "LIGHTING + BACKGROUND PRESET"}</span></div><button type="button" aria-label="Change scene" className="change-button" onClick={() => setSceneOpen((value) => !value)}>CHANGE</button></div>{sceneOpen && <ScenePicker scene={project.scene} onSelect={selectScene} />}<button type="button" aria-label={`Lighting ${project.lighting}`} className="wide-select" onClick={() => setLightingOpen((value) => !value)}><span><SunMedium size={14} />LIGHTING</span><b>{project.lighting.toUpperCase()}</b><ChevronDown size={12} /></button><div className="lighting-controls"><SliderRow label="LIGHT ROTATION X" value={project.lightRotation.x} min="-360" max="360" step="1" unit="°" onChange={(value) => updateProject((current) => ({ ...current, scene: "custom", lightRotation: { ...current.lightRotation, x: Number(value) } }))} /><SliderRow label="LIGHT ROTATION Y" value={project.lightRotation.y} min="-360" max="360" step="1" unit="°" onChange={(value) => updateProject((current) => ({ ...current, scene: "custom", lightRotation: { ...current.lightRotation, y: Number(value) } }))} /><SwitchRow label="CONTACT SHADOW" checked={project.contactShadow} onChange={(value) => updateProject((current) => ({ ...current, scene: "custom", contactShadow: value }))} /><SliderRow label="BG BLUR" value={project.bgBlur} min="0" max="1" step="0.01" onChange={(value) => updateProject((current) => ({ ...current, scene: "custom", bgBlur: Number(value) }))} /></div>{lightingOpen && <ChoicePopover items={lightingOptions} selected={project.lighting} onSelect={(value) => { updateProject((current) => ({ ...current, scene: "custom", lighting: value })); setLightingOpen(false); notify(`${value} lighting applied.`); }} />}<button ref={backgroundExpanderRef} type="button" aria-expanded={backgroundOpen} aria-label={backgroundOpen ? "Collapse background settings" : "Expand background settings"} className={`wide-select ${backgroundOpen ? "active" : ""}`} onClick={() => setBackgroundOpen((value) => !value)}><span><Palette size={14} />BACKGROUND</span><b>{backgroundLabel}</b><ChevronDown size={12} className={backgroundOpen ? "chevron-open" : ""} /></button>{backgroundOpen && <BackgroundPicker background={project.background} update={updateBackground} onClose={() => { setBackgroundOpen(false); requestAnimationFrame(() => backgroundExpanderRef.current?.focus()); }} />}</InspectorSection>
     <InspectorSection label="CAMERA" icon={<Camera size={13} />} open={panelSections.camera} onToggle={() => sectionToggle("camera")}><div className="camera-detail-controls"><div className="camera-tabs"><button type="button" className={!cameraPresetOpen ? "selected" : ""} onClick={() => setCameraPresetOpen(false)}>Manual</button><button type="button" aria-label="Camera presets" className={cameraPresetOpen ? "selected" : ""} onClick={() => setCameraPresetOpen((value) => !value)}>Presets</button></div>{cameraPresetOpen ? <CameraPresets selected={project.cameraPreset} onSelect={selectCameraPreset} /> : <CameraControls camera={project.camera} updateCamera={updateCamera} onKeyframe={addCameraKeyframe} />}</div></InspectorSection>
     <InspectorSection label="EFFECTS" icon={<Sparkles size={13} />} meta={project.effects.length ? `${project.effects.length} ACTIVE` : ""} open={panelSections.effects} onToggle={() => sectionToggle("effects")}><div className="effect-detail-controls"><div className="effect-list">{project.effects.map((effect) => <div className="effect-line" key={effect}><span><Sparkles size={13} />{effect}</span><button type="button" aria-label={`Remove ${effect}`} onClick={() => removeEffect(effect)}><X size={12} /></button>{["Glass Border", "Vignette", "Grain", "Sharpen", "Bloom"].includes(effect) && <SliderRow label="Amount" value={project.effectSettings[effect] || 20} min="0" max="100" unit="%" onChange={(value) => updateEffectSetting(effect, value)} />}</div>)}{!project.effects.length && <span className="empty-effect">No effects yet — add a look below.</span>}</div><button type="button" aria-label="Add effect" className="add-effect-button" onClick={() => setEffectsOpen((value) => !value)}><Plus size={13} />ADD EFFECT</button>{effectsOpen && <EffectPicker onSelect={addEffect} />}</div></InspectorSection>
   </aside>;
 }
 
-function InspectorSection({ label, meta, icon, open, onToggle, children }) { return <section className={`inspector-section ${open ? "open" : "closed"}`}><button type="button" className="inspector-section-head" aria-expanded={open} onClick={onToggle}><span className="section-icon">{icon}</span><span className="inspector-section-title"><span>{label}</span>{meta && <small>{meta}</small>}</span>{open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}</button>{open && <div className="inspector-section-body">{children}</div>}</section>; }
-function SourceCard({ media, onUpload, onRemove }) { return media ? <div className="source-card source-card-filled">{media.type?.startsWith("video/") ? <video src={media.src} muted autoPlay loop playsInline /> : <img src={media.src} alt="Uploaded source" />}<div><strong>{media.name}</strong><span>{media.type?.startsWith("video/") ? "VIDEO SOURCE" : "IMAGE SOURCE"}</span></div><button type="button" aria-label="Remove source media" onClick={onRemove}><X size={14} /></button></div> : <div className="source-card"><div className="source-upload-glyph"><Upload size={15} /></div><div><strong>CLICK TO UPLOAD</strong><span>DRAG &amp; DROP OR PASTE</span></div><button type="button" aria-label="Source media" onClick={onUpload} /></div>; }
+function InspectorSection({ label, meta, icon, open, onToggle, sectionRef, children }) { return <section ref={sectionRef} className={`inspector-section ${open ? "open" : "closed"}`}><button type="button" className="inspector-section-head" aria-expanded={open} onClick={onToggle}><span className="section-icon">{icon}</span><span className="inspector-section-title"><span>{label}</span>{meta && <small>{meta}</small>}</span>{open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}</button>{open && <div className="inspector-section-body">{children}</div>}</section>; }
+function SourceCard({ media, onUpload, onRemove, mockupName, onNextStep }) {
+  if (!media) {
+    return <button type="button" className="source-card source-card-empty" onClick={onUpload} aria-label="Upload screen: drop image or video, paste, or browse">
+      <span className="source-upload-glyph" aria-hidden="true"><Upload size={16} /></span>
+      <span className="source-card-text">
+        <strong>Upload screen</strong>
+        <span>Drop image or video, paste, or browse</span>
+        <small className="source-format-hint">PNG · JPG · MP4 · WEBM</small>
+      </span>
+      <span className="source-browse-btn" aria-hidden="true">Browse</span>
+    </button>;
+  }
+  return <div className="source-card-wrapper">
+    <div className="source-card source-card-filled">
+      <button type="button" className="source-preview-btn" onClick={onUpload} title="Click to replace media" aria-label="Replace media">
+        {media.type?.startsWith("video/") ? <video src={media.src} muted autoPlay loop playsInline /> : <img src={media.src} alt="Uploaded source" />}
+        <span className="source-preview-overlay"><RefreshCw size={12} /></span>
+      </button>
+      <div className="source-card-text">
+        <strong title={media.name}>{media.name}</strong>
+        <span>{media.type?.startsWith("video/") ? "VIDEO SOURCE" : "IMAGE SOURCE"}</span>
+      </div>
+      <div className="source-card-actions">
+        <button type="button" className="source-action-btn replace-btn" onClick={onUpload} title="Replace media">Replace</button>
+        <button type="button" className="source-action-btn remove-btn" aria-label="Remove source media" onClick={onRemove} title="Remove media"><X size={13} /></button>
+      </div>
+    </div>
+    {onNextStep && <div className="source-next-guidance">
+      <span>Active on {mockupName}</span>
+      <button type="button" className="source-next-action" onClick={onNextStep}>Change device →</button>
+    </div>}
+  </div>;
+}
 function ScenePicker({ scene, onSelect }) { return <div className="picker-grid scene-picker">{sceneOptions.map(([name, subtitle, , value]) => <button type="button" key={name} role="radio" aria-checked={scene === value} className={scene === value ? "selected" : ""} onClick={() => onSelect(value)}><span className={`scene-thumbnail ${value}`} /><span>{name}</span>{subtitle && <small>{subtitle}</small>}</button>)}</div>; }
 function ChoicePopover({ items, selected, onSelect, finish = false }) { return <div className={`choice-popover ${finish ? "finish-choice" : ""}`}>{items.map((item) => <button type="button" key={item} className={selected === item ? "selected" : ""} onClick={() => onSelect(item)}>{finish && <span className={`finish-swatch ${slugify(item)}`} />}{item}{selected === item && <Check size={12} />}</button>)}</div>; }
-function BackgroundPicker({ background, update, pickerOpen, setPickerOpen }) { return <div className="background-picker"><div className="picker-tabs"><button type="button" className={background.tab === "Color" ? "selected" : ""} onClick={() => update({ tab: "Color" })}>Color</button><button type="button" className={background.tab === "Preset" ? "selected" : ""} onClick={() => update({ tab: "Preset" })}>Preset</button><button type="button" className={background.tab === "Image" ? "selected" : ""} onClick={() => update({ tab: "Image" })}>Image</button></div>{background.tab === "Color" && <div className="color-picker"><label>Bg Color<input aria-label="Background color" value={background.color} onChange={(event) => update({ color: event.target.value })} /></label><div className="color-sample" style={{ background: background.color }} /></div>}{background.tab === "Preset" && <div className="background-choice"><button type="button" className="wide-select" onClick={() => setPickerOpen((value) => !value)}><span><Palette size={13} />Bg Preset</span><b>{background.preset}</b><ChevronDown size={12} /></button>{pickerOpen && <ChoicePopover items={presetOptions} selected={background.preset} onSelect={(value) => { update({ preset: value }); setPickerOpen(false); }} />}</div>}{background.tab === "Image" && <div className="background-choice"><button type="button" className="wide-select" onClick={() => setPickerOpen((value) => !value)}><span><ImagePlus size={13} />Bg Image</span><b>{background.image}</b><ChevronDown size={12} /></button>{pickerOpen && <div className="image-choice-grid">{imageOptions.map((item, index) => <button type="button" key={item} className={background.image === item ? "selected" : ""} onClick={() => { update({ image: item }); setPickerOpen(false); }}><span style={{ backgroundImage: `url(${asset(backgroundAssetMap[item] || `templates/${templateItems[index % templateItems.length][1]}`)})` }} />{item}</button>)}</div>}</div>}</div>; }
+function BackgroundPicker({ background, update, onClose }) {
+  const currentTab = background.tab || "Image";
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.stopPropagation();
+      event.preventDefault();
+      onClose?.();
+    }
+  };
+
+  return <div className="background-picker" role="region" aria-label="Background choices" onKeyDown={handleKeyDown}>
+    <div className="picker-tabs" role="group" aria-label="Background mode">
+      <button
+        type="button"
+        aria-pressed={currentTab === "Color"}
+        className={currentTab === "Color" ? "selected" : ""}
+        onClick={() => update({ tab: "Color" })}
+      >
+        Color
+      </button>
+      <button
+        type="button"
+        aria-pressed={currentTab === "Preset"}
+        className={currentTab === "Preset" ? "selected" : ""}
+        onClick={() => update({ tab: "Preset" })}
+      >
+        Preset
+      </button>
+      <button
+        type="button"
+        aria-pressed={currentTab === "Image"}
+        className={currentTab === "Image" ? "selected" : ""}
+        onClick={() => update({ tab: "Image" })}
+      >
+        Image
+      </button>
+    </div>
+
+    {currentTab === "Color" && <div className="color-picker-section">
+      <div className="color-picker">
+        <label>
+          <span>Color Hex</span>
+          <input
+            aria-label="Background color hex"
+            value={background.color || "#f2f2f2"}
+            onChange={(event) => update({ tab: "Color", color: event.target.value })}
+          />
+        </label>
+        <label className="color-sample-wrap" title="Choose color">
+          <input
+            type="color"
+            aria-label="Choose background color"
+            className="color-picker-native"
+            value={background.color?.startsWith("#") && background.color.length === 7 ? background.color : "#f2f2f2"}
+            onChange={(event) => update({ tab: "Color", color: event.target.value })}
+          />
+          <span className="color-sample" style={{ background: background.color || "#f2f2f2" }} />
+        </label>
+      </div>
+      <div className="color-swatches" role="group" aria-label="Preset colors">
+        {["#ffffff", "#f2f2f2", "#e5e5ea", "#6e6e69", "#1c1c1e", "#0b0c0d", "#f0771e", "#426c7d"].map((c) => {
+          const isSelected = (background.color || "").toLowerCase() === c.toLowerCase();
+          return <button
+            type="button"
+            key={c}
+            aria-label={`Color ${c}`}
+            aria-pressed={isSelected}
+            className={`color-swatch-btn ${isSelected ? "selected" : ""}`}
+            style={{ backgroundColor: c }}
+            onClick={() => update({ tab: "Color", color: c })}
+          />;
+        })}
+      </div>
+    </div>}
+
+    {currentTab === "Preset" && <div className="preset-choice-grid" role="group" aria-label="Background presets">
+      {presetOptions.map((item) => {
+        const isSelected = background.preset === item;
+        const bg = presetBackgrounds[item] || presetBackgrounds.None;
+        return <button
+          type="button"
+          key={item}
+          aria-pressed={isSelected}
+          className={`preset-choice-btn ${isSelected ? "selected" : ""}`}
+          onClick={() => update({ tab: "Preset", preset: item })}
+        >
+          <span
+            className="preset-swatch"
+            style={{ backgroundColor: bg.backgroundColor, backgroundImage: bg.backgroundImage }}
+          />
+          <span className="preset-choice-name">{item}</span>
+          {isSelected && <Check size={11} className="choice-check" />}
+        </button>;
+      })}
+    </div>}
+
+    {currentTab === "Image" && <div className="image-choice-grid" role="group" aria-label="Background images">
+      {imageOptions.map((item, index) => {
+        const isSelected = background.image === item;
+        const imgUrl = asset(backgroundAssetMap[item] || `templates/${templateItems[index % templateItems.length][1]}`);
+        return <button
+          type="button"
+          key={item}
+          aria-pressed={isSelected}
+          className={`image-choice-btn ${isSelected ? "selected" : ""}`}
+          onClick={() => update({ tab: "Image", image: item })}
+        >
+          <span className="image-choice-thumb" style={{ backgroundImage: `url(${imgUrl})` }} />
+          <span className="image-choice-name">{item}</span>
+          {isSelected && <Check size={11} className="choice-check" />}
+        </button>;
+      })}
+    </div>}
+  </div>;
+}
 function MockupGlyph({ name, size = 25 }) {
   const arch = deviceArchetype(name);
   if (arch === "tablet") return <Layers3 size={size} />;
@@ -574,15 +1545,108 @@ function MockupGlyph({ name, size = 25 }) {
   if (arch === "laptop") return <Laptop size={size} />;
   return <Smartphone size={size} />;
 }
-function MockupPicker({ mockup, onSelect }) {
-  const groups = [];
-  for (const option of mockupOptions) {
-    const label = deviceGroup(option[0]);
-    const last = groups[groups.length - 1];
-    if (last && last.label === label) last.items.push(option);
-    else groups.push({ label, items: [option] });
-  }
-  return <div className="mockup-picker-grid">{groups.map(({ label, items }, groupIndex) => <Fragment key={`mockup-group-${groupIndex}`}><div className="mockup-group-label">{label}</div>{items.map(([name, tag]) => <button type="button" role="radio" aria-checked={mockup === name} className={mockup === name ? "selected" : ""} key={name} onClick={() => onSelect(name)}><span className={`mockup-thumb ${slugify(name)}`}>{name === "iPhone 17" || name === "Flat" ? <img src={asset(name === "Flat" ? "source/starter-screen.jpg" : "source/iphone17.png")} alt="" /> : <MockupGlyph name={name} />}</span><span>{name}</span>{tag && <small className="free-text">{tag}</small>}</button>)}</Fragment>)}</div>;
+function MockupPicker({ mockup, onSelect, onClose }) {
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const selectedItemRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+
+  const { categories, categoryCounts } = useMemo(() => {
+    const counts = { All: mockupOptions.length };
+    const foundGroups = new Set();
+    for (const [name] of mockupOptions) {
+      const group = deviceGroup(name);
+      counts[group] = (counts[group] || 0) + 1;
+      foundGroups.add(group);
+    }
+    const preferred = ["Phones", "Tablets & readers", "Laptops", "Desktops", "Watches", "Handhelds", "Web & TV", "Spatial", "Stage"];
+    const ordered = ["All", ...preferred.filter((g) => foundGroups.has(g)), ...Array.from(foundGroups).filter((g) => !preferred.includes(g))];
+    return { categories: ordered, categoryCounts: counts };
+  }, []);
+
+  const filteredGroups = useMemo(() => {
+    const groups = [];
+    for (const option of mockupOptions) {
+      const label = deviceGroup(option[0]);
+      if (selectedCategory !== "All" && label !== selectedCategory) continue;
+      const last = groups[groups.length - 1];
+      if (last && last.label === label) last.items.push(option);
+      else groups.push({ label, items: [option] });
+    }
+    return groups;
+  }, [selectedCategory]);
+
+  const activeDeviceGroup = deviceGroup(mockup);
+  const activeIsFilteredOut = selectedCategory !== "All" && activeDeviceGroup !== selectedCategory;
+
+  useEffect(() => {
+    if (selectedItemRef.current) {
+      selectedItemRef.current.scrollIntoView({ block: "nearest" });
+    }
+  }, [selectedCategory]);
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.stopPropagation();
+      event.preventDefault();
+      onClose?.();
+    }
+  };
+
+  return <div className="mockup-picker-container" onKeyDown={handleKeyDown}>
+    <div className="mockup-filter-bar" role="group" aria-label="Device categories">
+      {categories.map((cat) => {
+        const isSelected = selectedCategory === cat;
+        const count = categoryCounts[cat] || 0;
+        const hasActive = activeDeviceGroup === cat;
+        return <button
+          key={cat}
+          type="button"
+          aria-pressed={isSelected}
+          className={`mockup-filter-btn ${isSelected ? "selected" : ""} ${hasActive && !isSelected ? "has-active-device" : ""}`}
+          onClick={() => setSelectedCategory(cat)}
+          title={`${cat} (${count} devices)${hasActive ? " · Contains active device" : ""}`}
+        >
+          <span>{cat}</span>
+          <span className="filter-count">({count})</span>
+          {hasActive && !isSelected && <span className="mockup-filter-active-dot" aria-label="Active device in this category" />}
+        </button>;
+      })}
+    </div>
+    {activeIsFilteredOut && <div className="mockup-filter-active-notice" role="status">
+      <span>Active: <strong>{mockup}</strong> ({activeDeviceGroup})</span>
+      <button type="button" className="mockup-filter-reset-link" onClick={() => setSelectedCategory("All")} aria-label={`Show active device ${mockup} in All category`}>
+        Show in All
+      </button>
+    </div>}
+    <div ref={scrollContainerRef} className="mockup-picker-scroll" tabIndex={0} role="region" aria-label="Device catalog">
+      <div className="mockup-picker-grid" role="group" aria-label="Device list">
+        {filteredGroups.map(({ label, items }, groupIndex) => <Fragment key={`mockup-group-${label}-${groupIndex}`}>
+          {selectedCategory === "All" && <div className="mockup-group-label">{label} ({items.length})</div>}
+          {items.map(([name, tag]) => {
+            const isSelected = mockup === name;
+            return <button
+              ref={isSelected ? selectedItemRef : null}
+              type="button"
+              aria-pressed={isSelected}
+              className={isSelected ? "selected" : ""}
+              key={name}
+              onClick={() => onSelect(name)}
+              onFocus={(e) => e.currentTarget.scrollIntoView({ block: "nearest" })}
+            >
+              <span className={`mockup-thumb ${slugify(name)}`}>
+                {name === "iPhone 17" || name === "Flat" ? <img src={asset(name === "Flat" ? "source/starter-screen.jpg" : "source/iphone17.png")} alt="" /> : <MockupGlyph name={name} />}
+              </span>
+              <span className="mockup-name-row">
+                <span>{name}</span>
+                {isSelected && <Check size={11} className="mockup-active-check" />}
+              </span>
+              {isSelected ? <small className="mockup-status-active">Active</small> : tag && <small className="free-text">{tag}</small>}
+            </button>;
+          })}
+        </Fragment>)}
+      </div>
+    </div>
+  </div>;
 }
 function SliderRow({ label, value, min = "0", max = "100", step = "1", unit = "", onChange, onKeyframe, disabled = false }) {
   const minNum = Number(min), maxNum = Number(max);
@@ -614,7 +1678,56 @@ function CameraPresets({ selected, onSelect }) { return <div className="camera-p
 function EffectPicker({ onSelect }) { return <div className="effect-picker-inline">{effectOptions.map((effect) => <button type="button" key={effect} onClick={() => onSelect(effect)}><Sparkles size={12} />{effect}</button>)}</div>; }
 
 function MobileDock({ project, updateProject, updateBlur, updateCamera, undo, redo, canUndo, canRedo, active, setActive, effectsOpen, setEffectsOpen, addEffect, removeEffect, onShowBlurTip, onUpload, notify }) {
-  return <section className={`mobile-dock ${project.mobileDockLeft ? "left-handed" : ""}`}><div className="mobile-control-surface">{active === "settings" && <MobileSettings leftHanded={project.mobileDockLeft} setLeftHanded={(value) => updateProject((current) => ({ ...current, mobileDockLeft: value }))} />}{active === "effects" && <MobileEffects effects={project.effects} effectSettings={project.effectSettings} effectsOpen={effectsOpen} setEffectsOpen={setEffectsOpen} addEffect={addEffect} removeEffect={removeEffect} updateEffectSetting={(effect, value) => updateProject((current) => ({ ...current, effectSettings: { ...current.effectSettings, [effect]: Number(value) } }))} />}{active === "blur" && <MobileBlur blur={project.blur} update={updateBlur} onShowTip={onShowBlurTip} />}{active === "mockup" && <MobileMockup finish={project.finish} mockup={project.mockup} setFinish={(value) => updateProject((current) => ({ ...current, finish: value }))} setMockup={(value) => updateProject((current) => ({ ...current, mockup: value }))} />}{active === "scene" && <MobileScene project={project} updateProject={updateProject} notify={notify} />}{active === "camera" && <MobileCamera mode={project.cameraMode} setMode={(value) => updateProject((current) => ({ ...current, cameraMode: value }))} camera={project.camera} updateCamera={updateCamera} />}</div><div className="mobile-tabs" role="tablist" aria-label="Control set"><button type="button" role="tab" aria-label="Dock settings" aria-selected={active === "settings"} className={active === "settings" ? "selected" : ""} onClick={() => setActive("settings")}><Settings2 size={14} /></button><button type="button" role="tab" aria-label="Effects controls" aria-selected={active === "effects"} className={active === "effects" ? "selected" : ""} onClick={() => setActive("effects")}><Sparkles size={14} /></button><button type="button" role="tab" aria-label="Blur controls" aria-selected={active === "blur"} className={active === "blur" ? "selected" : ""} onClick={() => setActive("blur")}><SunMedium size={14} /></button><button type="button" role="tab" aria-label="Mockup controls" aria-selected={active === "mockup"} className={active === "mockup" ? "selected" : ""} onClick={() => setActive("mockup")}><Smartphone size={14} /></button><button type="button" role="tab" aria-label="Scene controls" aria-selected={active === "scene"} className={active === "scene" ? "selected" : ""} onClick={() => setActive("scene")}><span className="globe-icon" /></button><button type="button" role="tab" aria-label="Camera controls" aria-selected={active === "camera"} className={active === "camera" ? "selected" : ""} onClick={() => setActive("camera")}><Camera size={14} /></button></div><div className="mobile-history"><IconButton label="Undo" onClick={undo} disabled={!canUndo}><Undo2 size={13} /></IconButton><IconButton label="Redo" onClick={redo} disabled={!canRedo}><Redo2 size={13} /></IconButton></div><IconButton label="Source media" className="mobile-upload" onClick={onUpload}><Upload size={14} /></IconButton></section>;
+  const hasMedia = Boolean(project.media?.src);
+  const mobileTools = [
+    { id: "camera", label: "Camera", icon: <Camera size={13} />, desc: "3D camera angle and position" },
+    { id: "mockup", label: "Device", icon: <Smartphone size={13} />, desc: "Device model and finish" },
+    { id: "scene", label: "Scene", icon: <Palette size={13} />, desc: "Lighting and background scene" },
+    { id: "blur", label: "Blur", icon: <SunMedium size={13} />, desc: "Depth of field and lens blur" },
+    { id: "effects", label: "Effects", icon: <Sparkles size={13} />, desc: "Post-processing effects" },
+    { id: "settings", label: "Settings", icon: <Settings2 size={13} />, desc: "Dock layout options" },
+  ];
+
+  return <section className={`mobile-dock ${project.mobileDockLeft ? "left-handed" : ""}`}>
+    <div className="mobile-control-surface">
+      {active === "settings" && <MobileSettings leftHanded={project.mobileDockLeft} setLeftHanded={(value) => updateProject((current) => ({ ...current, mobileDockLeft: value }))} />}
+      {active === "effects" && <MobileEffects effects={project.effects} effectSettings={project.effectSettings} effectsOpen={effectsOpen} setEffectsOpen={setEffectsOpen} addEffect={addEffect} removeEffect={removeEffect} updateEffectSetting={(effect, value) => updateProject((current) => ({ ...current, effectSettings: { ...current.effectSettings, [effect]: Number(value) } }))} />}
+      {active === "blur" && <MobileBlur blur={project.blur} update={updateBlur} onShowTip={onShowBlurTip} />}
+      {active === "mockup" && <MobileMockup finish={project.finish} mockup={project.mockup} setFinish={(value) => updateProject((current) => ({ ...current, finish: value }))} setMockup={(value) => updateProject((current) => ({ ...current, mockup: value }))} />}
+      {active === "scene" && <MobileScene project={project} updateProject={updateProject} notify={notify} />}
+      {active === "camera" && <MobileCamera mode={project.cameraMode} setMode={(value) => updateProject((current) => ({ ...current, cameraMode: value }))} camera={project.camera} updateCamera={updateCamera} />}
+    </div>
+    <div className="mobile-utility-bar">
+      <button
+        type="button"
+        className="mobile-upload-btn"
+        onClick={onUpload}
+        title={hasMedia ? "Replace screen media" : "Upload screen media"}
+        aria-label={hasMedia ? "Replace screen media" : "Upload screen media"}
+      >
+        <Upload size={13} />
+        <span>{hasMedia ? "Replace" : "Upload"}</span>
+      </button>
+      <IconButton label="Undo" onClick={undo} disabled={!canUndo}><Undo2 size={13} /></IconButton>
+      <IconButton label="Redo" onClick={redo} disabled={!canRedo}><Redo2 size={13} /></IconButton>
+    </div>
+    <div className="mobile-tabs" role="group" aria-label="Mobile tools">
+      {mobileTools.map(({ id, label, icon, desc }) => (
+        <button
+          key={id}
+          type="button"
+          aria-pressed={active === id}
+          className={`mobile-tab-btn ${active === id ? "selected" : ""}`}
+          onClick={() => setActive(active === id ? "" : id)}
+          title={desc}
+          aria-label={`${label} controls`}
+        >
+          {icon}
+          <span>{label}</span>
+        </button>
+      ))}
+    </div>
+  </section>;
 }
 function MobileSettings({ leftHanded, setLeftHanded }) { return <div className="mobile-settings"><strong>Settings</strong><div className="handed-buttons"><button type="button" className={leftHanded ? "selected" : ""} onClick={() => setLeftHanded(true)}><PanelLeft size={15} />Left handed</button><button type="button" className={!leftHanded ? "selected" : ""} onClick={() => setLeftHanded(false)}><PanelLeft size={15} />Right handed</button></div></div>; }
 function MobileEffects({ effects, effectSettings, effectsOpen, setEffectsOpen, addEffect, removeEffect, updateEffectSetting }) { return <div className="mobile-effects"><strong>Effects</strong>{!effects.length && !effectsOpen && <span>No effects</span>}{effects.map((effect) => <div className="mobile-effect-card" key={effect}><b>[{effect.toUpperCase()}]</b><button type="button" onClick={() => removeEffect(effect)}>REMOVE</button>{effect === "Glass Border" && <SliderRow label="Glass Border" value={effectSettings[effect] || 30} min="0" max="100" onChange={(value) => updateEffectSetting(effect, value)} />}</div>)}<button type="button" className="mobile-add-effect" onClick={() => setEffectsOpen((value) => !value)}><Plus size={13} />Add effect</button>{effectsOpen && <div className="mobile-effect-picker">{effectOptions.map((effect) => <button type="button" key={effect} onClick={() => addEffect(effect)}>{effect}</button>)}</div>}</div>; }
