@@ -3,7 +3,7 @@ import {
   Aperture, BookOpen, Box, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp,
   CircleHelp, CircleStop, Diamond, ExternalLink, Film, Gamepad2, GripVertical, HelpCircle, ImagePlus,
   Info, Laptop, Layers3, Maximize2, Menu, Minimize2, Moon, MoreHorizontal,
-  Move3d, MousePointer2, Music2, Palette, PanelLeft, PanelTop, Pause, Play, Plus, Redo2,
+  Move3d, MousePointer2, Music2, Palette, PanelLeft, Pause, Play, Plus, Redo2,
   RefreshCw, RotateCcw, Scan, Send, Settings2, Smartphone, Sparkles, Sun, SunMedium,
   TextCursorInput, Trash2, Tv, Undo2, Upload, Wand2, Watch, X, ZoomIn
 } from "lucide-react";
@@ -12,10 +12,10 @@ import {
   appStoreOptions, backgroundAssetMap, blurAtTime, cameraAtTime, cameraPresets, clamp, composeAutoMotionKeyframes, createDefaultProject,
   CAMERA_AXIS_MAX, CAMERA_AXIS_MIN, deviceArchetype, deviceGroup, effectOptions, finishOptions, formatTime, getSerializableProject, hydrateProject,
   imageOptions, isAndroidMockup, lightingOptions, mockupOptions, presetBackgrounds, presetOptions,
-  ratioOptions, ROTATION_DRAG_SCALE, ROTATION_WHEEL_SCALE, sceneOptions, scenePatch, slugify, templateItems, templatePatch,
-  wheelDeltaToDegrees, wheelRotationAxis
+  ratioOptions, sceneOptions, scenePatch, slugify, templateItems, templatePatch,
 } from "./editorState.js";
 import { exportImage, exportVideo } from "./exporter.js";
+import { deviceRotation, moveCamera, rotateCamera, zoomCamera } from "./cameraInteraction.js";
 
 const asset = (path) => `${import.meta.env.BASE_URL}assets/${path}`;
 
@@ -30,7 +30,6 @@ function StageDeviceRealistic({ project, deviceStyle, mockupSlug }) {
   const isVision = arch === "headset";
   const isWatch = arch === "watch";
   const isTablet = arch === "tablet";
-  const isBrowser = arch === "browser";
   const isFoldable = arch === "foldable";
   const isHandheld = arch === "handheld";
   const isEreader = arch === "ereader";
@@ -53,11 +52,6 @@ function StageDeviceRealistic({ project, deviceStyle, mockupSlug }) {
 
   if (isDisplay || isTV) return <div className={`${common} device-display ${isTV ? "device-tv" : ""}`} style={deviceStyle}>
     <div className="phone-glass">{mediaNode}<span className="display-camera" />{screenEffects}</div><div className="display-stand" /><div className="display-foot" />
-  </div>;
-
-  if (isBrowser) return <div className={`${common} device-browser`} style={deviceStyle}>
-    <div className="browser-chrome"><span className="browser-dot browser-dot-red" /><span className="browser-dot browser-dot-amber" /><span className="browser-dot browser-dot-green" /><span className="browser-url" /></div>
-    <div className="phone-glass">{mediaNode}{screenEffects}</div>
   </div>;
 
   if (isVision) return <div className={`${common} device-vision`} style={deviceStyle}>
@@ -151,29 +145,12 @@ function addKeyframe(project, camera, blur = project.blur, time = project.timeli
 }
 
 function getCameraStyle(camera, mockup, cameraPreset) {
-  if (mockup === "Flat") return { left: "49%", top: "51%", transform: "translate(-50%,-50%) rotate(0deg) scale(.98)" };
-  const xAxis = clamp(Number(camera.xAxis) || 0, CAMERA_AXIS_MIN, CAMERA_AXIS_MAX);
-  const yAxis = clamp(Number(camera.yAxis) || 0, CAMERA_AXIS_MIN, CAMERA_AXIS_MAX);
-  const zAxis = clamp(Number(camera.zAxis) || 0, CAMERA_AXIS_MIN, CAMERA_AXIS_MAX);
-  const arch = deviceArchetype(mockup);
-  const phoneMockup = arch === "phone" || arch === "foldable";
-  const tabletMockup = arch === "tablet" || arch === "ereader";
-  const watchMockup = arch === "watch";
-  const laptopMockup = arch === "laptop";
-  const displayMockup = arch === "display" || arch === "tv" || arch === "browser";
-  const headsetMockup = arch === "headset";
-  const handheldMockup = arch === "handheld";
-  const rollFactor = laptopMockup || displayMockup ? 0.1 : headsetMockup ? 0.03 : watchMockup ? 0.22 : tabletMockup ? 0.18 : handheldMockup ? 0.3 : arch === "foldable" ? 0.6 : 0.65;
-  const backView = cameraPreset === "Back" && (phoneMockup || tabletMockup || watchMockup || handheldMockup);
-  const basePitch = backView ? 8 : 0;
-  const baseYaw = backView ? 180 : 0;
-  const yaw = xAxis * (phoneMockup ? -1 : 1);
-  const pitch = basePitch + yAxis;
-  const roll = zAxis - xAxis * rollFactor;
-  const scale = clamp((Number(camera.zoom) || 1.9) / 1.9, 0.72, 1.36);
-  const panX = `${clamp(Number(camera.panX) || 0, -1, 1) * 78}px`;
-  const panY = `${clamp(Number(camera.panY) || 0, -1, 1) * 72}px`;
-  return { left: `calc(50% + ${panX})`, top: `calc(58% + ${panY})`, transformStyle: "preserve-3d", transform: `translate(-50%,-50%) rotateX(${pitch}deg) rotateY(${baseYaw + yaw}deg) rotateZ(${roll}deg) scale(${1.02 * scale})` };
+  const rotation = deviceRotation(camera, mockup, cameraPreset);
+  const deg = (value) => value * 180 / Math.PI;
+  const scale = clamp((Number(camera.zoom) || 1.9) / 1.9, 0.26, 2.11);
+  // CSS uses a downward Y axis. Match the WebGL rotation order and signs.
+  return { left: `${50 + (Number(camera.panX) || 0) * 50}%`, top: `${50 + (Number(camera.panY) || 0) * 50}%`, transformStyle: "preserve-3d", transform: `translate(-50%,-50%) rotateY(${-deg(rotation.y)}deg) rotateX(${-deg(rotation.x)}deg) rotateZ(${-deg(rotation.z)}deg) scale(${1.02 * scale})` };
+
 }
 
 function stageBackground(project) {
@@ -214,7 +191,8 @@ export function App() {
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [mobileControlTab, setMobileControlTab] = useState("camera");
-  const [stageHintSeen, setStageHintSeen] = useState(false);
+  const [preciseMovement, setPreciseMovement] = useState(false);
+  const [stageGesture, setStageGesture] = useState("");
   const [mobileTip, setMobileTip] = useState(() => showTips && isMobileViewport && !window.localStorage.getItem("openmock-mobile-onboarded") ? "welcome" : "");
   const [tourStep, setTourStep] = useState(() => showTips && !isMobileViewport && !window.localStorage.getItem("openmock-tour-seen") ? 1 : 0);
   const [panelSections, setPanelSections] = useState({ source: true, scene: true, lighting: true, background: true, mockup: true, finish: true, reflection: true, camera: true, effects: true });
@@ -222,13 +200,16 @@ export function App() {
   const [autoAreas, setAutoAreas] = useState([]);
   const stageRef = useRef(null), uploadRef = useRef(null), pointerRef = useRef(null), spaceDownRef = useRef(false);
   const axisHudRef = useRef(null), axisHudTimer = useRef(0);
+  const wheelGestureRef = useRef(0);
+  const previewedPlayheadRef = useRef(project.timeline.playhead);
+  const projectRef = useRef(project);
+  projectRef.current = project;
   const liveMediaUrlsRef = useRef(new Set());
 
   const notify = useCallback((message) => setToast(message), []);
-  // Live on-canvas readout while a stage gesture is driving the camera.
+  // Live top-bar readout while a stage gesture is driving the camera.
   // Written imperatively so 60Hz gestures don't re-render the editor tree.
   const showAxisHud = useCallback((camera) => {
-    setStageHintSeen(true);
     const el = axisHudRef.current;
     if (!el) return;
     const angle = (value) => { const rounded = Math.round(Number(value) || 0); return `${rounded > 0 ? "+" : ""}${rounded}°`; };
@@ -289,8 +270,8 @@ export function App() {
   }, [handleMediaFile]);
   useEffect(() => {
     const handleKeyDown = (event) => {
-      const typing = ["INPUT", "TEXTAREA", "SELECT"].includes(event.target?.tagName); const command = event.metaKey || event.ctrlKey;
-      if (!typing && event.code === "Space") { spaceDownRef.current = true; event.preventDefault(); return; }
+      const typing = ["INPUT", "TEXTAREA", "SELECT"].includes(event.target?.tagName) || event.target?.isContentEditable; const command = event.metaKey || event.ctrlKey;
+      if (!typing && event.code === "Space") { if (event.target.closest("button")) return; spaceDownRef.current = true; event.preventDefault(); return; }
       if (command && event.key.toLowerCase() === "z") { event.preventDefault(); event.shiftKey ? redo() : undo(); return; }
       if (!typing && event.key.toLowerCase() === "t") { updateProject((current) => ({ ...current, timeline: { ...current.timeline, minimized: !current.timeline.minimized } })); return; }
       if (!typing && event.key === "?") { setModal("shortcuts"); return; }
@@ -302,7 +283,7 @@ export function App() {
     return () => { window.removeEventListener("keydown", handleKeyDown); window.removeEventListener("keyup", handleKeyUp); window.removeEventListener("blur", clearSpace); };
   }, [closePopovers, redo, undo, updateProject]);
 
-  const updateCamera = useCallback((patch, { record = true } = {}) => updateProject((current) => { const camera = { ...current.camera, ...patch }; const next = { ...current, camera }; return current.timeline.recording ? addKeyframe(next, camera, current.blur) : next; }, { record }), [updateProject]);
+  const updateCamera = useCallback((patch, { record = true } = {}) => updateProject((current) => { const camera = { ...current.camera, ...(typeof patch === "function" ? patch(current.camera) : patch) }; const next = { ...current, camera }; return current.timeline.recording ? addKeyframe(next, camera, current.blur) : next; }, { record }), [updateProject]);
   const updateBlur = useCallback((patch, { record = true } = {}) => updateProject((current) => { const blur = { ...current.blur, ...patch }; const next = { ...current, blur }; return current.timeline.recording ? addKeyframe(next, current.camera, blur) : next; }, { record }), [updateProject]);
   // A camera keyframe can also be pinned without moving any dial.
   const addCameraKeyframe = useCallback(() => updateProject((current) => addKeyframe(current, current.camera, current.blur)), [updateProject]);
@@ -310,6 +291,8 @@ export function App() {
   // Keyed on the playhead only: direct camera edits and keyframe selections
   // must keep the pose the user (or chip) chose.
   useEffect(() => {
+    if (previewedPlayheadRef.current === project.timeline.playhead) return;
+    previewedPlayheadRef.current = project.timeline.playhead;
     updateProject((current) => ({ ...current, camera: cameraAtTime(current, current.timeline.playhead), blur: blurAtTime(current, current.timeline.playhead) }), { record: false });
   }, [project.timeline.playhead, updateProject]);
   const selectCameraPreset = useCallback((value) => { updateProject((current) => ({ ...current, cameraPreset: value, camera: { ...current.camera, ...cameraPresets[value] } })); setCameraPresetOpen(false); notify(`${value} camera preset applied.`); }, [notify, updateProject]);
@@ -326,9 +309,87 @@ export function App() {
   const selectTemplate = useCallback((name) => { const patch = templatePatch(name); updateProject((current) => ({ ...current, ...patch, scene: patch.scene || "custom", background: { ...current.background, ...(patch.background || {}) }, effectSettings: { ...current.effectSettings, ...(patch.effectSettings || {}) } })); closePopovers(); notify(`${name} loaded.`); }, [closePopovers, notify, updateProject]);
   const handleReset = useCallback(() => { updateProject(() => createDefaultProject()); closePopovers(); notify("All controls reset."); }, [closePopovers, notify, updateProject]);
 
-  const handleStagePointerDown = useCallback((event) => { if (event.button !== 0 || modal) return; const bounds = stageRef.current?.getBoundingClientRect(); if (!bounds) return; pointerRef.current = { x: event.clientX, y: event.clientY, camera: { ...project.camera }, blur: { ...project.blur }, bounds }; event.currentTarget.setPointerCapture?.(event.pointerId); }, [modal, project.blur, project.camera]);
-  const handleStagePointerMove = useCallback((event) => { const pointer = pointerRef.current; if (!pointer || !stageRef.current) return; const dx = event.clientX - pointer.x, dy = event.clientY - pointer.y; if (isMobileViewport && mobileControlTab === "blur") { updateBlur({ x: clamp((pointer.blur.x ?? 0.5) + dx / pointer.bounds.width, 0, 1), y: clamp((pointer.blur.y ?? 0.52) + dy / pointer.bounds.height, 0, 1) }, { record: false }); return; } if (project.cameraMode === "zoom") updateCamera({ fov: clamp(pointer.camera.fov - dy * 0.08, 1, 120) }, { record: false }); else if (project.cameraMode === "move" || event.shiftKey || spaceDownRef.current) updateCamera({ panX: clamp(pointer.camera.panX + dx / pointer.bounds.width, -1, 1), panY: clamp(pointer.camera.panY + dy / pointer.bounds.height, -1, 1) }, { record: false }); else if (event.altKey) { const patch = { zAxis: clamp(pointer.camera.zAxis + dx * ROTATION_DRAG_SCALE, CAMERA_AXIS_MIN, CAMERA_AXIS_MAX) }; updateCamera(patch, { record: false }); showAxisHud({ ...pointer.camera, ...patch }); } else { const patch = { xAxis: clamp(pointer.camera.xAxis + dx * ROTATION_DRAG_SCALE, CAMERA_AXIS_MIN, CAMERA_AXIS_MAX), yAxis: clamp(pointer.camera.yAxis - dy * ROTATION_DRAG_SCALE, CAMERA_AXIS_MIN, CAMERA_AXIS_MAX) }; updateCamera(patch, { record: false }); showAxisHud({ ...pointer.camera, ...patch }); } }, [isMobileViewport, mobileControlTab, project.cameraMode, showAxisHud, updateBlur, updateCamera]);
-  const handleStageWheel = useCallback((event) => { event.preventDefault(); const delta = wheelDeltaToDegrees(event, stageRef.current?.clientHeight || window.innerHeight); if (!delta) return; if (event.ctrlKey || event.metaKey) { const patch = { zoom: clamp(Number(project.camera.zoom) - delta * (0.0018 / ROTATION_WHEEL_SCALE), 0.5, 4) }; updateCamera(patch, { record: false }); showAxisHud({ ...project.camera, ...patch }); return; } const axis = wheelRotationAxis(event); const patch = { [axis]: clamp(Number(project.camera[axis]) + delta, CAMERA_AXIS_MIN, CAMERA_AXIS_MAX) }; updateCamera(patch, { record: false }); showAxisHud({ ...project.camera, ...patch }); }, [project.camera, showAxisHud, updateCamera]);
+  const finishStageGesture = useCallback((event) => {
+    const pointer = pointerRef.current;
+    if (!pointer || (event?.pointerId != null && pointer.id !== event.pointerId)) return;
+    pointerRef.current = null;
+    if (stageRef.current?.hasPointerCapture?.(pointer.id)) stageRef.current.releasePointerCapture(pointer.id);
+    setStageGesture("");
+  }, []);
+  useEffect(() => {
+    window.addEventListener("blur", finishStageGesture);
+    return () => { window.removeEventListener("blur", finishStageGesture); window.clearTimeout(axisHudTimer.current); };
+  }, [finishStageGesture]);
+  const setStageMode = useCallback((mode) => {
+    if (isMobileViewport) setMobileControlTab("camera");
+    wheelGestureRef.current = 0;
+    finishStageGesture();
+    updateProject((current) => ({ ...current, cameraMode: mode }), { record: false });
+  }, [finishStageGesture, isMobileViewport, updateProject]);
+  const resetStageView = useCallback(() => {
+    wheelGestureRef.current = 0;
+    finishStageGesture();
+    updateProject((current) => {
+      const camera = { ...cameraPresets.Flat, fov: 24, zoom: 1.9 };
+      const next = { ...current, cameraPreset: "Flat", camera, timeline: { ...current.timeline, playing: false } };
+      return current.timeline.recording ? addKeyframe(next, camera, current.blur) : next;
+    });
+    notify("View centered. Undo restores your previous angle.");
+  }, [finishStageGesture, notify, updateProject]);
+  const handleStagePointerDown = useCallback((event) => {
+    if (![0, 1].includes(event.button) || event.isPrimary === false || pointerRef.current || modal || tourStep || mobileTip) return;
+    if (event.target.closest("button, input, a, [role=toolbar]")) return;
+    const bounds = stageRef.current?.getBoundingClientRect();
+    if (!bounds) return;
+    const current = projectRef.current;
+    const mode = isMobileViewport && mobileControlTab === "blur" ? "blur" : event.button === 1 || spaceDownRef.current ? "move" : event.altKey ? "roll" : current.cameraMode;
+    pointerRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY, dx: 0, dy: 0, changed: false, mode, camera: { ...current.camera }, blur: { ...current.blur }, mockup: current.mockup, preset: current.cameraPreset, bounds };
+    wheelGestureRef.current = 0;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    setStageGesture(mode);
+    if (current.timeline.playing) updateProject((state) => ({ ...state, timeline: { ...state.timeline, playing: false } }), { record: false });
+  }, [isMobileViewport, mobileControlTab, modal, tourStep, mobileTip, updateProject]);
+  const handleStagePointerMove = useCallback((event) => {
+    const pointer = pointerRef.current;
+    if (!pointer || pointer.id !== event.pointerId) return;
+    const scale = preciseMovement || event.shiftKey ? 0.2 : 1;
+    pointer.dx += (event.clientX - pointer.x) * scale;
+    pointer.dy += (event.clientY - pointer.y) * scale;
+    pointer.x = event.clientX; pointer.y = event.clientY;
+    const { dx, dy, camera, mode, bounds } = pointer;
+    if (!pointer.changed && Math.hypot(dx, dy) < 0.6) return;
+    if (mode === "blur") {
+      const patch = { x: clamp((pointer.blur.x ?? 0.5) + dx / bounds.width, 0, 1), y: clamp((pointer.blur.y ?? 0.52) + dy / bounds.height, 0, 1) };
+      if (!pointer.changed && Object.entries(patch).every(([key, value]) => value === pointer.blur[key])) return;
+      updateBlur(patch, { record: !pointer.changed });
+      pointer.changed = true;
+      return;
+    }
+    const patch = mode === "zoom" ? zoomCamera(camera, dy)
+      : mode === "move" ? moveCamera(camera, dx, dy, bounds)
+      : rotateCamera(camera, pointer.mockup, pointer.preset, dx, dy, { roll: mode === "roll", tall: bounds.height / bounds.width > 1.2 });
+    if (!pointer.changed && Object.entries(patch).every(([key, value]) => Math.abs(value - camera[key]) < 1e-9)) return;
+    updateCamera(patch, { record: !pointer.changed });
+    pointer.changed = true;
+    showAxisHud({ ...camera, ...patch });
+  }, [preciseMovement, showAxisHud, updateBlur, updateCamera]);
+  const handleStageWheel = useCallback((event) => {
+    if (modal || tourStep || mobileTip || event.target.closest("button, input, [role=toolbar]")) return;
+    event.preventDefault();
+    if (pointerRef.current) return;
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? stageRef.current.clientHeight : 1;
+    const delta = clamp(event.deltaY * unit, -240, 240);
+    if (!delta) return;
+    const currentCamera = projectRef.current.camera;
+    if (zoomCamera(currentCamera, delta, preciseMovement || event.shiftKey).zoom === currentCamera.zoom) return;
+    const now = performance.now();
+    const record = !wheelGestureRef.current || now - wheelGestureRef.current > 300;
+    wheelGestureRef.current = now;
+    if (projectRef.current.timeline.playing) updateProject((current) => ({ ...current, timeline: { ...current.timeline, playing: false } }), { record: false });
+    updateCamera((camera) => zoomCamera(camera, delta, preciseMovement || event.shiftKey), { record });
+    showAxisHud({ ...projectRef.current.camera, ...zoomCamera(projectRef.current.camera, delta, preciseMovement || event.shiftKey) });
+  }, [modal, tourStep, mobileTip, preciseMovement, showAxisHud, updateCamera, updateProject]);
 
   const handleSaveProject = useCallback(() => { try { window.localStorage.setItem("openmock-project", JSON.stringify(getSerializableProject(project))); notify(project.media?.type?.startsWith("video/") ? "Project saved. Re-add the local video source next time." : "Project saved locally."); } catch { notify("Project could not be saved in this browser."); } }, [notify, project]);
   const handleCapture = useCallback(async () => { try { await exportImage(project); notify("Image captured and downloaded."); } catch (error) { notify(error.message || "Capture failed."); } }, [notify, project]);
@@ -341,8 +402,8 @@ export function App() {
   const appClass = `app-shell ${isDark ? "theme-dark" : "theme-light"} ${reduceMotion ? "reduce-motion" : ""} ${project.timeline.minimized ? "timeline-collapsed" : ""}`;
 
   return <main className={appClass}>
-    <TopBar isDark={isDark} popover={popover} onTogglePopover={(next) => { closePopovers(); setPopover(popover === next ? "" : next); }} onToggleTheme={() => { const next = !isDark; setIsDark(next); window.localStorage.setItem("openmock-theme", next ? "dark" : "light"); }} onOpenInfo={() => { closePopovers(); setModal("info"); }} onCapture={handleCapture} onSaveProject={handleSaveProject} viewportRatio={project.viewportRatio} onSelectRatio={(value) => { updateProject((current) => ({ ...current, viewportRatio: value })); setPopover(""); notify(`Viewport ratio set to ${value}.`); }} exportTab={exportTab} setExportTab={setExportTab} exportOptions={project.export} updateExport={(patch) => updateProject((current) => ({ ...current, export: { ...current.export, ...patch } }))} onExportImage={handleExportImage} onExportVideo={handleExportVideo} exporting={exporting} exportProgress={exportProgress} canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
-    <div className="workspace-grid"><div className="main-column"><Stage stageRef={stageRef} project={project} isDark={isDark} isMobile={isMobileViewport} hintSeen={stageHintSeen} onInteract={() => setStageHintSeen(true)} axisHudRef={axisHudRef} onPointerDown={handleStagePointerDown} onPointerMove={handleStagePointerMove} onPointerUp={() => { pointerRef.current = null; }} onWheel={handleStageWheel} onUpload={() => uploadRef.current?.click()} onDrop={(event) => { event.preventDefault(); handleMediaFile(event.dataTransfer?.files?.[0]); }} /><input ref={uploadRef} className="visually-hidden" type="file" accept="image/*,video/*" onChange={(event) => { handleMediaFile(event.target.files?.[0]); event.target.value = ""; }} /><Timeline project={project} updateProject={updateProject} onAutoMotion={() => setModal("auto-intro")} onOpenRecording={() => setModal("recording")} notify={notify} /></div></div>
+    <TopBar axisHudRef={axisHudRef} isDark={isDark} popover={popover} onTogglePopover={(next) => { closePopovers(); setPopover(popover === next ? "" : next); }} onToggleTheme={() => { const next = !isDark; setIsDark(next); window.localStorage.setItem("openmock-theme", next ? "dark" : "light"); }} onOpenInfo={() => { closePopovers(); setModal("info"); }} onCapture={handleCapture} onSaveProject={handleSaveProject} viewportRatio={project.viewportRatio} onSelectRatio={(value) => { updateProject((current) => ({ ...current, viewportRatio: value })); setPopover(""); notify(`Viewport ratio set to ${value}.`); }} exportTab={exportTab} setExportTab={setExportTab} exportOptions={project.export} updateExport={(patch) => updateProject((current) => ({ ...current, export: { ...current.export, ...patch } }))} onExportImage={handleExportImage} onExportVideo={handleExportVideo} exporting={exporting} exportProgress={exportProgress} canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
+    <div className="workspace-grid"><div className="main-column"><Stage stageRef={stageRef} project={project} isDark={isDark} isMobile={isMobileViewport} focusEditing={isMobileViewport && mobileControlTab === "blur"} gesture={stageGesture} precise={preciseMovement} onPrecise={() => setPreciseMovement((value) => !value)} onMode={setStageMode} onResetView={resetStageView} onPointerDown={handleStagePointerDown} onPointerMove={handleStagePointerMove} onPointerUp={finishStageGesture} onWheel={handleStageWheel} onUpload={() => uploadRef.current?.click()} onDrop={(event) => { event.preventDefault(); handleMediaFile(event.dataTransfer?.files?.[0]); }} /><input ref={uploadRef} className="visually-hidden" type="file" accept="image/*,video/*" onChange={(event) => { handleMediaFile(event.target.files?.[0]); event.target.value = ""; }} /><Timeline project={project} updateProject={updateProject} onAutoMotion={() => setModal("auto-intro")} onOpenRecording={() => setModal("recording")} notify={notify} /></div></div>
     {!isMobileViewport && <Inspector project={project} updateProject={updateProject} panelSections={panelSections} setPanelSections={setPanelSections} sceneOpen={sceneOpen} setSceneOpen={setSceneOpen} lightingOpen={lightingOpen} setLightingOpen={setLightingOpen} backgroundOpen={backgroundOpen} setBackgroundOpen={setBackgroundOpen} backgroundPickerOpen={backgroundPickerOpen} setBackgroundPickerOpen={setBackgroundPickerOpen} mockupOpen={mockupOpen} setMockupOpen={setMockupOpen} finishOpen={finishOpen} setFinishOpen={setFinishOpen} cameraPresetOpen={cameraPresetOpen} setCameraPresetOpen={setCameraPresetOpen} effectsOpen={effectsOpen} setEffectsOpen={setEffectsOpen} updateCamera={updateCamera} addCameraKeyframe={addCameraKeyframe} selectCameraPreset={selectCameraPreset} selectScene={selectScene} updateBackground={updateBackground} updateEffectSetting={updateEffectSetting} addEffect={addEffect} removeEffect={removeEffect} onUpload={() => uploadRef.current?.click()} onRemoveMedia={() => updateProject((current) => ({ ...current, media: null }))} onReset={handleReset} isDark={isDark} onToggleTheme={() => { const next = !isDark; setIsDark(next); window.localStorage.setItem("openmock-theme", next ? "dark" : "light"); }} notify={notify} />}
     {isMobileViewport && <MobileDock project={project} updateProject={updateProject} updateBlur={updateBlur} updateCamera={updateCamera} undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo} active={mobileControlTab} setActive={setMobileControlTab} effectsOpen={effectsOpen} setEffectsOpen={setEffectsOpen} addEffect={addEffect} removeEffect={removeEffect} onShowBlurTip={() => showTips && setMobileTip("blur-1")} onUpload={() => uploadRef.current?.click()} notify={notify} />}
     {popover === "menu" && <TopMenu canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} timelineVisible={!project.timeline.minimized} onToggleTimeline={() => updateProject((current) => ({ ...current, timeline: { ...current.timeline, minimized: !current.timeline.minimized } }))} onInfo={() => { closePopovers(); setModal("info"); }} onHelp={() => setPopover("help")} onPreferences={() => { closePopovers(); setModal("preferences"); }} onSignIn={() => { closePopovers(); setModal("account"); }} onCommunity={() => notify("Community links are available in Info.")} onChangelog={() => { closePopovers(); setModal("changelog"); }} />}
@@ -366,13 +427,14 @@ export function App() {
   </main>;
 }
 
-function TopBar({ isDark, popover, onTogglePopover, onToggleTheme, onOpenInfo, onCapture, onSaveProject, viewportRatio, onSelectRatio, exportTab, setExportTab, exportOptions, updateExport, onExportImage, onExportVideo, exporting, exportProgress, canUndo, canRedo, onUndo, onRedo }) {
+function TopBar({ axisHudRef, isDark, popover, onTogglePopover, onToggleTheme, onOpenInfo, onCapture, onSaveProject, viewportRatio, onSelectRatio, exportTab, setExportTab, exportOptions, updateExport, onExportImage, onExportVideo, exporting, exportProgress, canUndo, canRedo, onUndo, onRedo }) {
   return <header className="topbar">
     <IconButton label="Open menu" className="menu-trigger" onClick={() => onTogglePopover("menu")}><Menu size={15} /></IconButton>
     <div className="brand-mark"><img src={asset("source/openmock.svg")} alt="OpenMock" /></div>
     <div className="topbar-links"><TextButton onClick={onOpenInfo}>INFO</TextButton><TextButton onClick={() => onTogglePopover("templates")}>TEMPLATES <ChevronDown size={11} /></TextButton><TextButton onClick={() => onTogglePopover("help")}>HELP</TextButton></div>
     <div className="topbar-spacer" />
     <TextButton aria-label="Viewport ratio" className="ratio-button" onClick={() => onTogglePopover("ratio")}><span>{viewportRatio}</span><ChevronDown size={11} /></TextButton>
+    <div className="topbar-axis-hud" ref={axisHudRef} aria-hidden="true"><b>X</b><span data-axis="x" /><b>Y</b><span data-axis="y" /><b>Z</b><span data-axis="z" /><b className="hud-zoom-label">ZOOM</b><span data-axis="zoom" /></div>
     <div className="topbar-spacer" />
     <div className="topbar-history">
       <IconButton label="Undo" onClick={onUndo} disabled={!canUndo}><Undo2 size={14} /></IconButton>
@@ -397,7 +459,7 @@ function ImageExport({ options, update, onExport, exporting }) { const summary =
 const videoSizeOptions = { Landscape: ["16:9 — 1280×720 (720P)", "16:9 — 1920 × 1080 (1080P)"], Square: ["1:1 — 720×720 (720P)", "1:1 — 1080×1080 (1080P)"], Portrait: ["9:16 — 720×1280 (720P)", "9:16 — 1080 × 1920 (1080P)"] };
 function VideoExport({ options, update, onExport, exporting, progress }) { const orientation = options.videoOrientation || "Landscape"; const sizes = videoSizeOptions[orientation] || videoSizeOptions.Landscape; const selectedSize = sizes.includes(options.videoSize) ? options.videoSize : sizes[0]; const qualityMbps = { Low: 2.5, Med: 6, High: 10, Ultra: 16 }[options.quality] || 6; return <div className="export-body video-export"><div className="export-label">Orientation<div className="segmented-control">{["Landscape", "Square", "Portrait"].map((item) => <button type="button" key={item} className={orientation === item ? "selected" : ""} onClick={() => update({ videoOrientation: item, videoSize: videoSizeOptions[item][0] })}><span className={`${item.toLowerCase()}-icon`} />{item}</button>)}</div></div><select className="export-select-control" aria-label="Video size" value={selectedSize} onChange={(event) => update({ videoSize: event.target.value })}>{sizes.map((size) => <option key={size}>{size}</option>)}</select><RadioRow label="Quality" options={["Low", "Med", "High", "Ultra"]} selected={options.quality} onSelect={(value) => update({ quality: value })} /><RadioRow label="Frame rate" options={["30 fps", "60 fps"]} selected={`${options.fps} fps`} onSelect={(value) => update({ fps: Number(value.split(" ")[0]) })} /><RadioRow label="Motion Blur" options={["Off", "Low", "Med", "High"]} selected={options.motionBlur} onSelect={(value) => update({ motionBlur: value })} /><SwitchRow label="Transparent Background" checked={options.transparent} onChange={(value) => update({ transparent: value })} /><div className="export-summary"><strong>{dimensionLabel(selectedSize)}</strong><span>{options.fps} fps · ~{qualityMbps} Mbps</span><small>{options.quality} quality · active timeline.</small></div><button type="button" className="primary-wide" onClick={onExport} disabled={exporting}>{exporting ? `Exporting ${Math.round(progress * 100)}%` : "Export Video"} <Film size={14} /></button><p className="export-note">Exports the active track from start to finish, including camera, focus, and motion blur.</p><p className="export-note">Keep this tab open while exporting. If you switch tabs or minimise, the export pauses and resumes when you return.</p></div>; }
 
-function Stage({ stageRef, project, isDark, isMobile, hintSeen, onInteract, axisHudRef, onPointerDown, onPointerMove, onPointerUp, onWheel, onUpload, onDrop }) {
+function Stage({ stageRef, project, isDark, isMobile, focusEditing, gesture, precise, onPrecise, onMode, onResetView, onPointerDown, onPointerMove, onPointerUp, onWheel, onUpload, onDrop }) {
   const [dragOver, setDragOver] = useState(false);
   const [rendererState, setRendererState] = useState({ mockup: null, status: "loading" });
   const rendererStatus = rendererState.mockup === project.mockup ? rendererState.status : "loading";
@@ -418,7 +480,7 @@ function Stage({ stageRef, project, isDark, isMobile, hintSeen, onInteract, axis
   const backgroundImage = background.backgroundImage && background.backgroundImage !== "none" ? background.backgroundImage : null;
   const bgBlurPx = Math.round((Number(project.bgBlur) || 0) * 16 * 100) / 100;
   const mockupSlug = slugify(project.mockup);
-  const stageClass = `mockup-stage ratio-${slugify(project.viewportRatio)} scene-${slugify(project.scene)} lighting-${slugify(project.lighting)} ${isDark ? "stage-dark" : ""} ${dragOver ? "drag-over" : ""}`;
+  const stageClass = `mockup-stage mode-${project.cameraMode} ${gesture ? "is-manipulating" : ""} ratio-${slugify(project.viewportRatio)} scene-${slugify(project.scene)} lighting-${slugify(project.lighting)} ${isDark ? "stage-dark" : ""} ${dragOver ? "drag-over" : ""}`;
   const effectClass = (project.effects || []).map(slugify).join(" ");
   const effectStyle = { "--vignette-opacity": `${Number(project.effectSettings?.Vignette || 20) / 100}`, "--grain-opacity": `${Number(project.effectSettings?.Grain || 14) / 100}` };
   const blur = project.blur || {};
@@ -442,7 +504,7 @@ function Stage({ stageRef, project, isDark, isMobile, hintSeen, onInteract, axis
       : `radial-gradient(ellipse var(--dof-size) var(--dof-size) at ${blurX}% ${blurY}%, transparent 34%, #000 calc(34% + var(--dof-falloff)))`;
   const sourcePreview = project.media?.src || asset("source/starter-screen.jpg");
 
-  return <section ref={stageRef} className={stageClass} style={{ backgroundColor: background.backgroundColor }} onPointerDown={(event) => { onInteract(); onPointerDown(event); }} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(event) => { setDragOver(false); onDrop(event); }}>
+  return <section ref={stageRef} className={stageClass} style={{ backgroundColor: background.backgroundColor }} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onLostPointerCapture={onPointerUp} onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(event) => { setDragOver(false); onDrop(event); }}>
     <div className="stage-background-layer" style={{ backgroundImage, filter: `blur(${bgBlurPx}px)` }} aria-hidden="true" />
     <ThreeStage enabled cameraState={project.camera} cameraPreset={project.cameraPreset} lighting={project.lighting} lightRotation={project.lightRotation} contactShadow={project.contactShadow} finish={project.finish} reflection={project.reflection} mockup={project.mockup} media={project.media} effects={project.effects} isDark={isDark} onStatusChange={handleRendererStatus} />
     <div className="stage-background-glow" />
@@ -456,9 +518,15 @@ function Stage({ stageRef, project, isDark, isMobile, hintSeen, onInteract, axis
       {(project.effects || []).includes("Liquid Glass") && <span className="fx fx-liquid-glass" />}
     </div>
     {dofVisible && <div className={`stage-dof-layer dof-${slugify(blur.mode || "radial")} ${blur.bokeh ? "dof-bokeh" : ""}`} style={{ ...dofStyle, WebkitMaskImage: dofMask, maskImage: dofMask }} aria-hidden="true" />}
-    {!isMobile && !hintSeen && <div className="stage-hint" role="status"><Move3d size={12} />Drag to orbit<span className="hint-sep">·</span>Scroll to rotate<span className="hint-sep">·</span><kbd>⇧</kbd> tilt<span className="hint-sep">·</span><kbd>⌥</kbd> roll<span className="hint-sep">·</span><kbd>⌘</kbd>/<kbd>Ctrl</kbd> zoom</div>}
-    {isMobile && !hintSeen && <div className="stage-hint" role="status"><Move3d size={12} />Drag to rotate the device</div>}
-    <div className="stage-axis-hud" ref={axisHudRef} aria-hidden="true"><b>X</b><span data-axis="x" /><b>Y</b><span data-axis="y" /><b>Z</b><span data-axis="z" /><b className="hud-zoom-label">ZOOM</b><span data-axis="zoom" /></div>
+    <div className="stage-movement-controls" onPointerDown={(event) => event.stopPropagation()}>
+      <div className="stage-movement-toolbar" role="toolbar" aria-label="Device movement">
+        {[["tilt", "Rotate", <Move3d size={14} />], ["move", "Move", <MousePointer2 size={14} />], ["roll", "Roll", <RefreshCw size={14} />]].map(([mode, label, icon]) => <button type="button" key={mode} aria-pressed={!focusEditing && project.cameraMode === mode} onClick={() => onMode(mode)} title={`${label} device by dragging`}>{icon}<span>{label}</span></button>)}
+        <span className="movement-divider" />
+        <button type="button" className="movement-fine" aria-pressed={precise} title="Slower, more precise adjustments (Shift while dragging)" onClick={onPrecise}>Fine</button>
+        <button type="button" aria-label="Reset view" title="Center the device and face the front" onClick={onResetView}><RotateCcw size={14} /><span>Reset view</span></button>
+      </div>
+      <p className="stage-movement-hint">{focusEditing ? "Drag to move the focus area" : project.cameraMode === "move" ? "Drag to move" : project.cameraMode === "roll" ? "Drag sideways to roll" : project.cameraMode === "zoom" ? "Drag up to zoom in" : "Drag to rotate"}<span> · </span>Scroll to zoom</p>
+    </div>
     {rendererStatus === "loading" && !dragOver && <div className="stage-loading"><span className="spinner" />Loading device…</div>}
     <button type="button" className="background-chip" aria-label="Source media" onClick={onUpload}><img src={sourcePreview} alt="" /></button>
     <div className="stage-center-mark"><span /></div>
@@ -500,7 +568,6 @@ function MockupGlyph({ name, size = 25 }) {
   if (arch === "ereader") return <BookOpen size={size} />;
   if (arch === "display") return <Box size={size} />;
   if (arch === "tv") return <Tv size={size} />;
-  if (arch === "browser") return <PanelTop size={size} />;
   if (arch === "headset") return <Scan size={size} />;
   if (arch === "watch") return <Watch size={size} />;
   if (arch === "handheld") return <Gamepad2 size={size} />;
@@ -529,7 +596,7 @@ function CameraControls({ camera, updateCamera, onKeyframe }) {
   return <div className="camera-controls">
     <div className="control-group">
       <div className="control-group-head"><span>ROTATION</span><small>±360°</small></div>
-      <p className="control-group-note"><span className="nowrap">Canvas: drag orbits · scroll rotates</span><span className="nowrap"><kbd>⇧</kbd> tilt</span><span className="nowrap"><kbd>⌥</kbd> roll</span></p>
+      <p className="control-group-note"><span>Choose Rotate, Move or Roll above the canvas.</span><span>Scroll to zoom · Fine for small adjustments.</span></p>
       <SliderRow label="X · Turn" value={camera.xAxis} min={CAMERA_AXIS_MIN} max={CAMERA_AXIS_MAX} step="0.01" unit="°" onKeyframe={onKeyframe} onChange={(value) => updateCamera({ xAxis: Number(value) })} />
       <SliderRow label="Y · Tilt" value={camera.yAxis} min={CAMERA_AXIS_MIN} max={CAMERA_AXIS_MAX} step="0.01" unit="°" onKeyframe={onKeyframe} onChange={(value) => updateCamera({ yAxis: Number(value) })} />
       <SliderRow label="Z · Roll" value={camera.zAxis} min={CAMERA_AXIS_MIN} max={CAMERA_AXIS_MAX} step="0.01" unit="°" onKeyframe={onKeyframe} onChange={(value) => updateCamera({ zAxis: Number(value) })} />
@@ -557,7 +624,7 @@ function MobileScene({ project, updateProject, notify }) { return <div className
 function MobileCamera({ mode, setMode, camera, updateCamera }) {
   return <div className="mobile-camera">
     <div className="mobile-camera-row">
-      <div className="camera-radios" role="radiogroup" aria-label="Viewport drag controls"><button type="button" role="radio" aria-label="Drag moves the camera" aria-checked={mode === "move"} className={mode === "move" ? "selected" : ""} onClick={() => setMode("move")}><Move3d size={14} /></button><button type="button" role="radio" aria-label="Drag tilts the camera" aria-checked={mode === "tilt"} className={mode === "tilt" ? "selected" : ""} onClick={() => setMode("tilt")}><MousePointer2 size={14} /></button><button type="button" role="radio" aria-label="Drag zooms the camera" aria-checked={mode === "zoom"} className={mode === "zoom" ? "selected" : ""} onClick={() => setMode("zoom")}><ZoomIn size={14} /></button></div>
+      <div className="camera-radios" role="radiogroup" aria-label="Viewport drag controls"><button type="button" role="radio" aria-label="Drag moves the device" aria-checked={mode === "move"} className={mode === "move" ? "selected" : ""} onClick={() => setMode("move")}><Move3d size={14} /></button><button type="button" role="radio" aria-label="Drag rotates the device" aria-checked={mode === "tilt"} className={mode === "tilt" ? "selected" : ""} onClick={() => setMode("tilt")}><MousePointer2 size={14} /></button><button type="button" role="radio" aria-label="Drag zooms the device" aria-checked={mode === "zoom"} className={mode === "zoom" ? "selected" : ""} onClick={() => setMode("zoom")}><ZoomIn size={14} /></button></div>
       <label className="mobile-fov-dial" aria-label="Field of view"><span>FOV</span><output>{camera.fov}°</output><input type="range" min="1" max="120" value={camera.fov} onChange={(event) => updateCamera({ fov: Number(event.target.value) })} /></label>
     </div>
     <div className="mobile-rotation" role="group" aria-label="Device rotation">
@@ -570,7 +637,7 @@ function MobileCamera({ mode, setMode, camera, updateCamera }) {
 
 function ModalShell({ children, className = "", onClose, ariaLabel }) { return <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose?.(); }}><div className={`modal-card ${className}`} role="dialog" aria-modal="true" aria-label={ariaLabel}>{onClose && <IconButton label="Close" className="modal-close" onClick={onClose}><X size={15} /></IconButton>}{children}</div></div>; }
 function InfoModal({ onClose, notify }) { const [email, setEmail] = useState(""); const [status, setStatus] = useState(""); return <ModalShell className="info-modal" onClose={onClose} ariaLabel="Info"><div className="info-banner"><img src={asset("source/openmock.svg")} alt="OpenMock" /></div><div className="info-main"><img className="info-wordmark" src={asset("source/openmock.svg")} alt="OpenMock" /><strong>Version 2.42.1</strong><p>Open-source prototype by <a href="https://github.com/magare/openmock" target="_blank" rel="noreferrer">magare</a></p><div className="waitlist"><strong>Join the waitlist for V3</strong><div><input aria-label="Email address" type="email" value={email} placeholder="you@email.com" onChange={(event) => setEmail(event.target.value)} /><button type="button" onClick={() => { if (!email.includes("@")) { setStatus("Enter a valid email."); return; } setStatus("You’re on the list."); notify("Waitlist signup saved locally."); }}>Join</button></div>{status && <small className="form-status">{status}</small>}</div><div className="community-links"><span>Community</span><a href="https://github.com/magare/openmock" target="_blank" rel="noreferrer">View on GitHub <ExternalLink size={11} /></a></div></div><div className="info-footer"><span>©2026 OpenMock</span><span><a href="/sign-in">Account</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></span></div></ModalShell>; }
-function ShortcutsModal({ onClose }) { return <ModalShell className="shortcuts-modal" onClose={onClose} ariaLabel="Keyboard shortcuts"><div className="modal-heading"><span>Keyboard shortcuts</span><small>?</small></div><div className="shortcut-list"><div><span>Undo</span><kbd>⌘ Z</kbd></div><div><span>Redo</span><kbd>⇧ ⌘ Z</kbd></div><div><span>Toggle timeline</span><kbd>T</kbd></div><div><span>Orbit device</span><kbd>Drag</kbd></div><div><span>Rotate device</span><kbd>Scroll</kbd></div><div><span>Tilt — Y axis</span><kbd>⇧ + scroll</kbd></div><div><span>Roll — Z axis</span><kbd>⌥ + scroll</kbd></div><div><span>Zoom</span><kbd>⌘/Ctrl + scroll</kbd></div><div><span>Move camera</span><kbd>Space + drag</kbd></div><div><span>Paste media</span><kbd>⌘ V</kbd></div></div></ModalShell>; }
+function ShortcutsModal({ onClose }) { return <ModalShell className="shortcuts-modal" onClose={onClose} ariaLabel="Keyboard shortcuts"><div className="modal-heading"><span>Keyboard shortcuts</span><small>?</small></div><div className="shortcut-list"><div><span>Undo</span><kbd>⌘ Z</kbd></div><div><span>Redo</span><kbd>⇧ ⌘ Z</kbd></div><div><span>Toggle timeline</span><kbd>T</kbd></div><div><span>Rotate device</span><kbd>Drag</kbd></div><div><span>Fine adjustment</span><kbd>⇧ + drag</kbd></div><div><span>Roll device</span><kbd>⌥ + drag</kbd></div><div><span>Zoom</span><kbd>Scroll</kbd></div><div><span>Move device</span><kbd>Space + drag</kbd></div><div><span>Paste media</span><kbd>⌘ V</kbd></div></div></ModalShell>; }
 function PreferencesModal({ onClose, isDark, onToggleTheme, reduceMotion, onReduceMotion, showTips, onShowTips }) { return <ModalShell className="preferences-modal" onClose={onClose} ariaLabel="Preferences"><div className="modal-heading"><span>Preferences</span><Settings2 size={15} /></div><p className="modal-copy">Local editor preferences are saved in this browser.</p><SwitchRow label="Dark mode" checked={isDark} onChange={onToggleTheme} /><SwitchRow label="Reduce motion" checked={reduceMotion} onChange={onReduceMotion} /><SwitchRow label="Show onboarding tips" checked={showTips} onChange={onShowTips} /><button type="button" className="primary-wide" onClick={onClose}>Done</button></ModalShell>; }
 function AccountModal({ onClose }) { return <ModalShell className="account-modal" onClose={onClose} ariaLabel="Account"><div className="modal-heading"><span>Sign in</span><Smartphone size={15} /></div><p className="modal-copy">Sign in is simulated locally in this recreation. Your projects are saved in this browser and every editor feature is available for free.</p><input className="modal-input" aria-label="Email address" type="email" placeholder="you@email.com" /><button type="button" className="primary-wide" onClick={onClose}>Continue</button></ModalShell>; }
 function FeedbackModal({ onClose, notify }) { const [message, setMessage] = useState(""); return <ModalShell className="feedback-modal" onClose={onClose} ariaLabel="Send feedback"><div className="modal-heading"><span>Send feedback</span><Send size={15} /></div><p className="modal-copy">Tell the OpenMock team what you’d like to see next.</p><textarea aria-label="Feedback" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Your feedback…" /><button type="button" className="primary-wide" onClick={() => { notify(message ? "Feedback saved locally." : "Write a note before sending."); if (message) onClose(); }}>Send feedback</button></ModalShell>; }
@@ -588,6 +655,6 @@ function AutoMotionWorkspace({ areas, setAreas, onClose, onCompose }) {
 function RecordingModal({ onClose, onStart }) { return <ModalShell className="recording-modal" onClose={onClose} ariaLabel="Recording keyframes"><div className="modal-heading"><span>Recording keyframes</span><CircleStop size={16} /></div><ol><li>Start recording – camera and blur changes will be pinned at the playhead.</li><li>Move the playhead, then tweak a camera dial or a blur control.</li><li>Repeat at new times to build the animation.</li><li>Stop recording, return to the start, and press play.</li></ol><div className="recording-tips"><strong>Tip:</strong> Select a keyframe chip to inspect it, use the diamond buttons to pin the current pose, and use the wand button to change easing.</div><button type="button" className="primary-wide" onClick={onStart}>Start recording <CircleStop size={14} /></button></ModalShell>; }
 
 const tourContent = [["WELCOME TO OPENMOCK", "A quick tour of the editor — about 30 seconds. You can skip any time, and start the tour again from the Help menu."], ["THE VIEWPORT", "Use your mouse or trackpad to interact with the 3D mockup."], ["ADD MEDIA", "Drag and drop an image or video on the viewport, or paste with ⌘V."], ["THE TIMELINE", "Set key frames and animate the camera so you can export dynamic videos."], ["CONTROLS", "Camera, lighting, depth of field, background, and effects — all here. Collapse sections to keep it tidy."], ["THE MENU", "This is the main navigation menu. It includes links to your projects, templates, saving the project, community links, and more."], ["EXPORT", "When you're done, render to PNG, JPEG, or video from here."], ["YOU’RE SET", "Drop in a screenshot to get started. You can replay this tour any time from the Help menu."]];
-function TourModal({ step, onSkip, onNext }) { const [title, body] = tourContent[step - 1] || tourContent[0]; if (!tourContent[step - 1]) return null; return <div className="tour-backdrop"><div className="tour-card" role="dialog" aria-label={`Tour step ${step} of 8`}><div className="tour-card-top"><span>{step}/8</span><button type="button" onClick={onSkip}>Skip tour</button></div><div className="tour-icon"><img src={asset("source/openmock.svg")} alt="" /></div><p className="tour-eyebrow">{step === 1 ? "WELCOME TO OPENMOCK" : title}</p><h2>{step === 1 ? "Quick tour" : title}</h2><p>{body}</p>{step === 2 && <div className="tour-controls"><span>Orbit <b>Drag</b></span><span>Rotate <b>Scroll</b></span><span>Tilt — Y axis <b>⇧ + Scroll</b></span><span>Roll — Z axis <b>⌥ + Scroll</b></span><span>Zoom <b>⌘/Ctrl + Scroll</b></span><span>Move <b>Space + Drag</b></span></div>}<button type="button" className="tour-next" onClick={onNext}>{step === 8 ? "Done" : "Next"}<ChevronRight size={14} /></button></div></div>; }
-function MobileTipRouter({ tip, onClose, onNext }) { if (tip === "welcome") return <MobileWelcome onClose={() => { window.localStorage.setItem("openmock-mobile-onboarded", "1"); onNext("tip-1"); }} onSend={() => { window.localStorage.setItem("openmock-mobile-onboarded", "1"); onNext("tip-1"); }} />; const content = { "tip-1": ["Mobile tips", "Tap here to upload new media", "tip-2"], "tip-2": ["Mobile tips", "Change the viewport size ratio here", "tip-3"], "tip-3": ["Mobile tips", "Tap, hold and move your finger around on the viewport above to tilt the camera", "tip-4"], "tip-4": ["Mobile tips", "Switch between move, tilt and zoom in the camera dock", "done"], "blur-1": ["Mobile tips", "With Blur selected, drag in the viewport to move the focus area", "blur-2"], "blur-2": ["Mobile tips", "Use Strength, Size, and Falloff for precise focus control", "done"] }[tip]; return <div className="mobile-tour-backdrop"><div className="mobile-tip-card" role="dialog" aria-modal="true" aria-label="Mobile tips"><span className="tip-pip" /><h2>{content[0]}</h2><p>{content[1]}</p><button type="button" className="primary-button" onClick={() => onNext(content[2])}>{content[2] === "done" ? "DONE" : "NEXT"}</button><button type="button" className="tip-skip" onClick={onClose}>Skip</button></div></div>; }
+function TourModal({ step, onSkip, onNext }) { const [title, body] = tourContent[step - 1] || tourContent[0]; if (!tourContent[step - 1]) return null; return <div className="tour-backdrop"><div className="tour-card" role="dialog" aria-label={`Tour step ${step} of 8`}><div className="tour-card-top"><span>{step}/8</span><button type="button" onClick={onSkip}>Skip tour</button></div><div className="tour-icon"><img src={asset("source/openmock.svg")} alt="" /></div><p className="tour-eyebrow">{step === 1 ? "WELCOME TO OPENMOCK" : title}</p><h2>{step === 1 ? "Quick tour" : title}</h2><p>{body}</p>{step === 2 && <div className="tour-controls"><span>Rotate <b>Drag</b></span><span>Zoom <b>Scroll</b></span><span>Precise movement <b>Fine</b></span><span>Choose a tool <b>Rotate · Move · Roll</b></span><span>Move <b>Space + Drag</b></span></div>}<button type="button" className="tour-next" onClick={onNext}>{step === 8 ? "Done" : "Next"}<ChevronRight size={14} /></button></div></div>; }
+function MobileTipRouter({ tip, onClose, onNext }) { if (tip === "welcome") return <MobileWelcome onClose={() => { window.localStorage.setItem("openmock-mobile-onboarded", "1"); onNext("tip-1"); }} onSend={() => { window.localStorage.setItem("openmock-mobile-onboarded", "1"); onNext("tip-1"); }} />; const content = { "tip-1": ["Mobile tips", "Tap here to upload new media", "tip-2"], "tip-2": ["Mobile tips", "Change the viewport size ratio here", "tip-3"], "tip-3": ["Mobile tips", "Drag on the viewport to rotate the device. Use Move or Roll above the canvas for a different adjustment.", "tip-4"], "tip-4": ["Mobile tips", "Use Fine for smaller adjustments. Reset view brings the device back to a centered front view.", "done"], "blur-1": ["Mobile tips", "With Blur selected, drag in the viewport to move the focus area", "blur-2"], "blur-2": ["Mobile tips", "Use Strength, Size, and Falloff for precise focus control", "done"] }[tip]; return <div className="mobile-tour-backdrop"><div className="mobile-tip-card" role="dialog" aria-modal="true" aria-label="Mobile tips"><span className="tip-pip" /><h2>{content[0]}</h2><p>{content[1]}</p><button type="button" className="primary-button" onClick={() => onNext(content[2])}>{content[2] === "done" ? "DONE" : "NEXT"}</button><button type="button" className="tip-skip" onClick={onClose}>Skip</button></div></div>; }
 function MobileWelcome({ onClose, onSend }) { return <div className="mobile-tour-backdrop"><div className="mobile-welcome" role="dialog" aria-label="Welcome to OpenMock on mobile"><div className="tour-icon"><img src={asset("source/openmock.svg")} alt="" /></div><h2>Welcome to OpenMock on mobile</h2><p>For the full experience including video editing and animation, switch to desktop — send yourself the link so it’s waiting when you get there.</p><div className="mobile-dialog-actions"><button type="button" onClick={onClose}>Close</button><button type="button" className="primary-button" onClick={onSend}>Send to yourself <Send size={13} /></button></div></div></div>; }

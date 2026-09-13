@@ -45,7 +45,6 @@ export function scenePatch(scene) {
 
 export const mockupOptions = [
   ["Flat", "FREE", false],
-  ["Browser Window", "FREE", false],
   ["TV 65\"", "FREE", false],
   ["iPhone 16", "FREE", false],
   ["iPhone 17", "FREE", false],
@@ -93,7 +92,6 @@ export const mockupOptions = [
 export function deviceArchetype(mockup) {
   const name = String(mockup || "");
   if (name === "Flat") return "flat";
-  if (name === "Browser Window") return "browser";
   if (name === "TV 65\"") return "tv";
   if (name === "Apple Vision Pro") return "headset";
   if (name.includes("Watch")) return "watch";
@@ -122,7 +120,7 @@ export function deviceGroup(mockup) {
     case "tablet": case "ereader": return "Tablets & readers";
     case "watch": return "Watches";
     case "handheld": return "Handhelds";
-    case "browser": case "tv": return "Web & TV";
+    case "tv": return "Web & TV";
     case "display": return "Desktops";
     case "laptop": return "Laptops";
     default: return "Spatial";
@@ -174,27 +172,6 @@ export const presetBackgrounds = {
 // complete turn instead of stopping at the old ±225° prototype range.
 export const CAMERA_AXIS_MIN = -360;
 export const CAMERA_AXIS_MAX = 360;
-export const ROTATION_WHEEL_SCALE = 0.65;
-export const ROTATION_DRAG_SCALE = 0.42;
-
-export function wheelRotationAxis(event = {}) {
-  if (event.altKey) return "zAxis";
-  if (event.shiftKey) return "yAxis";
-  return "xAxis";
-}
-
-export function wheelDeltaToDegrees(event = {}, viewportHeight = 900) {
-  const deltaX = Number(event.deltaX) || 0;
-  const deltaY = Number(event.deltaY) || 0;
-  const delta = Math.abs(deltaY) >= Math.abs(deltaX) ? deltaY : deltaX;
-  if (!delta) return 0;
-  const mode = Number(event.deltaMode) || 0;
-  const unit = mode === 1 ? 16 : mode === 2 ? Math.max(1, Number(viewportHeight) || 900) : 1;
-  // A capped per-event delta keeps high-resolution trackpads fluid while
-  // making ordinary wheel notches cover a full turn in only a few gestures.
-  return clamp(delta * unit * ROTATION_WHEEL_SCALE, -90, 90);
-}
-
 export const cameraPresets = {
   Hero: { xAxis: -7, yAxis: 1, zAxis: 0, fov: 29, zoom: 2.16, panX: 0.02, panY: -0.12 },
   Angled: { xAxis: -24, yAxis: 12, zAxis: 0, fov: 24, zoom: 1.9, panX: 0.06, panY: -0.17 },

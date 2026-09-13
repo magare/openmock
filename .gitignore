@@ -5,3 +5,10 @@ dist/
 .env
 .env.*
 !.env.example
+
+# Disposable local QA output; curated evidence remains tracked.
+evidence/qa/local/
+playwright-report/
+test-results/
+output/playwright/
+.playwright-cli/

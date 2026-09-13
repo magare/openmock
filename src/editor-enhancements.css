@@ -67,17 +67,7 @@
 .phone-punch-hole{position:absolute;left:50%;top:10px;width:12px;height:12px;transform:translateX(-50%);border:2px solid rgba(255,255,255,.24);border-radius:50%;background:radial-gradient(circle at 35% 28%,#70888d 0 18%,#0a0e10 38% 100%);box-shadow:0 1px 2px rgba(0,0,0,.35);z-index:2}
 .mockup-device.imac-24 .phone-glass{border-radius:12px;border-width:5px}
 .mockup-device.studio-display .phone-glass{border-radius:11px;border-width:5px}
-/* New mockup families in the CSS fallback: browser window, TV, foldables, handhelds, e-reader. */
-.device-browser{width:412px;height:290px;filter:drop-shadow(18px 18px 13px rgba(0,0,0,.24))}
-.device-browser .browser-chrome{position:absolute;left:0;top:0;width:100%;height:34px;border-radius:12px 12px 0 0;background:linear-gradient(180deg,#f4f5f5,#e0e3e3);box-shadow:inset 0 1px rgba(255,255,255,.7);z-index:2}
-.device-browser .browser-dot{position:absolute;top:13px;width:9px;height:9px;border-radius:50%}
-.device-browser .browser-dot-red{left:12px;background:#ec6a5e}
-.device-browser .browser-dot-amber{left:29px;background:#f4bf4f}
-.device-browser .browser-dot-green{left:46px;background:#61c554}
-.device-browser .browser-url{position:absolute;left:66px;right:14px;top:10px;height:15px;border-radius:8px;background:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
-.device-browser .phone-glass{top:34px;height:calc(100% - 34px);border-width:6px;border-radius:10px}
-.theme-dark .device-browser .browser-chrome{background:linear-gradient(180deg,#3a3f41,#2b3032);box-shadow:inset 0 1px rgba(255,255,255,.14)}
-.theme-dark .device-browser .browser-url{background:#1d2224}
+/* New mockup families in the CSS fallback: TV, foldables, handhelds, e-reader. */
 .device-tv{width:480px;height:300px}
 .device-tv .phone-glass{border-width:5px;border-radius:7px}
 .device-tv .display-stand{left:46%;width:8%;height:15%;bottom:-13%}
@@ -104,10 +94,6 @@
   .device-vision{width:254px;height:143px}
   .laptop-keyboard i{margin-inline:.7%}
   .watch-crown,.watch-action{right:-5%}
-  .device-browser{width:318px;height:224px}
-  .device-browser .browser-chrome{height:28px}
-  .device-browser .browser-dot{top:10px}
-  .device-browser .browser-url{top:8px;height:13px;left:60px}
   .device-tv{width:378px;height:236px}
   .foldable-device{width:236px;height:330px}
   .flip-device{width:198px;height:356px}

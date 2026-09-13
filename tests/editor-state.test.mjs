@@ -23,8 +23,6 @@ import {
   deviceGroup,
   isAndroidMockup,
   effectOptions,
-  wheelDeltaToDegrees,
-  wheelRotationAxis,
 } from "../src/editorState.js";
 
 test("creates a source-shaped default project", () => {
@@ -72,17 +70,9 @@ test("keeps editor utility values predictable", () => {
   assert.equal(clamp("1.5", 0, 2), 1.5);
 });
 
-test("maps short wheel gestures across the full camera axes", () => {
+test("keeps full-turn manual axis controls", () => {
   assert.equal(CAMERA_AXIS_MIN, -360);
   assert.equal(CAMERA_AXIS_MAX, 360);
-  assert.equal(wheelRotationAxis({}), "xAxis");
-  assert.equal(wheelRotationAxis({ shiftKey: true }), "yAxis");
-  assert.equal(wheelRotationAxis({ altKey: true }), "zAxis");
-  assert.equal(wheelDeltaToDegrees({ deltaY: 120 }), 78);
-  assert.equal(wheelDeltaToDegrees({ deltaY: -120 }), -78);
-  assert.equal(wheelDeltaToDegrees({ deltaY: 100, deltaMode: 1 }), 90);
-  assert.equal(wheelDeltaToDegrees({ deltaX: 40, deltaY: 10 }), 26);
-  assert.equal(wheelDeltaToDegrees({}), 0);
 });
 
 test("template patches carry functional camera, scene, and effect changes", () => {
@@ -250,7 +240,6 @@ test("maps every catalog mockup onto a device archetype", () => {
   assert.equal(deviceArchetype("Kindle Paperwhite"), "ereader");
   assert.equal(deviceArchetype("Nintendo Switch 2"), "handheld");
   assert.equal(deviceArchetype("Steam Deck"), "handheld");
-  assert.equal(deviceArchetype("Browser Window"), "browser");
   assert.equal(deviceArchetype("TV 65\""), "tv");
   assert.equal(deviceArchetype("Surface Laptop 15\""), "laptop");
   assert.equal(deviceArchetype("Dell XPS 16"), "laptop");
@@ -271,7 +260,7 @@ test("flags Samsung and Google devices for punch-hole and round-watch rendering"
   for (const name of ["Galaxy S26", "Galaxy S26+", "Galaxy S26 Ultra", "Galaxy Z Fold 8", "Galaxy Z Flip 8", "Galaxy Tab S11 Ultra", "Galaxy Watch 8", "Pixel 10", "Pixel 10 Pro", "Pixel 10 Pro XL", "Pixel Watch 4"]) {
     assert.equal(isAndroidMockup(name), true, name);
   }
-  for (const name of ["iPhone 16", "iPhone 17", "iPhone 17 Pro Max", "iPad Pro", "Apple Watch Ultra 3", "MacBook Neo", "Surface Laptop 15\"", "Flat", "Browser Window"]) {
+  for (const name of ["iPhone 16", "iPhone 17", "iPhone 17 Pro Max", "iPad Pro", "Apple Watch Ultra 3", "MacBook Neo", "Surface Laptop 15\"", "Flat"]) {
     assert.equal(isAndroidMockup(name), false, name);
   }
 });

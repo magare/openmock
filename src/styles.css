@@ -149,7 +149,39 @@ img, video { display: block }
   cursor: grab;
   touch-action: none;
 }
-.mockup-stage:active { cursor: grabbing }
+.mockup-stage.is-manipulating { cursor: grabbing; user-select: none }
+.mockup-stage.mode-move { cursor: move }
+.mockup-stage.mode-zoom { cursor: zoom-in }
+.stage-movement-controls {
+  position: absolute; z-index: 6; top: 12px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: max-content; max-width: calc(100% - 20px); cursor: default;
+}
+.stage-movement-toolbar {
+  display: flex; align-items: center; gap: 2px; padding: 4px;
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--panel); box-shadow: 0 3px 14px #00000012;
+}
+.stage-movement-toolbar button {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  min-height: 34px; padding: 0 9px; border-radius: 8px; color: var(--ink-2);
+  font-size: 11px; white-space: nowrap;
+}
+.stage-movement-toolbar button:hover { background: var(--card-2); color: var(--ink) }
+.stage-movement-toolbar button[aria-pressed="true"] { background: var(--accent); color: #fff }
+.movement-divider { width: 1px; height: 18px; background: var(--line); margin: 0 3px }
+.stage-movement-hint {
+  margin: 0; padding: 4px 10px; border-radius: 6px; pointer-events: none;
+  background: var(--panel); color: var(--ink-2); font-size: 10px; text-align: center;
+}
+.stage-movement-hint span { opacity: .5 }
+@media (max-width: 900px) {
+  .stage-movement-toolbar button { padding: 0 7px; font-size: 10px; gap: 4px }
+  .stage-movement-toolbar button[aria-label="Reset view"] span { display: none }
+}
+@media (max-width: 699px) {
+  .stage-movement-toolbar button { min-height: 40px; padding: 0 8px }
+}
 .stage-dark { background-color: #292b2c }
 .stage-background-glow {
   position: absolute; inset: -10%;
@@ -216,20 +248,20 @@ img, video { display: block }
   font: 9.5px/1 var(--font-mono);
 }
 .stage-hint .hint-sep { opacity: .38 }
-.stage-axis-hud {
-  position: absolute; left: 50%; top: 18px; transform: translateX(-50%) translateY(-4px);
+.topbar-axis-hud {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, calc(-50% - 4px));
   display: flex; align-items: center; gap: 6px;
-  padding: 6px 14px; border-radius: 999px;
-  background: rgba(20, 21, 22, .78); color: #ececea;
+  height: 32px; padding: 0 14px; border-radius: var(--r-md);
+  background: var(--card-2); color: var(--ink-2);
+  border: 1px solid var(--line-2); box-shadow: var(--shadow-sm);
   font: 10px var(--font-mono); font-variant-numeric: tabular-nums;
-  z-index: 5; pointer-events: none; opacity: 0;
-  backdrop-filter: blur(6px);
+  z-index: 2; pointer-events: none; opacity: 0;
   transition: opacity .22s ease, transform .22s ease;
 }
-.stage-axis-hud[data-active="1"] { opacity: 1; transform: translateX(-50%) translateY(0) }
-.stage-axis-hud b { color: var(--accent); font-weight: 500; margin-right: 1px }
-.stage-axis-hud span { min-width: 34px; text-align: left }
-.stage-axis-hud .hud-zoom-label { margin-left: 6px; font-size: 8px; letter-spacing: .08em; opacity: .75 }
+.topbar-axis-hud[data-active="1"] { opacity: 1; transform: translate(-50%, -50%) }
+.topbar-axis-hud b { color: var(--accent); font-weight: 500; margin-right: 1px }
+.topbar-axis-hud span { min-width: 34px; text-align: left }
+.topbar-axis-hud .hud-zoom-label { margin-left: 6px; font-size: 8px; letter-spacing: .08em; opacity: .75 }
 @keyframes stage-hint-in { to { opacity: 1 } }
 @keyframes stage-hint-out { to { opacity: 0 } }
 .reduce-motion .stage-hint { animation: none; opacity: .9 }
@@ -995,6 +1027,9 @@ input[type="range"]:hover::-moz-range-thumb { border-color: var(--accent); box-s
   .topbar-links, .save-project, .topbar-history, .topbar-divider { display: none }
   .topbar-spacer { flex: 1 1 4px; min-width: 0 }
   .ratio-button { min-width: 54px; height: 30px; padding-inline: 8px; font-size: 9.5px }
+  .topbar-axis-hud { height: 30px; gap: 4px; padding-inline: 9px; font-size: 9px }
+  .topbar-axis-hud span { min-width: 28px }
+  .topbar-axis-hud .hud-zoom-label { margin-left: 2px; font-size: 7px }
   .theme-top-button { width: 30px; height: 30px; margin-left: 0 }
   .capture-button { width: 30px; height: 30px; margin-right: 0 }
   .export-button { padding-inline: 12px; height: 30px }

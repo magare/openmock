@@ -8,6 +8,9 @@ import { USDLoader } from "three/examples/jsm/loaders/USDLoader.js";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { deviceArchetype, isAndroidMockup } from "./editorState.js";
+import { deviceRotation, stageCameraView } from "./cameraInteraction.js";
+import { createIPhone16, createGalaxyTab, createPaperwhite, createAndroidWatch, createSteamDeck, createSwitch2, createWindowsLaptop } from "./hardwareDevices.js";
+import { batchedDevices, batchStaticDevice, deviceBounds, collectDeviceResources, disposeDeviceResources } from "./deviceOptimization.js";
 
 const localAssetUrl = (path) => `${import.meta.env.BASE_URL}assets/${path}`;
 const modelUrl = localAssetUrl("source/iphone-17-p-sim.glb");
@@ -94,7 +97,7 @@ const exactDeviceAssets = {
   },
   "Pixel 10 Pro": {
     type: "gltf",
-    url: localAssetUrl("devices/pixel-10-pro.glb"),
+    url: localAssetUrl("devices/pixel-10-pro-optimized.glb"),
     slab: true,
     forceOverlay: true,
     screenOverlay: {
@@ -110,7 +113,7 @@ const exactDeviceAssets = {
   },
   "Pixel 10 Pro XL": {
     type: "gltf",
-    url: localAssetUrl("devices/pixel-10-pro.glb"),
+    url: localAssetUrl("devices/pixel-10-pro-optimized.glb"),
     slab: true,
     forceOverlay: true,
     screenOverlay: {
@@ -1130,53 +1133,6 @@ function createRoundWatch(texture, finish, style) {
   return { group, materials: { body, finishables: [{ material: body.material, role: "body" }], screen: { material: screen.material }, glass: { material: glass.material } } };
 }
 
-// Desktop browser chrome: a flat window with a traffic-light toolbar and URL
-// pill above the media panel. Chrome takes the finish accent, the body the
-// finish color, so the finish picker still personalizes the frame.
-function createBrowserWindow(texture, finish) {
-  const palette = finishPalette[finish] || finishPalette.White;
-  const group = new THREE.Group();
-  const width = 2.66;
-  const height = 1.74;
-  const depth = 0.1;
-  const windowBody = roundedMesh(width, height, depth, 0.07, physicalMaterial(palette.body, { roughness: 0.3, metalness: 0.4, clearcoat: 0.66 }));
-  group.add(windowBody);
-  const toolbar = roundedMesh(width * 0.955, height * 0.125, 0.024, 0.03, physicalMaterial(palette.accent, { roughness: 0.4, metalness: 0.16 }));
-  toolbar.position.set(0, height * 0.4325, depth * 0.44);
-  group.add(toolbar);
-  const tabRow = roundedMesh(width * 0.955, height * 0.062, 0.02, 0.018, physicalMaterial(palette.body, { roughness: 0.46, metalness: 0.12 }));
-  tabRow.position.set(0, height * 0.3395, depth * 0.46);
-  group.add(tabRow);
-  const dotColors = [0xec6a5e, 0xf4bf4f, 0x61c554];
-  for (const [index, color] of dotColors.entries()) {
-    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.021, 18, 12), physicalMaterial(color, { roughness: 0.3, metalness: 0.05 }));
-    dot.position.set(-width * 0.43 + index * 0.075, height * 0.4325, depth * 0.5);
-    group.add(dot);
-  }
-  for (const x of [-width * 0.1, width * 0.16]) {
-    const tab = roundedMesh(width * 0.24, height * 0.055, 0.016, 0.014, physicalMaterial(0xffffff, { roughness: 0.4, metalness: 0.03 }), 4);
-    tab.position.set(x, height * 0.4325, depth * 0.5);
-    group.add(tab);
-  }
-  const urlPill = roundedMesh(width * 0.82, height * 0.042, 0.014, 0.01, physicalMaterial(0xf6f7f7, { roughness: 0.42, metalness: 0.04 }));
-  urlPill.position.set(0, height * 0.3395, depth * 0.52);
-  group.add(urlPill);
-  const screens = addScreen(group, width * 0.955, height * 0.66, depth, texture, { z: depth * 0.44 });
-  screens.screen.position.y = screens.glass.position.y = screens.bezel.position.y = -height * 0.09;
-  return {
-    group,
-    materials: {
-      body: windowBody,
-      finishables: [
-        { material: windowBody.material, role: "body" },
-        { material: toolbar.material, role: "accent" },
-      ],
-      screen: screens.screen,
-      glass: screens.glass,
-    },
-  };
-}
-
 // Foldables. The Fold renders open like the real device: a near-square inner
 // display with a vertical crease, a hinge spine along the left edge, and the
 // Samsung camera column on the back-right. The Flip renders closed-tall with
@@ -1389,9 +1345,17 @@ function createEreader(texture, finish) {
 }
 
 function createProceduralDevice(mockup, texture, finish) {
+  if (mockup === "iPhone 16") return createIPhone16(texture, finish, addAppleLogo);
+  if (mockup === "Galaxy Tab S11 Ultra") return createGalaxyTab(texture, finish);
+  if (mockup === "Kindle Paperwhite") return createPaperwhite(texture);
+  if (mockup === "Galaxy Watch 8") return createAndroidWatch(texture, "galaxy");
+  if (mockup === "Pixel Watch 4") return createAndroidWatch(texture, "pixel");
+  if (mockup === "Steam Deck") return createSteamDeck(texture);
+  if (mockup === 'Surface Laptop 15"') return createWindowsLaptop(texture, finish, "surface");
+  if (mockup === "Dell XPS 16") return createWindowsLaptop(texture, finish, "xps");
+  if (mockup === "Nintendo Switch 2") return createSwitch2(texture);
   switch (deviceArchetype(mockup)) {
     case "flat": return createFlatDisplay(texture);
-    case "browser": return createBrowserWindow(texture, finish);
     case "tv": return createDisplay(texture, finish, "tv");
     case "headset": return createVisionPro(texture, finish);
     case "watch": return createWatch(texture, finish, isAndroidMockup(mockup) ? { style: mockup.startsWith("Pixel") ? "pixel" : "galaxy" } : {});
@@ -1888,21 +1852,7 @@ function prepareExactDevice(model, mockup, asset, screenTexture) {
 // carry hidden variant slabs or helper geometry that Box3.setFromObject would
 // otherwise count, which would silently de-center the visible device.
 function visibleMeshBounds(object, target = new THREE.Box3()) {
-  target.makeEmpty();
-  object.updateWorldMatrix(true, true);
-  const isOpaqueMesh = (node) => {
-    if (!node.isMesh || !node.material) return false;
-    const materials = Array.isArray(node.material) ? node.material : [node.material];
-    return materials.some((material) => material.visible !== false && material.opacity !== 0 && !material.isShadowMaterial);
-  };
-  const walk = (node) => {
-    if (!node.visible) return;
-    if (isOpaqueMesh(node)) target.expandByObject(node);
-    for (const child of node.children) walk(child);
-  };
-  walk(object);
-  if (target.isEmpty()) target.setFromObject(object);
-  return target;
+  return deviceBounds(object, target);
 }
 
 function normalizeObject(object, target = 2.22) {
@@ -1918,7 +1868,7 @@ function normalizeObject(object, target = 2.22) {
 function placeGround(ground, object) {
   if (!ground || !object) return;
   object.updateMatrixWorld(true);
-  const bounds = new THREE.Box3().setFromObject(object);
+  const bounds = visibleMeshBounds(object);
   if (Number.isFinite(bounds.min.y)) ground.position.y = bounds.min.y - 0.012;
 }
 
@@ -1964,23 +1914,30 @@ function refitStage(runtime, panX = 0, panY = 0) {
     minY = Math.min(minY, corner.y); maxY = Math.max(maxY, corner.y);
   }
   const halfHWorldLive = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * camera.position.z / Math.max(0.05, camera.zoom);
-  root.position.x = panX * 0.5 - ((minX + maxX) / 2) * halfHWorldLive * Math.max(0.2, camera.aspect || 1);
-  root.position.y = -panY * 0.5 - ((minY + maxY) / 2) * halfHWorldLive;
+  // Offset in the view plane, so Move follows the cursor even on tilted
+  // laptop cameras. Convert viewport fractions using the live frustum.
+  const distance = camera.position.length();
+  const halfHeight = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * distance / camera.zoom;
+  root.position.set(
+    -((minX + maxX) / 2) * halfHWorldLive * Math.max(0.2, camera.aspect || 1),
+    -((minY + maxY) / 2) * halfHWorldLive,
+    0,
+  );
+  root.position.add(new THREE.Vector3(panX * halfHeight * camera.aspect, -panY * halfHeight, 0).applyQuaternion(camera.quaternion));
   runtime.renderer.domElement.dataset.openmockFit = fit.toFixed(3);
 }
 
 function enableModelShadows(object) {
   object.traverse((child) => {
     if (!child.isMesh) return;
-    child.castShadow = true;
-    child.receiveShadow = true;
+    child.castShadow = child.userData.openmockCastShadow ?? true;
+    child.receiveShadow = child.userData.openmockReceiveShadow ?? true;
   });
 }
 
 function fitTarget(mockup) {
   const arch = deviceArchetype(mockup);
   if (arch === "flat") return 1.82;
-  if (arch === "browser") return 1.78;
   if (arch === "watch") return 1.48;
   if (arch === "tablet") {
     if (mockup === "iPad mini") return 1.58;
@@ -2024,28 +1981,51 @@ function loadScreenTexture(media, disposables) {
   return texture;
 }
 
-async function loadExactModel(asset, renderer, runtime) {
+// Share decoders while requests overlap (including React's development
+// mount/cleanup/mount cycle). Each completed request releases its lease;
+// the last one shuts down the workers without interrupting another decode.
+let modelDecoders = null;
+function acquireModelDecoders(renderer) {
+  if (!modelDecoders) {
+    const ktx2Loader = new KTX2Loader().setTranscoderPath(localAssetUrl("basis/"));
+    ktx2Loader.detectSupport(renderer);
+    modelDecoders = { ktx2Loader, dracoLoader: new DRACOLoader().setDecoderPath(localAssetUrl("draco/")), users: 0 };
+  }
+  const pool = modelDecoders;
+  pool.users += 1;
+  return { ...pool, release() {
+    pool.users -= 1;
+    if (!pool.users) {
+      pool.ktx2Loader.dispose(); pool.dracoLoader.dispose();
+      if (modelDecoders === pool) modelDecoders = null;
+    }
+  } };
+}
+
+async function loadExactModel(asset, renderer) {
   if (asset.type === "usd") {
     const loader = new USDLoader();
     return loader.loadAsync(asset.url);
   }
 
-  const ktx2Loader = new KTX2Loader().setTranscoderPath(localAssetUrl("basis/"));
-  const dracoLoader = new DRACOLoader().setDecoderPath(localAssetUrl("draco/"));
-  ktx2Loader.detectSupport(renderer);
-  runtime.ktx2Loader = ktx2Loader;
-  runtime.dracoLoader = dracoLoader;
+  const decoders = acquireModelDecoders(renderer);
   const loader = new GLTFLoader()
-    .setKTX2Loader(ktx2Loader)
-    .setDRACOLoader(dracoLoader)
+    .setKTX2Loader(decoders.ktx2Loader)
+    .setDRACOLoader(decoders.dracoLoader)
     .setMeshoptDecoder(MeshoptDecoder);
-  const gltf = await loader.loadAsync(asset.url);
-  return gltf.scene;
+  try {
+    const gltf = await loader.loadAsync(asset.url);
+    return gltf.scene;
+  } finally {
+    // Let an in-flight decode finish when switching; the stale result is
+    // disposed by finishSetup. Terminating its workers early strands it.
+    decoders.release();
+  }
 }
 
 function fitScreenTextures(object) {
   if (!object) return;
-  object.traverse((child) => {
+  const fit = (child) => {
     if (!child.isMesh || !child.userData?.screenAspect || !child.material?.map) return;
     const map = child.material.map;
     const image = map.image;
@@ -2084,7 +2064,9 @@ function fitScreenTextures(object) {
     }
     map.userData = { ...(map.userData || {}), coverSignature: signature };
     map.needsUpdate = true;
-  });
+  };
+  if (Array.isArray(object)) object.forEach(fit);
+  else object.traverse(fit);
 }
 
 function applyLoadedModelMaterials(model, finish, reflection) {
@@ -2129,6 +2111,7 @@ function applyLoadedModelMaterials(model, finish, reflection) {
 }
 
 function updateProceduralMaterials(runtime, finish, reflection) {
+  runtime.materials?.updateFinish?.(finish);
   const palette = finishPalette[finish] || finishPalette.White;
   const { body, finishables, screen, glass } = runtime.materials || {};
   const refs = finishables?.length ? finishables : body ? [{ material: body.material, role: "body" }] : [];
@@ -2217,7 +2200,7 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
 
     const disposables = [];
     const screenTexture = loadScreenTexture(media, disposables);
-    const runtime = { renderer, scene, camera, root, key, rim, fill, ground, model: null, materials: null, screenTexture, disposables, switching: false, modelHalf: null, lastPanX: 0, lastPanY: 0, lastFitAspect: 1 };
+    const runtime = { renderer, scene, camera, root, key, rim, fill, ground, model: null, materials: null, screenTexture, screenMeshes: [], disposables, switching: false, needsRender: true, modelHalf: null, lastPanX: 0, lastPanY: 0, lastFitAspect: 1 };
     runtimeRef.current = runtime;
 
     const resize = () => {
@@ -2226,26 +2209,33 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
+      runtime.needsRender = true;
     };
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
     resize();
 
     const finishSetup = (result, asset = null) => {
-      if (disposed) return;
       let model = result.group || result;
+      const sourceResources = collectDeviceResources(model);
+      if (disposed) { disposeDeviceResources(sourceResources); return; }
       if (asset) model = prepareExactDevice(model, mockup, asset, screenTexture);
+      enableModelShadows(model);
+      if (asset) applyLoadedModelMaterials(model, finish, reflection);
+      // Vision Pro's source splits its rigid hardware across many wrappers.
+      if (batchedDevices.has(mockup)) batchStaticDevice(model, { acrossParents: mockup === "Apple Vision Pro" });
+      disposeDeviceResources(sourceResources, collectDeviceResources(model));
       normalizeObject(model, fitTarget(mockup));
       runtime.model = model;
       runtime.materials = asset ? null : result.materials || null;
       runtime.exact = Boolean(asset);
+      runtime.needsRender = true;
       runtime.switching = false;
       root.visible = true;
       ground.visible = true;
       root.add(runtime.model);
-      enableModelShadows(runtime.model);
-      if (asset) applyLoadedModelMaterials(runtime.model, finish, reflection);
-      fitScreenTextures(runtime.model);
+      model.traverse(child => { if (child.userData?.screenAspect) runtime.screenMeshes.push(child); });
+      fitScreenTextures(runtime.screenMeshes);
       placeGround(ground, runtime.model);
       // Cache the model's axis-aligned half extents in root space so the
       // framing fit can react to rotation without re-traversing the mesh tree.
@@ -2266,11 +2256,13 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
 
     const exactAsset = exactDeviceAssets[mockup];
     if (exactAsset) {
-      loadExactModel(exactAsset, renderer, runtime)
+      loadExactModel(exactAsset, renderer)
         .then((model) => finishSetup(model, exactAsset))
         .catch((error) => {
-          console.warn(`Unable to load exact ${mockup} model; using the local fallback.`, error);
-          if (!disposed) finishSetup(createProceduralDevice(mockup, screenTexture, finish));
+          if (!disposed) {
+            console.warn(`Unable to load exact ${mockup} model; using the local fallback.`, error);
+            finishSetup(createProceduralDevice(mockup, screenTexture, finish));
+          }
         });
     } else {
       finishSetup(createProceduralDevice(mockup, screenTexture, finish));
@@ -2279,8 +2271,10 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
     new HDRLoader().load(hdrUrl, (texture) => {
       if (disposed) { texture.dispose(); return; }
       const pmrem = new THREE.PMREMGenerator(renderer);
-      const environment = pmrem.fromEquirectangular(texture).texture;
-      scene.environment = environment;
+      const environment = pmrem.fromEquirectangular(texture);
+      scene.environment = environment.texture;
+      runtime.needsRender = true;
+      disposables.push(() => environment.dispose());
       texture.dispose();
       pmrem.dispose();
     }, undefined, () => {});
@@ -2289,7 +2283,6 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
     const render = () => {
       if (disposed) return;
       frame = window.requestAnimationFrame(render);
-      resize();
       if (runtime.switching) {
         renderer.clear(true, true, true);
       } else {
@@ -2300,8 +2293,17 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
           runtime.lastFitAspect = camera.aspect;
           placeGround(ground, runtime.model);
         }
-        fitScreenTextures(runtime.model);
-        renderer.render(scene, camera);
+        fitScreenTextures(runtime.screenMeshes);
+        // Keep a settled device in the preserved buffer. Camera playback,
+        // controls, resizing, loaded images/HDR and video frames invalidate
+        // it; a static mockup needs no repeated GPU or shadow-map work.
+        const videoTime = screenTexture.isVideoTexture ? screenTexture.image.currentTime : 0;
+        if (runtime.needsRender || runtime.lastScreenVersion !== screenTexture.version || runtime.lastVideoTime !== videoTime) {
+          renderer.render(scene, camera);
+          runtime.needsRender = false;
+          runtime.lastScreenVersion = screenTexture.version;
+          runtime.lastVideoTime = videoTime;
+        }
       }
     };
     render();
@@ -2310,20 +2312,13 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
       window.cancelAnimationFrame(frame);
       observer.disconnect();
       runtimeRef.current = null;
-      runtime.ktx2Loader?.dispose();
-      runtime.dracoLoader?.dispose();
       runtime.disposables.forEach((dispose) => dispose());
+      key.shadow.dispose();
+      disposeDeviceResources(collectDeviceResources(scene));
+      // The canvas keeps its WebGL context between devices. Reset unpack
+      // flags before the next renderer creates its default 3D textures.
+      renderer.resetState();
       renderer.dispose();
-      scene.traverse((object) => {
-        if (object.geometry) object.geometry.dispose();
-        if (object.material) {
-          const materials = Array.isArray(object.material) ? object.material : [object.material];
-          materials.forEach((material) => {
-            Object.values(material).forEach((value) => { if (value?.isTexture) value.dispose(); });
-            material.dispose();
-          });
-        }
-      });
       setReady(false);
       onStatusChange("loading");
     };
@@ -2335,40 +2330,14 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
     const { camera, model, root, key, rim, fill, ground, renderer, scene } = runtime;
     const cameraData = cameraState || {};
     camera.fov = Number(cameraData.fov) || 24;
-    camera.zoom = Math.max(0.5, Math.min(2.2, (Number(cameraData.zoom) || 1.9) / 1.9));
+    camera.zoom = Math.max(0.5, Math.min(4, Number(cameraData.zoom) || 1.9)) / 1.9;
     const tallViewport = runtime.renderer.domElement.clientHeight / Math.max(1, runtime.renderer.domElement.clientWidth) > 1.2;
-    const arch = deviceArchetype(mockup);
-    const flatMockup = arch === "flat";
-    const displayMockup = arch === "display" || arch === "tv" || arch === "browser";
-    const phoneMockup = arch === "phone" || arch === "foldable";
-    const tabletMockup = arch === "tablet" || arch === "ereader";
-    const watchMockup = arch === "watch";
-    const laptopMockup = arch === "laptop";
-    const headsetMockup = arch === "headset";
-    const handheldMockup = arch === "handheld";
-    const baseCameraZ = flatMockup ? 4.35 : laptopMockup ? 4.5 : arch === "tv" ? 4.75 : displayMockup ? 4.3 : headsetMockup ? 3.9 : watchMockup ? 3.9 : tabletMockup ? 4.05 : handheldMockup ? 4.1 : arch === "foldable" ? 3.95 : 3.62;
-    camera.position.z = baseCameraZ * (tallViewport ? 1.14 : 1);
-    camera.position.y = laptopMockup ? 0.48 : displayMockup ? 0.1 : 0.04;
-    camera.lookAt(0, laptopMockup ? -0.16 : 0, 0);
+    const view = stageCameraView(mockup, tallViewport);
+    camera.position.copy(view.position);
+    camera.lookAt(view.target);
     camera.updateProjectionMatrix();
     if (root) {
-      const xAxis = Number(cameraData.xAxis) || 0;
-      const yAxis = Number(cameraData.yAxis) || 0;
-      const zAxis = Number(cameraData.zAxis) || 0;
-      const rollFactor = flatMockup ? 0 : laptopMockup || displayMockup ? 0.1 : headsetMockup ? 0.03 : watchMockup ? 0.22 : tabletMockup ? 0.18 : handheldMockup ? 0.3 : arch === "foldable" ? (mockup.includes("Flip") ? 0.6 : 0.32) : 0.65;
-      const yawSign = phoneMockup ? -1 : 1;
-      const backView = cameraPreset === "Back" && (phoneMockup || tabletMockup || watchMockup || handheldMockup);
-      const basePitch = backView ? 8 : 0;
-      const baseYaw = backView ? 180 : 0;
-      // Camera axes are actual degrees now. Keep a small device-specific roll
-      // contribution from X for the existing editorial presets, while Z is an
-      // independent full-turn roll control.
-      root.rotation.order = "YXZ";
-      root.rotation.set(
-        flatMockup ? 0 : THREE.MathUtils.degToRad(basePitch + yAxis),
-        flatMockup ? 0 : THREE.MathUtils.degToRad(baseYaw + xAxis * yawSign),
-        flatMockup ? 0 : THREE.MathUtils.degToRad(zAxis - xAxis * rollFactor),
-      );
+      root.rotation.copy(deviceRotation(cameraData, mockup, cameraPreset));
       refitStage(runtime, Number(cameraData.panX) || 0, Number(cameraData.panY) || 0);
       runtime.lastPanX = Number(cameraData.panX) || 0;
       runtime.lastPanY = Number(cameraData.panY) || 0;
@@ -2390,6 +2359,7 @@ export function ThreeStage({ mockup = "iPhone 17", cameraState, cameraPreset = "
     scene.environmentIntensity = lighting === "Dark Rim" ? 0.22 : lighting === "Two Tone" ? 0.9 : lighting === "Warm Glow" ? 0.82 : lighting === "Studio Soft" ? 1.14 : 1;
     if (ground?.material) ground.material.opacity = contactShadow ? 0.28 : 0.08;
     renderer.toneMappingExposure = effects.includes("Bloom") ? 1.16 : isDark ? 0.8 : lighting === "Warm Glow" ? 1.08 : 1.02;
+    runtime.needsRender = true;
   }, [cameraState, cameraPreset, lighting, lightRotation, contactShadow, finish, reflection, isDark, effects, mockup, ready]);
 
   return <canvas ref={canvasRef} className={`three-stage-canvas ${ready && !failed ? "is-ready" : ""}`} aria-hidden="true" data-renderer-status={failed ? "fallback" : ready ? "ready" : "loading"} />;

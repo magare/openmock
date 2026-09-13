@@ -8,7 +8,12 @@
     "build": "vite build && node scripts/prepare-sites-build.mjs",
     "preview": "vite preview",
     "test:sites": "node --test tests/sites-worker.test.mjs",
-    "test:editor": "node --test tests/editor-state.test.mjs"
+    "test:editor": "node --test tests/editor-state.test.mjs tests/camera-interaction.test.mjs tests/hardware-devices.test.mjs tests/device-optimization.test.mjs",
+    "test": "npm run test:editor && npm run test:sites",
+    "qa:ui": "node scripts/qa/ui-capture.mjs",
+    "qa:devices": "node scripts/qa/device-sweep.mjs",
+    "qa:gestures": "node scripts/qa/gesture-probe.mjs",
+    "qa:scene": "node scripts/qa/scene-probe.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "5.0.4",
