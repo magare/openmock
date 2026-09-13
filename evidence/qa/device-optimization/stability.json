@@ -1,0 +1,93 @@
+{
+  "report": [
+    {
+      "name": "Pixel 10 Pro",
+      "fit": 0.853,
+      "calls": 39,
+      "triangles": 1159224,
+      "memory": {
+        "geometries": 20,
+        "textures": 8
+      },
+      "source": "manufacturer"
+    },
+    {
+      "name": "Surface Laptop 15\"",
+      "fit": 1,
+      "calls": 36,
+      "triangles": 487048,
+      "memory": {
+        "geometries": 20,
+        "textures": 6
+      },
+      "source": "procedural"
+    },
+    {
+      "name": "Dell XPS 16",
+      "fit": 1,
+      "calls": 43,
+      "triangles": 426270,
+      "memory": {
+        "geometries": 25,
+        "textures": 9
+      },
+      "source": "procedural"
+    },
+    {
+      "name": "Nintendo Switch 2",
+      "fit": 0.865,
+      "calls": 52,
+      "triangles": 203902,
+      "memory": {
+        "geometries": 34,
+        "textures": 15
+      },
+      "source": "procedural"
+    },
+    {
+      "name": "Steam Deck",
+      "fit": 0.849,
+      "calls": 64,
+      "triangles": 335672,
+      "memory": {
+        "geometries": 38,
+        "textures": 14
+      },
+      "source": "procedural"
+    },
+    {
+      "name": "Galaxy Watch 8",
+      "fit": 0.791,
+      "calls": 63,
+      "triangles": 307266,
+      "memory": {
+        "geometries": 33,
+        "textures": 5
+      },
+      "source": "procedural"
+    },
+    {
+      "name": "Pixel Watch 4",
+      "fit": 0.789,
+      "calls": 127,
+      "triangles": 348778,
+      "memory": {
+        "geometries": 65,
+        "textures": 5
+      },
+      "source": "procedural"
+    },
+    {
+      "name": "Apple Vision Pro",
+      "fit": 1,
+      "calls": 303,
+      "triangles": 420566,
+      "memory": {
+        "geometries": 152,
+        "textures": 58
+      },
+      "source": "manufacturer"
+    }
+  ],
+  "logs": []
+}

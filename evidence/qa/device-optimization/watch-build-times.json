@@ -1,0 +1,38 @@
+[
+  {
+    "style": "galaxy",
+    "version": "before",
+    "ms": [
+      993.5,
+      735.1,
+      1085.9
+    ]
+  },
+  {
+    "style": "galaxy",
+    "version": "after",
+    "ms": [
+      379.6,
+      13.6,
+      10.3
+    ]
+  },
+  {
+    "style": "pixel",
+    "version": "before",
+    "ms": [
+      938.6,
+      797.1,
+      1290.7
+    ]
+  },
+  {
+    "style": "pixel",
+    "version": "after",
+    "ms": [
+      805.4,
+      41.5,
+      65.5
+    ]
+  }
+]

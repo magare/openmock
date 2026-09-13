@@ -1,0 +1,236 @@
+
+> openmock-prototype-ehy0x6@0.0.0 test
+> npm run test:editor && npm run test:sites
+
+
+> openmock-prototype-ehy0x6@0.0.0 test:editor
+> node --test tests/editor-state.test.mjs tests/camera-interaction.test.mjs tests/hardware-devices.test.mjs tests/device-optimization.test.mjs
+
+TAP version 13
+# Subtest: horizontal, vertical and roll strokes follow the screen for every 3D device and pose
+ok 1 - horizontal, vertical and roll strokes follow the screen for every 3D device and pose
+  ---
+  duration_ms: 21.691
+  type: 'test'
+  ...
+# Subtest: returning to the drag origin restores the pose; Fine reduces angular movement fivefold
+ok 2 - returning to the drag origin restores the pose; Fine reduces angular movement fivefold
+  ---
+  duration_ms: 0.190458
+  type: 'test'
+  ...
+# Subtest: repeated drags continue through full turns and vertical poles
+ok 3 - repeated drags continue through full turns and vertical poles
+  ---
+  duration_ms: 0.63625
+  type: 'test'
+  ...
+# Subtest: Move tracks pixels consistently across viewport sizes and zoom levels
+ok 4 - Move tracks pixels consistently across viewport sizes and zoom levels
+  ---
+  duration_ms: 0.161833
+  type: 'test'
+  ...
+# Subtest: zoom is proportional, reversible, bounded and independent of camera rotation
+ok 5 - zoom is proportional, reversible, bounded and independent of camera rotation
+  ---
+  duration_ms: 0.47775
+  type: 'test'
+  ...
+# Subtest: static batches preserve geometry and transformed bounds, screens and transparency
+ok 6 - static batches preserve geometry and transformed bounds, screens and transparency
+  ---
+  duration_ms: 5.108125
+  type: 'test'
+  ...
+# Subtest: rigid manufacturer batches preserve nested transforms and live material identity
+ok 7 - rigid manufacturer batches preserve nested transforms and live material identity
+  ---
+  duration_ms: 2.900667
+  type: 'test'
+  ...
+# Subtest: resource cleanup includes detached variants and replaced materials, retaining shared textures
+ok 8 - resource cleanup includes detached variants and replaced materials, retaining shared textures
+  ---
+  duration_ms: 0.4305
+  type: 'test'
+  ...
+# Subtest: laptop batches retain footprints, all key geometry, trackpad and live finish controls
+ok 9 - laptop batches retain footprints, all key geometry, trackpad and live finish controls
+  ---
+  duration_ms: 360.218375
+  type: 'test'
+  ...
+# Subtest: watch strap cache preserves complete geometry and owns independent buffers
+ok 10 - watch strap cache preserves complete geometry and owns independent buffers
+  ---
+  duration_ms: 673.031084
+  type: 'test'
+  ...
+# Subtest: optimized Pixel Pro stays within its budget and retains hardware nodes and original texture bytes
+ok 11 - optimized Pixel Pro stays within its budget and retains hardware nodes and original texture bytes
+  ---
+  duration_ms: 4.281792
+  type: 'test'
+  ...
+# Subtest: creates a source-shaped default project
+ok 12 - creates a source-shaped default project
+  ---
+  duration_ms: 2.826667
+  type: 'test'
+  ...
+# Subtest: exposes the additional free device mockups
+ok 13 - exposes the additional free device mockups
+  ---
+  duration_ms: 0.581625
+  type: 'test'
+  ...
+# Subtest: keeps every catalog and export capability available for free
+ok 14 - keeps every catalog and export capability available for free
+  ---
+  duration_ms: 0.189583
+  type: 'test'
+  ...
+# Subtest: keeps editor utility values predictable
+ok 15 - keeps editor utility values predictable
+  ---
+  duration_ms: 0.227167
+  type: 'test'
+  ...
+# Subtest: keeps full-turn manual axis controls
+ok 16 - keeps full-turn manual axis controls
+  ---
+  duration_ms: 0.071208
+  type: 'test'
+  ...
+# Subtest: template patches carry functional camera, scene, and effect changes
+ok 17 - template patches carry functional camera, scene, and effect changes
+  ---
+  duration_ms: 0.1475
+  type: 'test'
+  ...
+# Subtest: hydrates partial persisted state without dropping defaults
+ok 18 - hydrates partial persisted state without dropping defaults
+  ---
+  duration_ms: 0.1145
+  type: 'test'
+  ...
+# Subtest: serializes local project state without persisting object URLs
+ok 19 - serializes local project state without persisting object URLs
+  ---
+  duration_ms: 0.170084
+  type: 'test'
+  ...
+# Subtest: scene presets apply their lighting and background environment
+ok 20 - scene presets apply their lighting and background environment
+  ---
+  duration_ms: 0.304917
+  type: 'test'
+  ...
+# Subtest: easing curves stay within the unit range
+ok 21 - easing curves stay within the unit range
+  ---
+  duration_ms: 0.360791
+  type: 'test'
+  ...
+# Subtest: cameraAtTime interpolates the active track between keyframes
+ok 22 - cameraAtTime interpolates the active track between keyframes
+  ---
+  duration_ms: 0.293791
+  type: 'test'
+  ...
+# Subtest: cameraAtTime falls back to the live camera without keyframes
+ok 23 - cameraAtTime falls back to the live camera without keyframes
+  ---
+  duration_ms: 0.074417
+  type: 'test'
+  ...
+# Subtest: blurAtTime interpolates recorded focus pulls
+ok 24 - blurAtTime interpolates recorded focus pulls
+  ---
+  duration_ms: 0.145041
+  type: 'test'
+  ...
+# Subtest: Auto-motion requires a path and respects 2D versus 3D motion
+ok 25 - Auto-motion requires a path and respects 2D versus 3D motion
+  ---
+  duration_ms: 0.929125
+  type: 'test'
+  ...
+# Subtest: maps every catalog mockup onto a device archetype
+ok 26 - maps every catalog mockup onto a device archetype
+  ---
+  duration_ms: 0.140125
+  type: 'test'
+  ...
+# Subtest: groups the picker catalog into labeled sections
+ok 27 - groups the picker catalog into labeled sections
+  ---
+  duration_ms: 0.144208
+  type: 'test'
+  ...
+# Subtest: flags Samsung and Google devices for punch-hole and round-watch rendering
+ok 28 - flags Samsung and Google devices for punch-hole and round-watch rendering
+  ---
+  duration_ms: 0.063209
+  type: 'test'
+  ...
+# Subtest: thin shells retain their specified face radius and physical thickness
+ok 29 - thin shells retain their specified face radius and physical thickness
+  ---
+  duration_ms: 53.011791
+  type: 'test'
+  ...
+# Subtest: rounded displays map the complete image exactly once across the face
+ok 30 - rounded displays map the complete image exactly once across the face
+  ---
+  duration_ms: 3.985833
+  type: 'test'
+  ...
+1..30
+# tests 30
+# suites 0
+# pass 30
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1150.39675
+
+> openmock-prototype-ehy0x6@0.0.0 test:sites
+> node --test tests/sites-worker.test.mjs
+
+TAP version 13
+# Subtest: serves existing static assets without a fallback
+ok 1 - serves existing static assets without a fallback
+  ---
+  duration_ms: 12.227125
+  type: 'test'
+  ...
+# Subtest: falls back to index.html for an unknown app route
+ok 2 - falls back to index.html for an unknown app route
+  ---
+  duration_ms: 0.69825
+  type: 'test'
+  ...
+# Subtest: does not turn missing API or write requests into the app shell
+ok 3 - does not turn missing API or write requests into the app shell
+  ---
+  duration_ms: 0.313375
+  type: 'test'
+  ...
+# Subtest: emits the files required by Sites packaging
+ok 4 - emits the files required by Sites packaging
+  ---
+  duration_ms: 2.402834
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 63.471209

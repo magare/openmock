@@ -1,0 +1,1795 @@
+{
+  "report": [
+    {
+      "name": "Flat",
+      "readyMs": 664,
+      "idleDraws": 0,
+      "source": "procedural",
+      "meshes": 4,
+      "triangles": 8112,
+      "vertices": 24336,
+      "materials": 4,
+      "textures": 1,
+      "geometryMiB": 0.74,
+      "textureMiB": 15.33,
+      "drawCalls": 12,
+      "drawnTriangles": 22310,
+      "cpuMedianMs": 0.6,
+      "cpuP95Ms": 1,
+      "frameMedianMs": 17,
+      "frameP95Ms": 18.2,
+      "memory": {
+        "geometries": 5,
+        "textures": 6
+      },
+      "fit": "0.913",
+      "heavyMeshes": [
+        {
+          "name": "Mesh",
+          "triangles": 2028
+        },
+        {
+          "name": "Mesh",
+          "triangles": 2028
+        },
+        {
+          "name": "Mesh",
+          "triangles": 2028
+        },
+        {
+          "name": "Mesh",
+          "triangles": 2028
+        }
+      ]
+    },
+    {
+      "name": "TV 65\"",
+      "readyMs": 608,
+      "idleDraws": 0,
+      "source": "procedural",
+      "meshes": 6,
+      "triangles": 9288,
+      "vertices": 27864,
+      "materials": 5,
+      "textures": 1,
+      "geometryMiB": 0.85,
+      "textureMiB": 15.33,
+      "drawCalls": 18,
+      "drawnTriangles": 25838,
+      "cpuMedianMs": 0.7,
+      "cpuP95Ms": 1.2,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.2,
+      "memory": {
+        "geometries": 7,
+        "textures": 6
+      },
+      "fit": "1.000",
+      "heavyMeshes": [
+        {
+          "name": "Mesh",
+          "triangles": 2028
+        },
+        {
+          "name": "Mesh",
+          "triangles": 2028
+        },
+        {
+          "name": "Mesh",
+          "triangles": 2028
+        },
+        {
+          "name": "Mesh",
+          "triangles": 2028
+        },
+        {
+          "name": "Mesh",
+          "triangles": 588
+        }
+      ]
+    },
+    {
+      "name": "iPhone 16",
+      "readyMs": 421,
+      "idleDraws": 0,
+      "source": "procedural",
+      "meshes": 43,
+      "triangles": 35395,
+      "vertices": 90419,
+      "materials": 36,
+      "textures": 2,
+      "geometryMiB": 2.81,
+      "textureMiB": 15.77,
+      "drawCalls": 83,
+      "drawnTriangles": 70209,
+      "cpuMedianMs": 0.9,
+      "cpuP95Ms": 1.7,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.7,
+      "memory": {
+        "geometries": 44,
+        "textures": 6
+      },
+      "fit": "0.777",
+      "heavyMeshes": [
+        {
+          "name": "Mesh",
+          "triangles": 3276
+        },
+        {
+          "name": "Mesh",
+          "triangles": 3276
+        },
+        {
+          "name": "Mesh",
+          "triangles": 3276
+        },
+        {
+          "name": "Mesh",
+          "triangles": 3236
+        },
+        {
+          "name": "Mesh",
+          "triangles": 3236
+        }
+      ]
+    },
+    {
+      "name": "iPhone 17",
+      "readyMs": 881,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 76,
+      "triangles": 57443,
+      "vertices": 171789,
+      "materials": 34,
+      "textures": 16,
+      "geometryMiB": 4.01,
+      "textureMiB": 30.66,
+      "drawCalls": 153,
+      "drawnTriangles": 114888,
+      "cpuMedianMs": 1.4,
+      "cpuP95Ms": 2.4,
+      "frameMedianMs": 16.8,
+      "frameP95Ms": 18.2,
+      "memory": {
+        "geometries": 76,
+        "textures": 20
+      },
+      "fit": "0.778",
+      "heavyMeshes": [
+        {
+          "name": "SDwuwXCtPYwKDlE",
+          "triangles": 9334
+        },
+        {
+          "name": "DfmKJaHnzEOCmwx",
+          "triangles": 3883
+        },
+        {
+          "name": "NJwiycHzVoPLttV",
+          "triangles": 2520
+        },
+        {
+          "name": "yAIOrOfJNvXEQZw",
+          "triangles": 2115
+        },
+        {
+          "name": "RxRDralYbcQWeYc",
+          "triangles": 2112
+        }
+      ]
+    },
+    {
+      "name": "iPhone 17 Air",
+      "readyMs": 746,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 69,
+      "triangles": 65361,
+      "vertices": 196083,
+      "materials": 69,
+      "textures": 21,
+      "geometryMiB": 6.22,
+      "textureMiB": 28.85,
+      "drawCalls": 139,
+      "drawnTriangles": 130724,
+      "cpuMedianMs": 1.3,
+      "cpuP95Ms": 2.4,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 18.1,
+      "memory": {
+        "geometries": 70,
+        "textures": 25
+      },
+      "fit": "0.778",
+      "heavyMeshes": [
+        {
+          "name": "UpKaGipWNvokUGf",
+          "triangles": 13024
+        },
+        {
+          "name": "OJRMWDmWznngIRa",
+          "triangles": 4957
+        },
+        {
+          "name": "IJtRUXYEEXnnqxn",
+          "triangles": 4677
+        },
+        {
+          "name": "avktKcFMCgBNWOI",
+          "triangles": 3734
+        },
+        {
+          "name": "LhhTspjmoZZHNry",
+          "triangles": 3412
+        }
+      ]
+    },
+    {
+      "name": "iPhone 17 Pro",
+      "readyMs": 777,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 81,
+      "triangles": 74175,
+      "vertices": 222443,
+      "materials": 81,
+      "textures": 16,
+      "geometryMiB": 7.9,
+      "textureMiB": 21.52,
+      "drawCalls": 163,
+      "drawnTriangles": 148352,
+      "cpuMedianMs": 1.2,
+      "cpuP95Ms": 2.3,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.8,
+      "memory": {
+        "geometries": 82,
+        "textures": 20
+      },
+      "fit": "0.775",
+      "heavyMeshes": [
+        {
+          "name": "iiaJouajajQCUNT",
+          "triangles": 25999
+        },
+        {
+          "name": "lwfmQebmsqyrPXh",
+          "triangles": 5155
+        },
+        {
+          "name": "fbdwSPZAhafRoVX",
+          "triangles": 4440
+        },
+        {
+          "name": "UduOrBpYBvdbGKN",
+          "triangles": 2912
+        },
+        {
+          "name": "dlfOvjAvSNEnzpf",
+          "triangles": 2912
+        }
+      ]
+    },
+    {
+      "name": "iPhone 17 Pro Max",
+      "readyMs": 858,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 81,
+      "triangles": 74406,
+      "vertices": 223136,
+      "materials": 81,
+      "textures": 16,
+      "geometryMiB": 7.93,
+      "textureMiB": 21.52,
+      "drawCalls": 163,
+      "drawnTriangles": 148814,
+      "cpuMedianMs": 1.4,
+      "cpuP95Ms": 2.7,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 18.2,
+      "memory": {
+        "geometries": 82,
+        "textures": 20
+      },
+      "fit": "0.777",
+      "heavyMeshes": [
+        {
+          "name": "iiaJouajajQCUNT",
+          "triangles": 26190
+        },
+        {
+          "name": "lwfmQebmsqyrPXh",
+          "triangles": 5155
+        },
+        {
+          "name": "fbdwSPZAhafRoVX",
+          "triangles": 4440
+        },
+        {
+          "name": "UduOrBpYBvdbGKN",
+          "triangles": 2912
+        },
+        {
+          "name": "dlfOvjAvSNEnzpf",
+          "triangles": 2912
+        }
+      ]
+    },
+    {
+      "name": "Galaxy S26",
+      "readyMs": 867,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 23,
+      "triangles": 50780,
+      "vertices": 36021,
+      "materials": 23,
+      "textures": 24,
+      "geometryMiB": 1.8,
+      "textureMiB": 135.13,
+      "drawCalls": 71,
+      "drawnTriangles": 152420,
+      "cpuMedianMs": 1.7,
+      "cpuP95Ms": 2,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.5,
+      "memory": {
+        "geometries": 24,
+        "textures": 10
+      },
+      "fit": "0.779",
+      "heavyMeshes": [
+        {
+          "name": "M1_Rearcase",
+          "triangles": 11708
+        },
+        {
+          "name": "M1_BackCam_Ring",
+          "triangles": 9372
+        },
+        {
+          "name": "M1_Rearcase_light",
+          "triangles": 5712
+        },
+        {
+          "name": "M1_Backcover_Glass",
+          "triangles": 5244
+        },
+        {
+          "name": "M1_BackCam_Frame",
+          "triangles": 3072
+        }
+      ]
+    },
+    {
+      "name": "Galaxy S26+",
+      "readyMs": 769,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 23,
+      "triangles": 52023,
+      "vertices": 53121,
+      "materials": 23,
+      "textures": 24,
+      "geometryMiB": 2.39,
+      "textureMiB": 131.13,
+      "drawCalls": 71,
+      "drawnTriangles": 156175,
+      "cpuMedianMs": 1.5,
+      "cpuP95Ms": 1.9,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 17.3,
+      "memory": {
+        "geometries": 24,
+        "textures": 10
+      },
+      "fit": "0.780",
+      "heavyMeshes": [
+        {
+          "name": "M2_Rearcase",
+          "triangles": 11429
+        },
+        {
+          "name": "M2_BackCam_Ring",
+          "triangles": 8476
+        },
+        {
+          "name": "M2_Rearcase_light",
+          "triangles": 5474
+        },
+        {
+          "name": "M2_Backcover_Glass",
+          "triangles": 5244
+        },
+        {
+          "name": "M2_BackCam_Glass",
+          "triangles": 3456
+        }
+      ]
+    },
+    {
+      "name": "Galaxy S26 Ultra",
+      "readyMs": 757,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 24,
+      "triangles": 53528,
+      "vertices": 37799,
+      "materials": 23,
+      "textures": 21,
+      "geometryMiB": 2.09,
+      "textureMiB": 125.45,
+      "drawCalls": 74,
+      "drawnTriangles": 160682,
+      "cpuMedianMs": 1.9,
+      "cpuP95Ms": 2.4,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 17.5,
+      "memory": {
+        "geometries": 25,
+        "textures": 11
+      },
+      "fit": "0.779",
+      "heavyMeshes": [
+        {
+          "name": "M3_Rearcase",
+          "triangles": 12646
+        },
+        {
+          "name": "M3_Rearcase_light",
+          "triangles": 5684
+        },
+        {
+          "name": "M3_BackCam_Ring",
+          "triangles": 5616
+        },
+        {
+          "name": "M3_BackCover_Glass",
+          "triangles": 4716
+        },
+        {
+          "name": "M3_USB_1",
+          "triangles": 3340
+        }
+      ]
+    },
+    {
+      "name": "Galaxy Z Fold 8",
+      "readyMs": 882,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 41,
+      "triangles": 155752,
+      "vertices": 99273,
+      "materials": 31,
+      "textures": 7,
+      "geometryMiB": 4.38,
+      "textureMiB": 90.83,
+      "drawCalls": 87,
+      "drawnTriangles": 312466,
+      "cpuMedianMs": 0.8,
+      "cpuP95Ms": 2,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 18.3,
+      "memory": {
+        "geometries": 42,
+        "textures": 11
+      },
+      "fit": "0.912",
+      "heavyMeshes": [
+        {
+          "name": "Right_Rear_Case",
+          "triangles": 26744
+        },
+        {
+          "name": "Left_Rear_Case",
+          "triangles": 24342
+        },
+        {
+          "name": "Hinge_2",
+          "triangles": 17696
+        },
+        {
+          "name": "Back_Cam_Rear_black",
+          "triangles": 14592
+        },
+        {
+          "name": "Left_Bezel",
+          "triangles": 7884
+        }
+      ]
+    },
+    {
+      "name": "Galaxy Z Flip 8",
+      "readyMs": 963,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 34,
+      "triangles": 169859,
+      "vertices": 106270,
+      "materials": 28,
+      "textures": 6,
+      "geometryMiB": 4.65,
+      "textureMiB": 73.5,
+      "drawCalls": 72,
+      "drawnTriangles": 341448,
+      "cpuMedianMs": 1,
+      "cpuP95Ms": 1.8,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 17.7,
+      "memory": {
+        "geometries": 35,
+        "textures": 10
+      },
+      "fit": "0.860",
+      "heavyMeshes": [
+        {
+          "name": "Top_Rear_Case",
+          "triangles": 33708
+        },
+        {
+          "name": "Bottom_Rear_Case",
+          "triangles": 25956
+        },
+        {
+          "name": "Hinge_2",
+          "triangles": 19960
+        },
+        {
+          "name": "Hinge",
+          "triangles": 18096
+        },
+        {
+          "name": "Bottom_blackole",
+          "triangles": 13686
+        }
+      ]
+    },
+    {
+      "name": "Pixel 10",
+      "readyMs": 946,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 16,
+      "triangles": 144932,
+      "vertices": 113941,
+      "materials": 16,
+      "textures": 4,
+      "geometryMiB": 6.87,
+      "textureMiB": 119.85,
+      "drawCalls": 33,
+      "drawnTriangles": 289866,
+      "cpuMedianMs": 0.7,
+      "cpuP95Ms": 1.1,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.6,
+      "memory": {
+        "geometries": 17,
+        "textures": 8
+      },
+      "fit": "0.779",
+      "heavyMeshes": [
+        {
+          "name": "Alum",
+          "triangles": 61367
+        },
+        {
+          "name": "Flash",
+          "triangles": 28224
+        },
+        {
+          "name": "Plastic",
+          "triangles": 15633
+        },
+        {
+          "name": "RoughPlastic",
+          "triangles": 14167
+        },
+        {
+          "name": "PlasticFront",
+          "triangles": 7424
+        }
+      ]
+    },
+    {
+      "name": "Pixel 10 Pro",
+      "readyMs": 1101,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 19,
+      "triangles": 579611,
+      "vertices": 452343,
+      "materials": 18,
+      "textures": 4,
+      "geometryMiB": 27.34,
+      "textureMiB": 125.22,
+      "drawCalls": 39,
+      "drawnTriangles": 1159224,
+      "cpuMedianMs": 0.8,
+      "cpuP95Ms": 2,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 18.4,
+      "memory": {
+        "geometries": 20,
+        "textures": 8
+      },
+      "fit": "0.779",
+      "heavyMeshes": [
+        {
+          "name": "speakerGrills",
+          "triangles": 250874
+        },
+        {
+          "name": "alumPolished",
+          "triangles": 212672
+        },
+        {
+          "name": "Flash",
+          "triangles": 28224
+        },
+        {
+          "name": "PlasticBack",
+          "triangles": 18155
+        },
+        {
+          "name": "RoughPlastic",
+          "triangles": 11665
+        }
+      ]
+    },
+    {
+      "name": "Pixel 10 Pro XL",
+      "readyMs": 1044,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 19,
+      "triangles": 579611,
+      "vertices": 452343,
+      "materials": 18,
+      "textures": 4,
+      "geometryMiB": 27.34,
+      "textureMiB": 125.22,
+      "drawCalls": 39,
+      "drawnTriangles": 1159224,
+      "cpuMedianMs": 0.7,
+      "cpuP95Ms": 1.2,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.7,
+      "memory": {
+        "geometries": 20,
+        "textures": 8
+      },
+      "fit": "0.779",
+      "heavyMeshes": [
+        {
+          "name": "speakerGrills",
+          "triangles": 250874
+        },
+        {
+          "name": "alumPolished",
+          "triangles": 212672
+        },
+        {
+          "name": "Flash",
+          "triangles": 28224
+        },
+        {
+          "name": "PlasticBack",
+          "triangles": 18155
+        },
+        {
+          "name": "RoughPlastic",
+          "triangles": 11665
+        }
+      ]
+    },
+    {
+      "name": "Galaxy Tab S11 Ultra",
+      "readyMs": 578,
+      "idleDraws": 0,
+      "source": "procedural",
+      "meshes": 77,
+      "triangles": 32680,
+      "vertices": 65933,
+      "materials": 73,
+      "textures": 2,
+      "geometryMiB": 2.13,
+      "textureMiB": 16.25,
+      "drawCalls": 152,
+      "drawnTriangles": 64778,
+      "cpuMedianMs": 1.3,
+      "cpuP95Ms": 2.3,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 17.7,
+      "memory": {
+        "geometries": 79,
+        "textures": 6
+      },
+      "fit": "0.937",
+      "heavyMeshes": [
+        {
+          "name": "Mesh",
+          "triangles": 3276
+        },
+        {
+          "name": "Mesh",
+          "triangles": 3276
+        },
+        {
+          "name": "Mesh",
+          "triangles": 3276
+        },
+        {
+          "name": "Mesh",
+          "triangles": 1280
+        },
+        {
+          "name": "Mesh",
+          "triangles": 1280
+        }
+      ]
+    },
+    {
+      "name": "iPad (A16)",
+      "readyMs": 757,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 43,
+      "triangles": 35470,
+      "vertices": 106410,
+      "materials": 43,
+      "textures": 13,
+      "geometryMiB": 3.79,
+      "textureMiB": 20.83,
+      "drawCalls": 87,
+      "drawnTriangles": 70942,
+      "cpuMedianMs": 0.6,
+      "cpuP95Ms": 1.1,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.4,
+      "memory": {
+        "geometries": 44,
+        "textures": 17
+      },
+      "fit": "0.942",
+      "heavyMeshes": [
+        {
+          "name": "HhQCoNCmAcSOoOO",
+          "triangles": 22170
+        },
+        {
+          "name": "GXmFwDgXmXWJSzi",
+          "triangles": 1440
+        },
+        {
+          "name": "oFKiZTMDjMDaaJW",
+          "triangles": 853
+        },
+        {
+          "name": "KdzYyyMQvyWJmef",
+          "triangles": 812
+        },
+        {
+          "name": "WLWPiYGcrPwbNCz",
+          "triangles": 812
+        }
+      ]
+    },
+    {
+      "name": "iPad Air 11\"",
+      "readyMs": 859,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 40,
+      "triangles": 35119,
+      "vertices": 105357,
+      "materials": 40,
+      "textures": 12,
+      "geometryMiB": 3.7,
+      "textureMiB": 19.49,
+      "drawCalls": 81,
+      "drawnTriangles": 70240,
+      "cpuMedianMs": 0.8,
+      "cpuP95Ms": 1.5,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.7,
+      "memory": {
+        "geometries": 41,
+        "textures": 16
+      },
+      "fit": "0.810",
+      "heavyMeshes": [
+        {
+          "name": "zHoxJWuHLiWPXvU",
+          "triangles": 19448
+        },
+        {
+          "name": "gjEZakwBfgjeWOs",
+          "triangles": 1568
+        },
+        {
+          "name": "SINnKckportdULt",
+          "triangles": 1400
+        },
+        {
+          "name": "BuISiXWDRcVagCx",
+          "triangles": 1156
+        },
+        {
+          "name": "MXLDJgJLbZkTVMu",
+          "triangles": 980
+        }
+      ]
+    },
+    {
+      "name": "iPad Air 13\"",
+      "readyMs": 843,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 40,
+      "triangles": 35119,
+      "vertices": 105357,
+      "materials": 40,
+      "textures": 12,
+      "geometryMiB": 3.7,
+      "textureMiB": 19.49,
+      "drawCalls": 81,
+      "drawnTriangles": 70240,
+      "cpuMedianMs": 0.9,
+      "cpuP95Ms": 1.6,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.7,
+      "memory": {
+        "geometries": 41,
+        "textures": 16
+      },
+      "fit": "0.797",
+      "heavyMeshes": [
+        {
+          "name": "zHoxJWuHLiWPXvU",
+          "triangles": 19448
+        },
+        {
+          "name": "gjEZakwBfgjeWOs",
+          "triangles": 1568
+        },
+        {
+          "name": "SINnKckportdULt",
+          "triangles": 1400
+        },
+        {
+          "name": "BuISiXWDRcVagCx",
+          "triangles": 1156
+        },
+        {
+          "name": "MXLDJgJLbZkTVMu",
+          "triangles": 980
+        }
+      ]
+    },
+    {
+      "name": "iPad mini",
+      "readyMs": 845,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 50,
+      "triangles": 30209,
+      "vertices": 90545,
+      "materials": 50,
+      "textures": 15,
+      "geometryMiB": 3.1,
+      "textureMiB": 27.99,
+      "drawCalls": 101,
+      "drawnTriangles": 60420,
+      "cpuMedianMs": 0.9,
+      "cpuP95Ms": 1.7,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.7,
+      "memory": {
+        "geometries": 51,
+        "textures": 19
+      },
+      "fit": "0.895",
+      "heavyMeshes": [
+        {
+          "name": "KVDGRcCeoMOKtlI",
+          "triangles": 11341
+        },
+        {
+          "name": "HDyyzyAbmnfBfAl",
+          "triangles": 2627
+        },
+        {
+          "name": "mVgTafuBxkHoMMx",
+          "triangles": 1908
+        },
+        {
+          "name": "bTbRDtIZOCfkTbq",
+          "triangles": 1830
+        },
+        {
+          "name": "LcBILBpGkyPTwzv",
+          "triangles": 1512
+        }
+      ]
+    },
+    {
+      "name": "iPad Pro",
+      "readyMs": 801,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 59,
+      "triangles": 45786,
+      "vertices": 137358,
+      "materials": 59,
+      "textures": 21,
+      "geometryMiB": 4.76,
+      "textureMiB": 25.24,
+      "drawCalls": 119,
+      "drawnTriangles": 91574,
+      "cpuMedianMs": 1,
+      "cpuP95Ms": 1.5,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.4,
+      "memory": {
+        "geometries": 60,
+        "textures": 25
+      },
+      "fit": "0.796",
+      "heavyMeshes": [
+        {
+          "name": "iHFdWwurVgjVzql",
+          "triangles": 14615
+        },
+        {
+          "name": "sVOhRwAxzkalDhh",
+          "triangles": 7568
+        },
+        {
+          "name": "nDVdkRDaRByiRXE",
+          "triangles": 2520
+        },
+        {
+          "name": "lrZCOKyVctrASxO",
+          "triangles": 2260
+        },
+        {
+          "name": "cbyESvRKYknMBVA",
+          "triangles": 1492
+        }
+      ]
+    },
+    {
+      "name": "Kindle Paperwhite",
+      "readyMs": 397,
+      "idleDraws": 0,
+      "source": "procedural",
+      "meshes": 9,
+      "triangles": 9232,
+      "vertices": 26540,
+      "materials": 9,
+      "textures": 3,
+      "geometryMiB": 0.81,
+      "textureMiB": 18.44,
+      "drawCalls": 15,
+      "drawnTriangles": 18074,
+      "cpuMedianMs": 0.4,
+      "cpuP95Ms": 0.9,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 17.4,
+      "memory": {
+        "geometries": 10,
+        "textures": 7
+      },
+      "fit": "0.849",
+      "heavyMeshes": [
+        {
+          "name": "Mesh",
+          "triangles": 3276
+        },
+        {
+          "name": "Mesh",
+          "triangles": 3276
+        },
+        {
+          "name": "Mesh",
+          "triangles": 1036
+        },
+        {
+          "name": "Mesh",
+          "triangles": 996
+        },
+        {
+          "name": "Mesh",
+          "triangles": 256
+        }
+      ]
+    },
+    {
+      "name": "Apple Watch SE 3",
+      "readyMs": 799,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 40,
+      "triangles": 108335,
+      "vertices": 325005,
+      "materials": 40,
+      "textures": 9,
+      "geometryMiB": 11,
+      "textureMiB": 23.99,
+      "drawCalls": 81,
+      "drawnTriangles": 216672,
+      "cpuMedianMs": 0.8,
+      "cpuP95Ms": 1.6,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 17.5,
+      "memory": {
+        "geometries": 41,
+        "textures": 13
+      },
+      "fit": "0.787",
+      "heavyMeshes": [
+        {
+          "name": "VdLyCZBqsTtQwLX",
+          "triangles": 21780
+        },
+        {
+          "name": "lmuxgVBiGleLVGd",
+          "triangles": 16290
+        },
+        {
+          "name": "zYmxiwiDOfAuPkO",
+          "triangles": 12374
+        },
+        {
+          "name": "QkSHqpaYtvTOXjz",
+          "triangles": 10540
+        },
+        {
+          "name": "mlUiNDVuRdFaWSO",
+          "triangles": 6460
+        }
+      ]
+    },
+    {
+      "name": "Apple Watch Series 11",
+      "readyMs": 828,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 47,
+      "triangles": 115718,
+      "vertices": 347154,
+      "materials": 47,
+      "textures": 8,
+      "geometryMiB": 11.56,
+      "textureMiB": 23.66,
+      "drawCalls": 95,
+      "drawnTriangles": 231438,
+      "cpuMedianMs": 0.8,
+      "cpuP95Ms": 1.7,
+      "frameMedianMs": 16.8,
+      "frameP95Ms": 17.4,
+      "memory": {
+        "geometries": 48,
+        "textures": 12
+      },
+      "fit": "0.785",
+      "heavyMeshes": [
+        {
+          "name": "nKJFtylUfZzRmPk",
+          "triangles": 16290
+        },
+        {
+          "name": "YzfsLJvgjDYUSFM",
+          "triangles": 12732
+        },
+        {
+          "name": "ZsMIXFvahzKbgPg",
+          "triangles": 12374
+        },
+        {
+          "name": "efdZKltjbwHAPZo",
+          "triangles": 8610
+        },
+        {
+          "name": "TQESGyezKuigkIa",
+          "triangles": 7528
+        }
+      ]
+    },
+    {
+      "name": "Apple Watch Ultra 3",
+      "readyMs": 827,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 67,
+      "triangles": 113165,
+      "vertices": 339495,
+      "materials": 67,
+      "textures": 19,
+      "geometryMiB": 11.44,
+      "textureMiB": 31.69,
+      "drawCalls": 135,
+      "drawnTriangles": 226332,
+      "cpuMedianMs": 1.1,
+      "cpuP95Ms": 2.6,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 18.4,
+      "memory": {
+        "geometries": 68,
+        "textures": 23
+      },
+      "fit": "0.784",
+      "heavyMeshes": [
+        {
+          "name": "RbWTMszrAcoTinI",
+          "triangles": 22418
+        },
+        {
+          "name": "prZlRsJbIiXSaMc",
+          "triangles": 12864
+        },
+        {
+          "name": "pbeWayKOFcbhmmP",
+          "triangles": 12126
+        },
+        {
+          "name": "MDRUwDjwtyAifCq",
+          "triangles": 6286
+        },
+        {
+          "name": "HlVPGWlEKVQGFaQ",
+          "triangles": 5890
+        }
+      ]
+    },
+    {
+      "name": "Galaxy Watch 8",
+      "readyMs": 494,
+      "idleDraws": 0,
+      "source": "procedural",
+      "meshes": 32,
+      "triangles": 153728,
+      "vertices": 99814,
+      "materials": 27,
+      "textures": 1,
+      "geometryMiB": 3.35,
+      "textureMiB": 15.33,
+      "drawCalls": 63,
+      "drawnTriangles": 307266,
+      "cpuMedianMs": 0.6,
+      "cpuP95Ms": 1.5,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.9,
+      "memory": {
+        "geometries": 33,
+        "textures": 5
+      },
+      "fit": "0.770",
+      "heavyMeshes": [
+        {
+          "name": "Mesh",
+          "triangles": 98428
+        },
+        {
+          "name": "Mesh",
+          "triangles": 39448
+        },
+        {
+          "name": "Mesh",
+          "triangles": 1280
+        },
+        {
+          "name": "Mesh",
+          "triangles": 1280
+        },
+        {
+          "name": "Mesh",
+          "triangles": 1280
+        }
+      ]
+    },
+    {
+      "name": "Pixel Watch 4",
+      "readyMs": 605,
+      "idleDraws": 0,
+      "source": "procedural",
+      "meshes": 64,
+      "triangles": 174484,
+      "vertices": 197862,
+      "materials": 57,
+      "textures": 1,
+      "geometryMiB": 6.32,
+      "textureMiB": 15.33,
+      "drawCalls": 127,
+      "drawnTriangles": 348778,
+      "cpuMedianMs": 0.5,
+      "cpuP95Ms": 0.9,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.5,
+      "memory": {
+        "geometries": 65,
+        "textures": 5
+      },
+      "fit": "0.768",
+      "heavyMeshes": [
+        {
+          "name": "Mesh",
+          "triangles": 85040
+        },
+        {
+          "name": "Mesh",
+          "triangles": 39328
+        },
+        {
+          "name": "Mesh",
+          "triangles": 1280
+        },
+        {
+          "name": "Mesh",
+          "triangles": 1152
+        },
+        {
+          "name": "Mesh",
+          "triangles": 1036
+        }
+      ]
+    },
+    {
+      "name": "Nintendo Switch 2",
+      "readyMs": 601,
+      "idleDraws": 0,
+      "source": "procedural",
+      "meshes": 31,
+      "triangles": 102160,
+      "vertices": 295553,
+      "materials": 26,
+      "textures": 11,
+      "geometryMiB": 9.05,
+      "textureMiB": 53.17,
+      "drawCalls": 52,
+      "drawnTriangles": 203902,
+      "cpuMedianMs": 0.7,
+      "cpuP95Ms": 1.3,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.5,
+      "memory": {
+        "geometries": 34,
+        "textures": 15
+      },
+      "fit": "0.726",
+      "heavyMeshes": [
+        {
+          "name": "openmock-static-batch",
+          "triangles": 37464
+        },
+        {
+          "name": "openmock-static-batch",
+          "triangles": 31676
+        },
+        {
+          "name": "openmock-static-batch",
+          "triangles": 9960
+        },
+        {
+          "name": "openmock-static-batch",
+          "triangles": 3584
+        },
+        {
+          "name": "Mesh",
+          "triangles": 3276
+        }
+      ]
+    },
+    {
+      "name": "Steam Deck",
+      "readyMs": 647,
+      "idleDraws": 0,
+      "source": "procedural",
+      "meshes": 37,
+      "triangles": 168038,
+      "vertices": 493274,
+      "materials": 36,
+      "textures": 10,
+      "geometryMiB": 15.09,
+      "textureMiB": 46.54,
+      "drawCalls": 64,
+      "drawnTriangles": 335672,
+      "cpuMedianMs": 0.8,
+      "cpuP95Ms": 1.4,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.5,
+      "memory": {
+        "geometries": 38,
+        "textures": 14
+      },
+      "fit": "0.716",
+      "heavyMeshes": [
+        {
+          "name": "openmock-static-batch",
+          "triangles": 56008
+        },
+        {
+          "name": "openmock-static-batch",
+          "triangles": 31928
+        },
+        {
+          "name": "openmock-static-batch",
+          "triangles": 24864
+        },
+        {
+          "name": "openmock-static-batch",
+          "triangles": 13104
+        },
+        {
+          "name": "openmock-static-batch",
+          "triangles": 12432
+        }
+      ]
+    },
+    {
+      "name": "MacBook Air 13\"",
+      "readyMs": 750,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 47,
+      "triangles": 107148,
+      "vertices": 321444,
+      "materials": 47,
+      "textures": 10,
+      "geometryMiB": 11.74,
+      "textureMiB": 22.33,
+      "drawCalls": 95,
+      "drawnTriangles": 214298,
+      "cpuMedianMs": 1,
+      "cpuP95Ms": 2,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 18.1,
+      "memory": {
+        "geometries": 48,
+        "textures": 14
+      },
+      "fit": "0.992",
+      "heavyMeshes": [
+        {
+          "name": "KqIoTsQcbSbhupt",
+          "triangles": 50444
+        },
+        {
+          "name": "PaEOPskmbSfhjyH",
+          "triangles": 8554
+        },
+        {
+          "name": "FWgvCnFruvRzTdM",
+          "triangles": 7592
+        },
+        {
+          "name": "otPuLXzsxGGeCQD",
+          "triangles": 5643
+        },
+        {
+          "name": "OEcaYRcFHzNVRgE",
+          "triangles": 5622
+        }
+      ]
+    },
+    {
+      "name": "MacBook Neo",
+      "readyMs": 703,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 56,
+      "triangles": 129045,
+      "vertices": 387135,
+      "materials": 56,
+      "textures": 7,
+      "geometryMiB": 13.05,
+      "textureMiB": 21.33,
+      "drawCalls": 113,
+      "drawnTriangles": 258092,
+      "cpuMedianMs": 1.1,
+      "cpuP95Ms": 2.1,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 17.9,
+      "memory": {
+        "geometries": 57,
+        "textures": 11
+      },
+      "fit": "0.997",
+      "heavyMeshes": [
+        {
+          "name": "AqcQCwqkepkmIxJ",
+          "triangles": 47724
+        },
+        {
+          "name": "RGLDQJKTekftnoB",
+          "triangles": 13929
+        },
+        {
+          "name": "LTxTFlhLWoHyhvo",
+          "triangles": 10470
+        },
+        {
+          "name": "fylMvyMYpOJcbku",
+          "triangles": 8532
+        },
+        {
+          "name": "AHewMMzHKsIFykK",
+          "triangles": 8253
+        }
+      ]
+    },
+    {
+      "name": "MacBook Pro 14\"",
+      "readyMs": 842,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 44,
+      "triangles": 163918,
+      "vertices": 491754,
+      "materials": 44,
+      "textures": 11,
+      "geometryMiB": 17.43,
+      "textureMiB": 21.66,
+      "drawCalls": 89,
+      "drawnTriangles": 327838,
+      "cpuMedianMs": 1,
+      "cpuP95Ms": 2,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 18.1,
+      "memory": {
+        "geometries": 45,
+        "textures": 15
+      },
+      "fit": "0.991",
+      "heavyMeshes": [
+        {
+          "name": "LsmCMkPRBVEEGpg",
+          "triangles": 51148
+        },
+        {
+          "name": "DmUcWNXfiLPcftc",
+          "triangles": 20011
+        },
+        {
+          "name": "wyClPAIazRlKQnt",
+          "triangles": 19611
+        },
+        {
+          "name": "dAVNlHAHYLbkxrB",
+          "triangles": 9652
+        },
+        {
+          "name": "ZroMGzfQtHrkgUh",
+          "triangles": 8544
+        }
+      ]
+    },
+    {
+      "name": "MacBook Pro 16\"",
+      "readyMs": 731,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 44,
+      "triangles": 163918,
+      "vertices": 491754,
+      "materials": 44,
+      "textures": 11,
+      "geometryMiB": 17.43,
+      "textureMiB": 21.66,
+      "drawCalls": 89,
+      "drawnTriangles": 327838,
+      "cpuMedianMs": 1,
+      "cpuP95Ms": 1.8,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 18.1,
+      "memory": {
+        "geometries": 45,
+        "textures": 15
+      },
+      "fit": "0.997",
+      "heavyMeshes": [
+        {
+          "name": "LsmCMkPRBVEEGpg",
+          "triangles": 51148
+        },
+        {
+          "name": "DmUcWNXfiLPcftc",
+          "triangles": 20011
+        },
+        {
+          "name": "wyClPAIazRlKQnt",
+          "triangles": 19611
+        },
+        {
+          "name": "dAVNlHAHYLbkxrB",
+          "triangles": 9652
+        },
+        {
+          "name": "ZroMGzfQtHrkgUh",
+          "triangles": 8544
+        }
+      ]
+    },
+    {
+      "name": "Surface Laptop 15\"",
+      "readyMs": 624,
+      "idleDraws": 0,
+      "source": "procedural",
+      "meshes": 19,
+      "triangles": 243718,
+      "vertices": 728576,
+      "materials": 18,
+      "textures": 2,
+      "geometryMiB": 22.24,
+      "textureMiB": 25.99,
+      "drawCalls": 36,
+      "drawnTriangles": 487048,
+      "cpuMedianMs": 0.6,
+      "cpuP95Ms": 1,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 17.5,
+      "memory": {
+        "geometries": 20,
+        "textures": 6
+      },
+      "fit": "0.897",
+      "heavyMeshes": [
+        {
+          "name": "openmock-static-batch",
+          "triangles": 79772
+        },
+        {
+          "name": "openmock-static-batch",
+          "triangles": 79772
+        },
+        {
+          "name": "openmock-static-batch",
+          "triangles": 49800
+        },
+        {
+          "name": "openmock-static-batch",
+          "triangles": 13104
+        },
+        {
+          "name": "Mesh",
+          "triangles": 3276
+        }
+      ]
+    },
+    {
+      "name": "Dell XPS 16",
+      "readyMs": 829,
+      "idleDraws": 0,
+      "source": "procedural",
+      "meshes": 24,
+      "triangles": 213524,
+      "vertices": 633323,
+      "materials": 23,
+      "textures": 5,
+      "geometryMiB": 19.35,
+      "textureMiB": 27.96,
+      "drawCalls": 43,
+      "drawnTriangles": 426270,
+      "cpuMedianMs": 0.6,
+      "cpuP95Ms": 1.1,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 17.5,
+      "memory": {
+        "geometries": 25,
+        "textures": 9
+      },
+      "fit": "0.920",
+      "heavyMeshes": [
+        {
+          "name": "openmock-static-batch",
+          "triangles": 65268
+        },
+        {
+          "name": "openmock-static-batch",
+          "triangles": 65268
+        },
+        {
+          "name": "openmock-static-batch",
+          "triangles": 48804
+        },
+        {
+          "name": "openmock-static-batch",
+          "triangles": 13104
+        },
+        {
+          "name": "Mesh",
+          "triangles": 3276
+        }
+      ]
+    },
+    {
+      "name": "iMac 24\"",
+      "readyMs": 816,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 81,
+      "triangles": 66889,
+      "vertices": 200667,
+      "materials": 81,
+      "textures": 8,
+      "geometryMiB": 7.61,
+      "textureMiB": 23.04,
+      "drawCalls": 163,
+      "drawnTriangles": 133780,
+      "cpuMedianMs": 1.2,
+      "cpuP95Ms": 1.8,
+      "frameMedianMs": 16.6,
+      "frameP95Ms": 17.6,
+      "memory": {
+        "geometries": 82,
+        "textures": 12
+      },
+      "fit": "1.000",
+      "heavyMeshes": [
+        {
+          "name": "IRnMJEJlqBNFooA",
+          "triangles": 24317
+        },
+        {
+          "name": "nYynKpfqNLthgFi",
+          "triangles": 3763
+        },
+        {
+          "name": "dcsVXyJpQZJnbHo",
+          "triangles": 2652
+        },
+        {
+          "name": "xPerbdpZpdcyYhL",
+          "triangles": 2652
+        },
+        {
+          "name": "TDIRhaWLzLtFJNE",
+          "triangles": 2652
+        }
+      ]
+    },
+    {
+      "name": "Studio Display",
+      "readyMs": 734,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 75,
+      "triangles": 80535,
+      "vertices": 241605,
+      "materials": 75,
+      "textures": 9,
+      "geometryMiB": 8.65,
+      "textureMiB": 19.43,
+      "drawCalls": 151,
+      "drawnTriangles": 161072,
+      "cpuMedianMs": 1.8,
+      "cpuP95Ms": 2.7,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 18,
+      "memory": {
+        "geometries": 76,
+        "textures": 13
+      },
+      "fit": "1.000",
+      "heavyMeshes": [
+        {
+          "name": "jwQIckRtmrrTzBp",
+          "triangles": 47932
+        },
+        {
+          "name": "FMhZBBKlKdbeEuj",
+          "triangles": 7600
+        },
+        {
+          "name": "EdzqLErvPbhzmSr",
+          "triangles": 3600
+        },
+        {
+          "name": "ONEcsnCSPAFMcET",
+          "triangles": 2728
+        },
+        {
+          "name": "AAmIQhLimDYDRJt",
+          "triangles": 2466
+        }
+      ]
+    },
+    {
+      "name": "XDR Display",
+      "readyMs": 1214,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 16,
+      "triangles": 253513,
+      "vertices": 760539,
+      "materials": 16,
+      "textures": 10,
+      "geometryMiB": 23.82,
+      "textureMiB": 47.33,
+      "drawCalls": 33,
+      "drawnTriangles": 507028,
+      "cpuMedianMs": 0.9,
+      "cpuP95Ms": 1.5,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 18,
+      "memory": {
+        "geometries": 17,
+        "textures": 14
+      },
+      "fit": "1.000",
+      "heavyMeshes": [
+        {
+          "name": "bIyqxwRZNkokZiN",
+          "triangles": 162768
+        },
+        {
+          "name": "RLqNWQTvdxhYzwN",
+          "triangles": 61488
+        },
+        {
+          "name": "HJxexdgaCCQkOSU",
+          "triangles": 10082
+        },
+        {
+          "name": "RVNPTVBkPRthSTH",
+          "triangles": 6720
+        },
+        {
+          "name": "hpSdHYOSkCaurbw",
+          "triangles": 2568
+        }
+      ]
+    },
+    {
+      "name": "Apple Vision Pro",
+      "readyMs": 1254,
+      "idleDraws": 0,
+      "source": "manufacturer",
+      "meshes": 151,
+      "triangles": 210282,
+      "vertices": 630846,
+      "materials": 151,
+      "textures": 54,
+      "geometryMiB": 23.78,
+      "textureMiB": 83.17,
+      "drawCalls": 303,
+      "drawnTriangles": 420566,
+      "cpuMedianMs": 1.8,
+      "cpuP95Ms": 2.6,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 17.4,
+      "memory": {
+        "geometries": 152,
+        "textures": 58
+      },
+      "fit": "0.889",
+      "heavyMeshes": [
+        {
+          "name": "ldtyhejQMFOqXDD",
+          "triangles": 14500
+        },
+        {
+          "name": "KUmzVQzgqSLYaVv",
+          "triangles": 13108
+        },
+        {
+          "name": "qZWBiTuJsqplvNl",
+          "triangles": 13104
+        },
+        {
+          "name": "GzHtrBOmcyypNsX",
+          "triangles": 12668
+        },
+        {
+          "name": "eizgzqnmEoCVytZ",
+          "triangles": 12654
+        }
+      ]
+    }
+  ],
+  "logs": []
+}

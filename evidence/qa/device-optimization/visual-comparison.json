@@ -1,0 +1,202 @@
+[
+  {
+    "file": "apple-vision-pro-angled.png",
+    "meanChannelDifference": 0.000008333333333333334,
+    "channelsDifferingOver10Percent": 0
+  },
+  {
+    "file": "apple-vision-pro-back.png",
+    "meanChannelDifference": 0.0009127946127946128,
+    "channelsDifferingOver10Percent": 0.001877104377104377
+  },
+  {
+    "file": "apple-vision-pro-black.png",
+    "meanChannelDifference": 0.000008333333333333334,
+    "channelsDifferingOver10Percent": 0
+  },
+  {
+    "file": "apple-vision-pro-front.png",
+    "meanChannelDifference": 0.000004124579124579124,
+    "channelsDifferingOver10Percent": 0
+  },
+  {
+    "file": "apple-vision-pro-side.png",
+    "meanChannelDifference": 0.00027744107744107744,
+    "channelsDifferingOver10Percent": 0.00042929292929292924
+  },
+  {
+    "file": "dell-xps-16-angled.png",
+    "meanChannelDifference": 0.001012037037037037,
+    "channelsDifferingOver10Percent": 0.0033333333333333335
+  },
+  {
+    "file": "dell-xps-16-back.png",
+    "meanChannelDifference": 0.00008072390572390573,
+    "channelsDifferingOver10Percent": 0.00004208754208754209
+  },
+  {
+    "file": "dell-xps-16-black.png",
+    "meanChannelDifference": 0.001012037037037037,
+    "channelsDifferingOver10Percent": 0.0033333333333333335
+  },
+  {
+    "file": "dell-xps-16-front.png",
+    "meanChannelDifference": 0.003084006734006734,
+    "channelsDifferingOver10Percent": 0.02441919191919192
+  },
+  {
+    "file": "dell-xps-16-side.png",
+    "meanChannelDifference": 0.003961363636363636,
+    "channelsDifferingOver10Percent": 0.013173400673400674
+  },
+  {
+    "file": "galaxy-watch-8-angled.png",
+    "meanChannelDifference": 0,
+    "channelsDifferingOver10Percent": 0
+  },
+  {
+    "file": "galaxy-watch-8-back.png",
+    "meanChannelDifference": 0,
+    "channelsDifferingOver10Percent": 0
+  },
+  {
+    "file": "galaxy-watch-8-black.png",
+    "meanChannelDifference": 0,
+    "channelsDifferingOver10Percent": 0
+  },
+  {
+    "file": "galaxy-watch-8-front.png",
+    "meanChannelDifference": 0,
+    "channelsDifferingOver10Percent": 0
+  },
+  {
+    "file": "galaxy-watch-8-side.png",
+    "meanChannelDifference": 0,
+    "channelsDifferingOver10Percent": 0
+  },
+  {
+    "file": "nintendo-switch-2-angled.png",
+    "meanChannelDifference": 0.0008315656565656566,
+    "channelsDifferingOver10Percent": 0.001228956228956229
+  },
+  {
+    "file": "nintendo-switch-2-back.png",
+    "meanChannelDifference": 0.000030303030303030302,
+    "channelsDifferingOver10Percent": 0.00012626262626262626
+  },
+  {
+    "file": "nintendo-switch-2-black.png",
+    "meanChannelDifference": 0.0008315656565656566,
+    "channelsDifferingOver10Percent": 0.001228956228956229
+  },
+  {
+    "file": "nintendo-switch-2-front.png",
+    "meanChannelDifference": 0.0010837542087542087,
+    "channelsDifferingOver10Percent": 0
+  },
+  {
+    "file": "nintendo-switch-2-side.png",
+    "meanChannelDifference": 0.000596043771043771,
+    "channelsDifferingOver10Percent": 0.001548821548821549
+  },
+  {
+    "file": "pixel-10-pro-angled.png",
+    "meanChannelDifference": 0.03860892255892256,
+    "channelsDifferingOver10Percent": 0.06260942760942761
+  },
+  {
+    "file": "pixel-10-pro-back.png",
+    "meanChannelDifference": 0.008615824915824915,
+    "channelsDifferingOver10Percent": 0.009351851851851853
+  },
+  {
+    "file": "pixel-10-pro-black.png",
+    "meanChannelDifference": 0.04205707070707071,
+    "channelsDifferingOver10Percent": 0.07328282828282828
+  },
+  {
+    "file": "pixel-10-pro-front.png",
+    "meanChannelDifference": 0.025639478114478115,
+    "channelsDifferingOver10Percent": 0.02127946127946128
+  },
+  {
+    "file": "pixel-10-pro-side.png",
+    "meanChannelDifference": 0.00747449494949495,
+    "channelsDifferingOver10Percent": 0.007398989898989899
+  },
+  {
+    "file": "pixel-watch-4-angled.png",
+    "meanChannelDifference": 0,
+    "channelsDifferingOver10Percent": 0
+  },
+  {
+    "file": "pixel-watch-4-back.png",
+    "meanChannelDifference": 0,
+    "channelsDifferingOver10Percent": 0
+  },
+  {
+    "file": "pixel-watch-4-black.png",
+    "meanChannelDifference": 0,
+    "channelsDifferingOver10Percent": 0
+  },
+  {
+    "file": "pixel-watch-4-front.png",
+    "meanChannelDifference": 0,
+    "channelsDifferingOver10Percent": 0
+  },
+  {
+    "file": "pixel-watch-4-side.png",
+    "meanChannelDifference": 0,
+    "channelsDifferingOver10Percent": 0
+  },
+  {
+    "file": "steam-deck-angled.png",
+    "meanChannelDifference": 0.00019074074074074075,
+    "channelsDifferingOver10Percent": 0.000664983164983165
+  },
+  {
+    "file": "steam-deck-back.png",
+    "meanChannelDifference": 0.00013855218855218855,
+    "channelsDifferingOver10Percent": 0.00015993265993265992
+  },
+  {
+    "file": "steam-deck-black.png",
+    "meanChannelDifference": 0.00019074074074074075,
+    "channelsDifferingOver10Percent": 0.000664983164983165
+  },
+  {
+    "file": "steam-deck-front.png",
+    "meanChannelDifference": 0.00003215488215488215,
+    "channelsDifferingOver10Percent": 0.00011784511784511784
+  },
+  {
+    "file": "steam-deck-side.png",
+    "meanChannelDifference": 0.00005269360269360269,
+    "channelsDifferingOver10Percent": 0.00021043771043771043
+  },
+  {
+    "file": "surface-laptop-15-angled.png",
+    "meanChannelDifference": 0.007782912457912458,
+    "channelsDifferingOver10Percent": 0.027853535353535356
+  },
+  {
+    "file": "surface-laptop-15-back.png",
+    "meanChannelDifference": 0.016041329966329967,
+    "channelsDifferingOver10Percent": 0.027095959595959593
+  },
+  {
+    "file": "surface-laptop-15-black.png",
+    "meanChannelDifference": 0.0009459595959595959,
+    "channelsDifferingOver10Percent": 0.0007154882154882154
+  },
+  {
+    "file": "surface-laptop-15-front.png",
+    "meanChannelDifference": 0.00012693602693602694,
+    "channelsDifferingOver10Percent": 0.000505050505050505
+  },
+  {
+    "file": "surface-laptop-15-side.png",
+    "meanChannelDifference": 0.029780050505050504,
+    "channelsDifferingOver10Percent": 0.04156565656565657
+  }
+]
